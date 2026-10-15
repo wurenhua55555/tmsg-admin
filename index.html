@@ -69,6 +69,7 @@ th{background:#fafafa;font-weight:600;color:#666}
     <div class="logo">三国风云</div>
     <div class="menu-item active" onclick="showPage('dashboard',this)">仪表盘</div>
     <div class="menu-item" onclick="showPage('users',this)">用户管理</div>
+    <div class="menu-item" onclick="showPage('sponsor',this)">赞助记录</div>
     <div class="menu-item" onclick="showPage('items',this)">道具管理</div>
     <div class="menu-item" onclick="showPage('activities',this)">活动管理</div>
     <div class="menu-item" onclick="showPage('announce',this)">公告管理</div>
@@ -92,10 +93,11 @@ th{background:#fafafa;font-weight:600;color:#666}
 const SUPABASE_URL='https://vdckluemzmzfancascek.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkY2tsdWVtem16ZmFuY2FzY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTc3MzQsImV4cCI6MjEwNzM3MzczNH0.i4cW81Lk6joaaWJKmR_uF4TvBdyRhO9QOOEkIggeLFw';
 let _cache={};
+let CURRENT_ADMIN='admin';
 
 async function api(table,opts={}){
   const cacheKey=table+'?'+(opts.query||'');
-  if(opts.method==='GET'&&_cache[cacheKey]&&Date.now()-_cache[cacheKey].t<30000)return _cache[cacheKey].data;
+  if(opts.method==='GET'&&!opts.noCache&&_cache[cacheKey]&&Date.now()-_cache[cacheKey].t<30000)return _cache[cacheKey].data;
   try{
     const url=new URL(`${SUPABASE_URL}/rest/v1/${table}`);
     if(opts.query)new URLSearchParams(opts.query).forEach((v,k)=>url.searchParams.set(k,v));
@@ -108,7 +110,7 @@ async function api(table,opts={}){
       body:opts.body?JSON.stringify(opts.body):undefined
     });
     const data=await res.json();
-    if(opts.method==='GET'&&Array.isArray(data))_cache[cacheKey]={t:Date.now(),data};
+    if(opts.method==='GET'&&Array.isArray(data)&&!opts.noCache)_cache[cacheKey]={t:Date.now(),data};
     return data;
   }catch(e){console.error('API错误:',table,e);alert('接口错误:'+e.message+' 表:'+table);return [];}
 }
@@ -116,7 +118,7 @@ function parseData(d){if(typeof d==='string'){try{return JSON.parse(d)}catch(e){
 
 function doLogin(){
   const u=document.getElementById('loginUser').value,p=document.getElementById('loginPass').value;
-  if(u==='admin'&&p==='admin123'){localStorage.setItem('tmsg_admin','1');document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
+  if(u==='admin'&&p==='admin123'){CURRENT_ADMIN=u;localStorage.setItem('tmsg_admin','1');document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
   else alert('账号或密码错误');
 }
 function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
@@ -124,11 +126,12 @@ function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
 function showPage(name,el){
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',items:'道具管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
   if(name==='users')renderUsers(c);
+  if(name==='sponsor')renderSponsor(c);
   if(name==='items')renderItems(c);
   if(name==='activities')renderActivities(c);
   if(name==='announce')renderAnnounce(c);
@@ -173,21 +176,80 @@ async function loadUsers(){
 }
 function openPoints(uname){
   document.getElementById('modalMask').style.display='flex';
-  document.getElementById('modalBox').innerHTML=`<h3>给 ${uname} 加赞助积分</h3><input type="number" id="pointNum" placeholder="输入积分数" value="100"><div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="addPoints('${uname}')">提交</button></div>`;
+  document.getElementById('modalBox').innerHTML=`<h3>给 ${uname} 加赞助积分</h3>
+    <div style="font-size:13px;color:#666;margin:10px 0 2px">积分数</div>
+    <input type="number" id="pointNum" placeholder="输入积分数" value="100">
+    <div style="font-size:13px;color:#666;margin:10px 0 2px">原因备注（选填，会写入赞助记录）</div>
+    <input type="text" id="pointReason" placeholder="如：充值100元" value="充值">
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="addPoints('${uname}')">提交</button></div>`;
 }
 function closeModal(){document.getElementById('modalMask').style.display='none';}
 async function addPoints(uname){
   const num=parseInt(document.getElementById('pointNum').value)||0;
-  if(num<=0){alert('请输入正数');return;}
+  if(num<=0){adminTip('请输入正数积分');return;}
+  const reason=(document.getElementById('pointReason')||{}).value?(document.getElementById('pointReason').value.trim()||'充值'):'充值';
   const enc=encodeURIComponent(uname);
   const r=await api('saves',{query:`username=eq.${enc}&select=data`});
-  if(!r||!r.length){alert('用户不存在，请检查用户名：'+uname);return;}
+  if(!r||!r.length){adminTip('用户不存在：'+uname);return;}
   let d=parseData(r[0].data);
   if(!d.char)d.char={};
   d.char.jifen=(d.char.jifen||0)+num;
   // 写回的时候转成JSON字符串，和游戏端保持一致
   await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
-  closeModal();delete _cache['saves?select=username,data,created_at,updated_at'];loadUsers();alert('成功加'+num+'积分，用户登录后商城积分自动对应增加');
+  // 写入赞助记录
+  await api('sponsor_logs',{method:'POST',body:{username:uname,jifen_delta:num,reason:reason,operator:CURRENT_ADMIN}});
+  closeModal();
+  // 清除saves相关缓存
+  Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
+  loadUsers();
+  adminTip('已为 '+uname+' 加 '+num+' 积分，已记录');
+}
+
+// 顶部白底黑字提示（不用原生alert）
+function adminTip(msg){
+  let t=document.getElementById('adminTip');
+  if(!t){
+    t=document.createElement('div');
+    t.id='adminTip';
+    t.style.cssText='position:fixed;top:12px;left:50%;transform:translateX(-50%);background:#fff;color:#000;padding:10px 18px;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.2);z-index:9999;font-size:14px;max-width:90vw;text-align:center;display:none';
+    document.body.appendChild(t);
+  }
+  t.textContent=msg;t.style.display='block';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(function(){t.style.display='none';},2500);
+}
+
+// ===== 赞助记录页 =====
+function renderSponsor(c){
+  c.innerHTML=`<div class="card"><div class="search-bar">
+    <input id="sponsorSearch" placeholder="按账号筛选（留空看全部）" onkeydown="if(event.key==='Enter')loadSponsorLogs()">
+    <button onclick="loadSponsorLogs()">筛选</button>
+    <button onclick="document.getElementById('sponsorSearch').value='';loadSponsorLogs()">全部</button>
+    </div><div class="table-wrap" id="sponsorList">加载中...</div></div>`;
+  loadSponsorLogs();
+}
+async function loadSponsorLogs(){
+  const input=document.getElementById('sponsorSearch');
+  const kw=input&&input.value?input.value.trim():'';
+  const box=document.getElementById('sponsorList');
+  box.innerHTML='加载中...';
+  let q='select=*&order=created_at.desc&limit=500';
+  if(kw)q+=`&username=eq.${encodeURIComponent(kw)}`;
+  const logs=await api('sponsor_logs',{query:q,noCache:true});
+  if(!Array.isArray(logs)){box.innerHTML='<div class="err">查询失败，请重试</div>';return;}
+  if(!logs.length){box.innerHTML='<div class="err">'+(kw?('账号 "'+kw+'" 暂无赞助记录'):'暂无赞助记录')+'</div>';return;}
+  function fmtTime(s){
+    const dt=new Date(s);
+    if(isNaN(dt))return (s||'').substring(0,16);
+    return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+  }
+  box.innerHTML='<table><tr><th>赠送时间</th><th>账号</th><th>积分变动</th><th>原因</th><th>操作人</th></tr>'+
+    logs.map(function(l){
+      const delta=l.jifen_delta||0;
+      const color=delta>0?'#52c41a':(delta<0?'#ff4d4f':'#666');
+      const sign=delta>0?'+':'';
+      return `<tr><td>${fmtTime(l.created_at)}</td><td>${l.username}</td><td style="color:${color};font-weight:bold">${sign}${delta}</td><td>${l.reason||'-'}</td><td>${l.operator||'-'}</td></tr>`;
+    }).join('')+'</table>';
 }
 
 const ITEM_CATALOG=[
