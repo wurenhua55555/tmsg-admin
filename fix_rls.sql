@@ -1,0 +1,8 @@
+-- 完全关闭saves表RLS，放开所有权限
+ALTER TABLE saves DISABLE ROW LEVEL SECURITY;
+
+-- 放开announcements
+ALTER TABLE announcements DISABLE ROW LEVEL SECURITY;
+
+-- 放开chat
+ALTER TABLE chat DISABLE ROW LEVEL SECURITY;

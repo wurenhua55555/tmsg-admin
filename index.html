@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>三国风云 - 管理后台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;font-size:14px}
+.login-wrap{display:flex;align-items:center;justify-content:center;height:100vh}
+.login-box{background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1);width:360px;max-width:90vw}
+.login-box h2{text-align:center;margin-bottom:24px;color:#136ec2}
+.login-box input{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px;font-size:14px}
+.login-box button{width:100%;padding:10px;background:#136ec2;color:#fff;border:none;border-radius:4px;font-size:16px;cursor:pointer;margin-top:12px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:200px;background:#001529;color:#fff;flex-shrink:0}
+.sidebar .logo{padding:20px;font-size:16px;font-weight:bold;text-align:center;border-bottom:1px solid #333}
+.sidebar .menu-item{padding:12px 20px;cursor:pointer;color:rgba(255,255,255,.65)}
+.sidebar .menu-item:hover,.sidebar .menu-item.active{background:#136ec2;color:#fff}
+.topbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.card{background:#fff;padding:16px;border-radius:8px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.stat-card .num{font-size:24px;font-weight:bold;color:#136ec2;margin-top:8px}
+.stat-card .label{color:#999;font-size:12px}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:800px}
+th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;white-space:nowrap}
+th{background:#fafafa;font-weight:600;color:#666}
+.btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:13px;margin-right:4px}
+.btn-primary{background:#136ec2;color:#fff}
+.btn-danger{background:#ff4d4f;color:#fff}
+.btn-default{background:#fff;border:1px solid #ddd;color:#666}
+.search-bar{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
+.search-bar input{padding:8px;border:1px solid #ddd;border-radius:4px;flex:1;min-width:150px}
+.search-bar button{padding:8px 16px;background:#136ec2;color:#fff;border:none;border-radius:4px;cursor:pointer}
+.modal-mask{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
+.modal{background:#fff;padding:24px;border-radius:8px;width:420px;max-width:90vw;max-height:80vh;overflow:auto}
+.modal h3{margin-bottom:16px}
+.modal input,.modal textarea,.modal select{width:100%;padding:8px;margin:6px 0;border:1px solid #ddd;border-radius:4px}
+.modal .modal-footer{margin-top:16px;text-align:right}
+.tag{padding:2px 8px;border-radius:4px;font-size:12px}
+.tag-on{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
+.tag-vip{background:#fff7e6;color:#fa8c16;border:1px solid #ffd591}
+@media(max-width:768px){
+  .sidebar{width:60px}
+  .sidebar .logo{font-size:12px;padding:10px 5px}
+  .sidebar .menu-item{padding:12px 5px;text-align:center;font-size:11px}
+  .stat-row{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:10px}
+  .card{padding:10px}
+}
+.err{color:#ff4d4f;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginPage">
+  <div class="login-box">
+    <h2>三国风云 管理后台</h2>
+    <input type="text" id="loginUser" placeholder="管理员账号" value="admin">
+    <input type="password" id="loginPass" placeholder="密码">
+    <button onclick="doLogin()">登 录</button>
+  </div>
+</div>
+
+<div class="layout" id="mainPage" style="display:none">
+  <div class="sidebar">
+    <div class="logo">三国风云</div>
+    <div class="menu-item active" onclick="showPage('dashboard',this)">仪表盘</div>
+    <div class="menu-item" onclick="showPage('users',this)">用户管理</div>
+    <div class="menu-item" onclick="showPage('items',this)">道具管理</div>
+    <div class="menu-item" onclick="showPage('activities',this)">活动管理</div>
+    <div class="menu-item" onclick="showPage('announce',this)">公告管理</div>
+    <div class="menu-item" onclick="showPage('chat',this)">聊天监控</div>
+    <div class="menu-item" onclick="doLogout()">退出</div>
+  </div>
+  <div style="flex:1;min-width:0">
+    <div class="topbar">
+      <span id="pageTitle">仪表盘</span>
+      <span style="color:#666;font-size:13px">admin</span>
+    </div>
+    <div style="padding:16px" id="content"></div>
+  </div>
+</div>
+
+<div class="modal-mask" id="modalMask">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+const SUPABASE_URL='https://vdckluemzmzfancascek.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkY2tsdWVtem16ZmFuY2FzY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTc3MzQsImV4cCI6MjEwNzM3MzczNH0.i4cW81Lk6joaaWJKmR_uF4TvBdyRhO9QOOEkIggeLFw';
+let _cache={};
+
+async function api(table,opts={}){
+  const cacheKey=table+'?'+(opts.query||'');
+  if(opts.method==='GET'&&_cache[cacheKey]&&Date.now()-_cache[cacheKey].t<30000)return _cache[cacheKey].data;
+  try{
+    const url=new URL(`${SUPABASE_URL}/rest/v1/${table}`);
+    if(opts.query)new URLSearchParams(opts.query).forEach((v,k)=>url.searchParams.set(k,v));
+    const headers={apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`};
+    if(opts.body)headers['Content-Type']='application/json';
+    if(opts.method==='PATCH')headers['Prefer']='return=representation';
+    const res=await fetch(url.toString(),{
+      method:opts.method||'GET',
+      headers:headers,
+      body:opts.body?JSON.stringify(opts.body):undefined
+    });
+    const data=await res.json();
+    if(opts.method==='GET'&&Array.isArray(data))_cache[cacheKey]={t:Date.now(),data};
+    return data;
+  }catch(e){console.error('API错误:',table,e);alert('接口错误:'+e.message+' 表:'+table);return [];}
+}
+function parseData(d){if(typeof d==='string'){try{return JSON.parse(d)}catch(e){return {}}}return d||{};}
+
+function doLogin(){
+  const u=document.getElementById('loginUser').value,p=document.getElementById('loginPass').value;
+  if(u==='admin'&&p==='admin123'){localStorage.setItem('tmsg_admin','1');document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
+  else alert('账号或密码错误');
+}
+function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
+
+function showPage(name,el){
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  el.classList.add('active');
+  const titles={dashboard:'仪表盘',users:'用户管理',items:'道具管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
+  document.getElementById('pageTitle').innerText=titles[name];
+  const c=document.getElementById('content');
+  if(name==='dashboard')renderDashboard(c);
+  if(name==='users')renderUsers(c);
+  if(name==='items')renderItems(c);
+  if(name==='activities')renderActivities(c);
+  if(name==='announce')renderAnnounce(c);
+  if(name==='chat')renderChat(c);
+}
+
+async function renderDashboard(c){
+  c.innerHTML='<div class="stat-row">'+
+    '<div class="stat-card"><div class="label">总玩家数</div><div class="num" id="st1">-</div></div>'+
+    '<div class="stat-card"><div class="label">总银两</div><div class="num" id="st2">-</div></div>'+
+    '<div class="stat-card"><div class="label">总元宝</div><div class="num" id="st3">-</div></div>'+
+    '<div class="stat-card"><div class="label">总金珠</div><div class="num" id="st4">-</div></div>'+
+  '</div><div class="card"><h3>最近公告</h3><div id="recentAnnounce">-</div></div>';
+  const saves=await api('saves?select=username,data');
+  let ts=0,ty=0,tg=0;
+  saves.forEach(r=>{const d=parseData(r.data);const ch=d.char||{};ts+=ch.silver||0;ty+=ch.yuanbao||0;tg+=ch.gold||0;});
+  document.getElementById('st1').innerText=saves.length;
+  document.getElementById('st2').innerText=ts.toLocaleString();
+  document.getElementById('st3').innerText=ty.toLocaleString();
+  document.getElementById('st4').innerText=tg.toLocaleString();
+  const anns=await api('announcements?select=*&order=created_at.desc&limit=5').catch(()=>[]);
+  document.getElementById('recentAnnounce').innerHTML=anns.map(a=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${a.title}</b> <span style="color:#999;font-size:12px">${(a.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无公告';
+}
+
+async function renderUsers(c){
+  c.innerHTML=`<div class="card"><div class="search-bar"><input id="searchUser" placeholder="搜索用户名/角色名"><button onclick="loadUsers()">搜索</button></div><div class="table-wrap" id="userList">加载中...</div></div>`;
+  loadUsers();
+}
+async function loadUsers(){
+  const kw=document.getElementById('searchUser').value;
+  document.getElementById('userList').innerHTML='加载中...';
+  const saves=await api('saves',{query:'select=username,data,updated_at'});
+  if(!Array.isArray(saves)||!saves.length){document.getElementById('userList').innerHTML='<div class="err">暂无用户数据</div>';return;}
+  let list=saves.map(r=>{
+    const d=parseData(r.data);const ch=d.char||{};
+    return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,created:r.updated_at||''};
+  });
+  list.sort((a,b)=>new Date(b.created)-new Date(a.created));
+  if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
+  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册时间</th><th>赞助积分</th><th>操作</th></tr>'+
+    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
+}
+function openPoints(uname){
+  document.getElementById('modalMask').style.display='flex';
+  document.getElementById('modalBox').innerHTML=`<h3>给 ${uname} 加赞助积分</h3><input type="number" id="pointNum" placeholder="输入积分数" value="100"><div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="addPoints('${uname}')">提交</button></div>`;
+}
+function closeModal(){document.getElementById('modalMask').style.display='none';}
+async function addPoints(uname){
+  const num=parseInt(document.getElementById('pointNum').value)||0;
+  if(num<=0){alert('请输入正数');return;}
+  const enc=encodeURIComponent(uname);
+  const r=await api('saves',{query:`username=eq.${enc}&select=data`});
+  if(!r||!r.length){alert('用户不存在，请检查用户名：'+uname);return;}
+  let d=parseData(r[0].data);
+  if(!d.char)d.char={};
+  d.char.jifen=(d.char.jifen||0)+num;
+  // 写回的时候转成JSON字符串，和游戏端保持一致
+  await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
+  closeModal();delete _cache['saves?select=username,data,created_at,updated_at'];loadUsers();alert('成功加'+num+'积分，用户登录后商城积分自动对应增加');
+}
+
+const ITEM_CATALOG=[
+{name:'★哥姐徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
+{name:'★超哥徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
+{name:'★超姐徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
+{name:'秘药礼包',type:'宝箱',usage:'打开获得随机秘药',ctime:'2026-10-13'},
+{name:'双倍经验卡',type:'活动',usage:'使用后1小时双倍经验',ctime:'2026-10-13'},
+{name:'神游果',type:'消耗',usage:'使用后快速传送至任意地图',ctime:'2026-10-13'},
+{name:'背包扩容卷',type:'消耗',usage:'背包格子+10',ctime:'2026-10-13'},
+{name:'玫瑰花',type:'消耗',usage:'赠送增加好友度',ctime:'2026-10-13'},
+{name:'小喇叭',type:'消耗',usage:'全服广播发言',ctime:'2026-10-13'},
+{name:'续命灯',type:'消耗',usage:'死亡不掉经验',ctime:'2026-10-13'},
+{name:'强化宝玉',type:'材料',usage:'装备强化材料',ctime:'2026-10-13'},
+{name:'宝匣钥匙',type:'消耗',usage:'开启宝匣获得奖励',ctime:'2026-10-13'},
+{name:'追杀令',type:'任务',usage:'接取追杀任务',ctime:'2026-10-13'},
+{name:'新婚草戒包',type:'宝箱',usage:'打开获得结婚戒指',ctime:'2026-10-13'},
+{name:'诸侯令1天',type:'活动',usage:'1天诸侯称号加成',ctime:'2026-10-13'},
+{name:'诸侯令7天',type:'活动',usage:'7天诸侯称号加成',ctime:'2026-10-13'},
+{name:'小银两包',type:'消耗',usage:'使用获得50000银两',ctime:'2026-10-13'},
+{name:'大银两包',type:'消耗',usage:'使用获得500000银两',ctime:'2026-10-13'},
+{name:'玫瑰花种子',type:'材料',usage:'家园种植玫瑰花',ctime:'2026-10-13'},
+{name:'经验丹种子',type:'材料',usage:'家园种植经验丹',ctime:'2026-10-13'},
+{name:'大经验丹种子',type:'材料',usage:'家园种植大经验丹',ctime:'2026-10-13'},
+{name:'大经验丹',type:'消耗',usage:'使用获得50000经验',ctime:'2026-10-13'},
+{name:'催熟剂',type:'消耗',usage:'家园作物瞬间成熟',ctime:'2026-10-13'},
+{name:'大血石',type:'材料',usage:'装备打造材料',ctime:'2026-10-13'},
+{name:'大魔石',type:'材料',usage:'装备打造材料',ctime:'2026-10-13'},
+{name:'活力卡',type:'消耗',usage:'补充体力',ctime:'2026-10-13'},
+{name:'聚魂幡碎片',type:'材料',usage:'合成聚魂幡',ctime:'2026-10-13'},
+{name:'副将招募令',type:'活动',usage:'招募副将',ctime:'2026-10-13'},
+{name:'副将低级经验丹',type:'消耗',usage:'副将+5000经验',ctime:'2026-10-13'},
+{name:'副将中级经验丹',type:'消耗',usage:'副将+20000经验',ctime:'2026-10-13'},
+{name:'副将高级经验丹',type:'消耗',usage:'副将+100000经验',ctime:'2026-10-13'},
+{name:'副将资质丹',type:'消耗',usage:'副将资质提升',ctime:'2026-10-13'},
+{name:'副将增寿丹',type:'消耗',usage:'副将寿命+30天',ctime:'2026-10-13'},
+{name:'副将忠诚丹',type:'消耗',usage:'副将忠诚+100',ctime:'2026-10-13'},
+{name:'副将强化丹',type:'消耗',usage:'副将强化材料',ctime:'2026-10-13'},
+{name:'副将悟性丹',type:'消耗',usage:'副将悟性提升',ctime:'2026-10-13'},
+{name:'碎皮',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
+{name:'黄杨木',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
+{name:'麻布',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
+{name:'黄铜矿',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
+{name:'硬皮',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
+{name:'沉香木',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
+{name:'棉布',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
+{name:'黑铁矿',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
+{name:'厚皮',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
+{name:'紫檀木',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
+{name:'呢绒',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
+{name:'精金矿',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
+{name:'遗忘之章残页',type:'材料',usage:'合成技能书',ctime:'2026-10-13'},
+{name:'混乱入门残页',type:'材料',usage:'合成混乱技能书',ctime:'2026-10-13'},
+{name:'吸收入门',type:'技能书',usage:'学习吸收技能',ctime:'2026-10-13'},
+{name:'护佑入门',type:'技能书',usage:'学习护佑技能',ctime:'2026-10-13'},
+{name:'法能入门',type:'技能书',usage:'学习法能技能',ctime:'2026-10-13'},
+{name:'锐利入门',type:'技能书',usage:'学习锐利技能',ctime:'2026-10-13'},
+{name:'坚韧入门',type:'技能书',usage:'学习坚韧技能',ctime:'2026-10-13'},
+{name:'勇猛入门',type:'技能书',usage:'学习勇猛技能',ctime:'2026-10-13'},
+{name:'冷静入门',type:'技能书',usage:'学习冷静技能',ctime:'2026-10-13'},
+{name:'自疗入门',type:'技能书',usage:'学习自疗技能',ctime:'2026-10-13'},
+{name:'嗜血入门',type:'技能书',usage:'学习嗜血技能',ctime:'2026-10-13'},
+{name:'连击入门',type:'技能书',usage:'学习连击技能',ctime:'2026-10-13'},
+];
+function renderItems(c){
+  c.innerHTML=`<div class="card"><h3>道具列表</h3><div class="table-wrap" id="itemList"></div></div>`;
+  document.getElementById('itemList').innerHTML='<table><tr><th>道具名称</th><th>道具类型</th><th>道具用途</th><th>创建时间</th></tr>'+
+    ITEM_CATALOG.map(i=>`<tr><td>${i.name}</td><td>${i.type}</td><td>${i.usage}</td><td>${i.ctime}</td></tr>`).join('')+'</table>';
+}
+
+function renderActivities(c){c.innerHTML=`<div class="card"><h3>活动管理</h3><p style="color:#999">活动配置表待建</p></div>`;}
+
+async function renderAnnounce(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editAnn(0)">新增公告</button></div><div id="annList">加载中...</div></div>`;
+  loadAnns();
+}
+async function loadAnns(){
+  const anns=await api('announcements?select=*&order=created_at.desc').catch(()=>[]);
+  document.getElementById('annList').innerHTML='<table><tr><th>ID</th><th>标题</th><th>内容</th><th>时间</th><th>操作</th></tr>'+anns.map(a=>`<tr><td>${a.id}</td><td>${a.title}</td><td>${(a.content||'').substring(0,50)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editAnn(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAnn(${a.id})">删除</button></td></tr>`).join('')||'<tr><td colspan="5">暂无公告</td></tr></table>';
+}
+function editAnn(id){
+  document.getElementById('modalMask').style.display='flex';
+  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}公告</h3><input id="aTitle" placeholder="公告标题"><textarea id="aContent" rows="4" placeholder="公告内容"></textarea><div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAnn(${id})">保存</button></div>`;
+}
+async function saveAnn(id){
+  const title=document.getElementById('aTitle').value,content=document.getElementById('aContent').value;
+  if(id){await api(`announcements?id=eq.${id}`,{method:'PATCH',body:{title,content}});}else{await api('announcements',{method:'POST',body:{title,content}});}
+  closeModal();loadAnns();
+}
+function delAnn(id){if(confirm('确定删除？')){api(`announcements?id=eq.${id}`,{method:'DELETE'});loadAnns();}}
+
+async function renderChat(c){
+  c.innerHTML=`<div class="card"><h3>公共频道消息</h3><div id="chatList">加载中...</div></div>`;
+  const msgs=await api('chat?select=*&order=created_at.desc&limit=100').catch(()=>[]);
+  document.getElementById('chatList').innerHTML=msgs.map(m=>`<div style="padding:8px;border-bottom:1px solid #eee"><b style="color:#136ec2">${m.name}</b>: ${m.content} <span style="color:#999;font-size:12px">${(m.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无消息';
+}
+
+if(localStorage.getItem('tmsg_admin')){document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
+</script>
+</body>
+</html>
