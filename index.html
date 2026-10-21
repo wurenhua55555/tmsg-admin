@@ -67,19 +67,23 @@ th{background:#fafafa;font-weight:600;color:#666}
 <div class="layout" id="mainPage" style="display:none">
   <div class="sidebar">
     <div class="logo">三国风云</div>
-    <div class="menu-item active" onclick="showPage('dashboard',this)">仪表盘</div>
-    <div class="menu-item" onclick="showPage('users',this)">用户管理</div>
-    <div class="menu-item" onclick="showPage('sponsor',this)">赞助记录</div>
-    <div class="menu-item" onclick="showPage('items',this)">道具管理</div>
-    <div class="menu-item" onclick="showPage('activities',this)">活动管理</div>
-    <div class="menu-item" onclick="showPage('announce',this)">公告管理</div>
-    <div class="menu-item" onclick="showPage('chat',this)">聊天监控</div>
+    <div class="menu-item active" onclick="showPage('dashboard',this)" data-page="dashboard">仪表盘</div>
+    <div class="menu-item" onclick="showPage('users',this)" data-page="users">用户管理</div>
+    <div class="menu-item" onclick="showPage('sponsor',this)" data-page="sponsor">赞助记录</div>
+    <div class="menu-item" onclick="showPage('items',this)" data-page="items">道具管理</div>
+    <div class="menu-item" onclick="showPage('equip',this)" data-page="equip" data-perm="equip">装备管理</div>
+    <div class="menu-item" onclick="showPage('gift',this)" data-page="gift" data-perm="gift">礼包管理</div>
+    <div class="menu-item" onclick="showPage('boss',this)" data-page="boss" data-perm="boss">BOSS管理</div>
+    <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
+    <div class="menu-item" onclick="showPage('activities',this)" data-page="activities" data-perm="activity">活动管理</div>
+    <div class="menu-item" onclick="showPage('announce',this)" data-page="announce">公告管理</div>
+    <div class="menu-item" onclick="showPage('chat',this)" data-page="chat">聊天监控</div>
     <div class="menu-item" onclick="doLogout()">退出</div>
   </div>
   <div style="flex:1;min-width:0">
     <div class="topbar">
       <span id="pageTitle">仪表盘</span>
-      <span style="color:#666;font-size:13px">admin</span>
+      <span style="color:#666;font-size:13px" id="topUser">admin</span>
     </div>
     <div style="padding:16px" id="content"></div>
   </div>
@@ -94,6 +98,10 @@ const SUPABASE_URL='https://vdckluemzmzfancascek.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkY2tsdWVtem16ZmFuY2FzY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTc3MzQsImV4cCI6MjEwNzM3MzczNH0.i4cW81Lk6joaaWJKmR_uF4TvBdyRhO9QOOEkIggeLFw';
 let _cache={};
 let CURRENT_ADMIN='admin';
+let CURRENT_PERMS={equip:true,gift:true,boss:true,perm:true,activity:true};
+let CURRENT_IS_SUPER=false;
+const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',perm:'权限管理',activity:'活动管理'};
+const DEFAULT_PERMS={equip:false,gift:false,boss:false,perm:false,activity:false};
 
 async function api(table,opts={}){
   const cacheKey=table+'?'+(opts.query||'');
@@ -116,23 +124,64 @@ async function api(table,opts={}){
 }
 function parseData(d){if(typeof d==='string'){try{return JSON.parse(d)}catch(e){return {}}}return d||{};}
 
-function doLogin(){
-  const u=document.getElementById('loginUser').value,p=document.getElementById('loginPass').value;
-  if(u==='admin'&&p==='admin123'){CURRENT_ADMIN=u;localStorage.setItem('tmsg_admin','1');document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
-  else alert('账号或密码错误');
+async function doLogin(){
+  const u=document.getElementById('loginUser').value.trim(),p=document.getElementById('loginPass').value;
+  if(!u||!p){alert('请输入账号和密码');return;}
+  let rows;
+  try{
+    const raw=await fetch(`${SUPABASE_URL}/rest/v1/admin_accounts?select=*&limit=1000`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    if(!raw.ok){
+      adminTip('管理员表不存在：请先在 Supabase SQL Editor 执行 init_admin_tables.sql 后再登录');
+      return;
+    }
+    rows=await raw.json();
+  }catch(e){adminTip('接口错误:'+e.message);return;}
+  if(!Array.isArray(rows))rows=[];
+  if(!rows.length){
+    // 无管理员账号时，首个进入的账号自动置为超级管理员
+    const body={username:u,password:p,is_super:true,perms:{equip:true,gift:true,boss:true,perm:true,activity:true}};
+    await api('admin_accounts',{method:'POST',body:body,noCache:true});
+    CURRENT_ADMIN=u;CURRENT_IS_SUPER=true;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,{equip:true,gift:true,boss:true,perm:true,activity:true});
+    localStorage.setItem('tmsg_admin','1');
+    adminTip('首个账号已自动设为超级管理员');
+    enterAdmin();
+    return;
+  }
+  const acc=rows.find(r=>r.username===u);
+  if(!acc||acc.password!==p){alert('账号或密码错误');return;}
+  CURRENT_ADMIN=u;CURRENT_IS_SUPER=!!acc.is_super;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,parseData(acc.perms));
+  localStorage.setItem('tmsg_admin','1');
+  enterAdmin();
+}
+function enterAdmin(){
+  document.getElementById('loginPage').style.display='none';
+  document.getElementById('mainPage').style.display='flex';
+  const tu=document.getElementById('topUser');if(tu)tu.innerText=CURRENT_ADMIN+(CURRENT_IS_SUPER?'(超管)':'');
+  // 按权限过滤侧栏菜单
+  document.querySelectorAll('.menu-item[data-perm]').forEach(m=>{
+    const pk=m.getAttribute('data-perm');
+    const ok=CURRENT_IS_SUPER||CURRENT_PERMS[pk];
+    m.style.display=ok?'block':'none';
+  });
+  showPage('dashboard',document.querySelector('.menu-item[data-page="dashboard"]'));
+  ensureAdminSeeds();
 }
 function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
 
 function showPage(name,el){
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',perm:'权限管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
   if(name==='users')renderUsers(c);
   if(name==='sponsor')renderSponsor(c);
   if(name==='items')renderItems(c);
+  if(name==='equip')renderEquip(c);
+  if(name==='gift')renderGift(c);
+  if(name==='boss')renderBoss(c);
+  if(name==='perm')renderPerm(c);
   if(name==='activities')renderActivities(c);
   if(name==='announce')renderAnnounce(c);
   if(name==='chat')renderChat(c);
@@ -253,74 +302,156 @@ async function loadSponsorLogs(){
 }
 
 const ITEM_CATALOG=[
-{name:'★哥姐徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
-{name:'★超哥徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
-{name:'★超姐徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-13'},
-{name:'秘药礼包',type:'宝箱',usage:'打开获得随机秘药',ctime:'2026-10-13'},
-{name:'双倍经验卡',type:'活动',usage:'使用后1小时双倍经验',ctime:'2026-10-13'},
-{name:'神游果',type:'消耗',usage:'使用后快速传送至任意地图',ctime:'2026-10-13'},
-{name:'背包扩容卷',type:'消耗',usage:'背包格子+10',ctime:'2026-10-13'},
-{name:'玫瑰花',type:'消耗',usage:'赠送增加好友度',ctime:'2026-10-13'},
-{name:'小喇叭',type:'消耗',usage:'全服广播发言',ctime:'2026-10-13'},
-{name:'续命灯',type:'消耗',usage:'死亡不掉经验',ctime:'2026-10-13'},
-{name:'强化宝玉',type:'材料',usage:'装备强化材料',ctime:'2026-10-13'},
-{name:'宝匣钥匙',type:'消耗',usage:'开启宝匣获得奖励',ctime:'2026-10-13'},
-{name:'追杀令',type:'任务',usage:'接取追杀任务',ctime:'2026-10-13'},
-{name:'新婚草戒包',type:'宝箱',usage:'打开获得结婚戒指',ctime:'2026-10-13'},
-{name:'诸侯令1天',type:'活动',usage:'1天诸侯称号加成',ctime:'2026-10-13'},
-{name:'诸侯令7天',type:'活动',usage:'7天诸侯称号加成',ctime:'2026-10-13'},
-{name:'小银两包',type:'消耗',usage:'使用获得50000银两',ctime:'2026-10-13'},
-{name:'大银两包',type:'消耗',usage:'使用获得500000银两',ctime:'2026-10-13'},
-{name:'玫瑰花种子',type:'材料',usage:'家园种植玫瑰花',ctime:'2026-10-13'},
-{name:'经验丹种子',type:'材料',usage:'家园种植经验丹',ctime:'2026-10-13'},
-{name:'大经验丹种子',type:'材料',usage:'家园种植大经验丹',ctime:'2026-10-13'},
-{name:'大经验丹',type:'消耗',usage:'使用获得50000经验',ctime:'2026-10-13'},
-{name:'催熟剂',type:'消耗',usage:'家园作物瞬间成熟',ctime:'2026-10-13'},
-{name:'大血石',type:'材料',usage:'装备打造材料',ctime:'2026-10-13'},
-{name:'大魔石',type:'材料',usage:'装备打造材料',ctime:'2026-10-13'},
-{name:'活力卡',type:'消耗',usage:'补充体力',ctime:'2026-10-13'},
-{name:'聚魂幡碎片',type:'材料',usage:'合成聚魂幡',ctime:'2026-10-13'},
-{name:'副将招募令',type:'活动',usage:'招募副将',ctime:'2026-10-13'},
-{name:'副将低级经验丹',type:'消耗',usage:'副将+5000经验',ctime:'2026-10-13'},
-{name:'副将中级经验丹',type:'消耗',usage:'副将+20000经验',ctime:'2026-10-13'},
-{name:'副将高级经验丹',type:'消耗',usage:'副将+100000经验',ctime:'2026-10-13'},
-{name:'副将资质丹',type:'消耗',usage:'副将资质提升',ctime:'2026-10-13'},
-{name:'副将增寿丹',type:'消耗',usage:'副将寿命+30天',ctime:'2026-10-13'},
-{name:'副将忠诚丹',type:'消耗',usage:'副将忠诚+100',ctime:'2026-10-13'},
-{name:'副将强化丹',type:'消耗',usage:'副将强化材料',ctime:'2026-10-13'},
-{name:'副将悟性丹',type:'消耗',usage:'副将悟性提升',ctime:'2026-10-13'},
-{name:'碎皮',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
-{name:'黄杨木',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
-{name:'麻布',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
-{name:'黄铜矿',type:'材料',usage:'初级装备打造材料',ctime:'2026-10-13'},
-{name:'硬皮',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
-{name:'沉香木',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
-{name:'棉布',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
-{name:'黑铁矿',type:'材料',usage:'中级装备打造材料',ctime:'2026-10-13'},
-{name:'厚皮',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
-{name:'紫檀木',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
-{name:'呢绒',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
-{name:'精金矿',type:'材料',usage:'高级装备打造材料',ctime:'2026-10-13'},
-{name:'遗忘之章残页',type:'材料',usage:'合成技能书',ctime:'2026-10-13'},
-{name:'混乱入门残页',type:'材料',usage:'合成混乱技能书',ctime:'2026-10-13'},
-{name:'吸收入门',type:'技能书',usage:'学习吸收技能',ctime:'2026-10-13'},
-{name:'护佑入门',type:'技能书',usage:'学习护佑技能',ctime:'2026-10-13'},
-{name:'法能入门',type:'技能书',usage:'学习法能技能',ctime:'2026-10-13'},
-{name:'锐利入门',type:'技能书',usage:'学习锐利技能',ctime:'2026-10-13'},
-{name:'坚韧入门',type:'技能书',usage:'学习坚韧技能',ctime:'2026-10-13'},
-{name:'勇猛入门',type:'技能书',usage:'学习勇猛技能',ctime:'2026-10-13'},
-{name:'冷静入门',type:'技能书',usage:'学习冷静技能',ctime:'2026-10-13'},
-{name:'自疗入门',type:'技能书',usage:'学习自疗技能',ctime:'2026-10-13'},
-{name:'嗜血入门',type:'技能书',usage:'学习嗜血技能',ctime:'2026-10-13'},
-{name:'连击入门',type:'技能书',usage:'学习连击技能',ctime:'2026-10-13'},
-];
+  {name:'厚皮',type:'材料',usage:'一级装备打造材料',ctime:'2026-10-19'},
+  {name:'呢绒',type:'材料',usage:'一级装备打造材料',ctime:'2026-10-19'},
+  {name:'棉布',type:'材料',usage:'二级装备打造材料',ctime:'2026-10-19'},
+  {name:'沉香木',type:'材料',usage:'二级装备打造材料',ctime:'2026-10-19'},
+  {name:'硬皮',type:'材料',usage:'二级装备打造材料',ctime:'2026-10-19'},
+  {name:'碎皮',type:'材料',usage:'三级装备打造材料',ctime:'2026-10-19'},
+  {name:'精金矿',type:'材料',usage:'一级装备打造材料',ctime:'2026-10-19'},
+  {name:'紫檀木',type:'材料',usage:'一级装备打造材料',ctime:'2026-10-19'},
+  {name:'麻布',type:'材料',usage:'三级装备打造材料',ctime:'2026-10-19'},
+  {name:'黄杨木',type:'材料',usage:'三级装备打造材料',ctime:'2026-10-19'},
+  {name:'黄铜矿',type:'材料',usage:'三级装备打造材料',ctime:'2026-10-19'},
+  {name:'黑铁矿',type:'材料',usage:'二级装备打造材料',ctime:'2026-10-19'},
+  {name:'军团战特惠包',type:'宝箱',usage:'特惠礼包，军团战使用',ctime:'2026-10-19'},
+  {name:'厚皮包',type:'宝箱',usage:'打开获得20个一级打造材料「厚皮」',ctime:'2026-10-19'},
+  {name:'呢绒包',type:'宝箱',usage:'打开获得20个一级打造材料「呢绒」',ctime:'2026-10-19'},
+  {name:'大血石特惠包',type:'宝箱',usage:'特惠礼包，打开获得大血石',ctime:'2026-10-19'},
+  {name:'大银两包',type:'宝箱',usage:'使用获得大量银两',ctime:'2026-10-19'},
+  {name:'大魔石特惠包',type:'宝箱',usage:'特惠礼包，打开获得大魔石',ctime:'2026-10-19'},
+  {name:'小喇叭特惠包',type:'宝箱',usage:'特惠礼包，打开获得小喇叭',ctime:'2026-10-19'},
+  {name:'小银两包',type:'宝箱',usage:'使用获得银两',ctime:'2026-10-19'},
+  {name:'新婚草戒包',type:'宝箱',usage:'打开获得新婚草戒',ctime:'2026-10-19'},
+  {name:'新婚钻戒包',type:'宝箱',usage:'打开获得新婚钻戒',ctime:'2026-10-19'},
+  {name:'棉布包',type:'宝箱',usage:'打开获得20个二级打造材料「棉布」',ctime:'2026-10-19'},
+  {name:'沉香木包',type:'宝箱',usage:'打开获得20个二级打造材料「沉香木」',ctime:'2026-10-19'},
+  {name:'硬皮包',type:'宝箱',usage:'打开获得20个二级打造材料「硬皮」',ctime:'2026-10-19'},
+  {name:'碎皮包',type:'宝箱',usage:'打开获得20个三级打造材料「碎皮」',ctime:'2026-10-19'},
+  {name:'秘药礼包',type:'宝箱',usage:'打开获得随机秘药',ctime:'2026-10-19'},
+  {name:'精金矿包',type:'宝箱',usage:'打开获得20个一级打造材料「精金矿」',ctime:'2026-10-19'},
+  {name:'紫檀木包',type:'宝箱',usage:'打开获得20个一级打造材料「紫檀木」',ctime:'2026-10-19'},  {name:'麻布包',type:'宝箱',usage:'打开获得20个三级打造材料「麻布」',ctime:'2026-10-19'},
+  {name:'黄杨木包',type:'宝箱',usage:'打开获得20个三级打造材料「黄杨木」',ctime:'2026-10-19'},
+  {name:'黄铜矿包',type:'宝箱',usage:'打开获得20个三级打造材料「黄铜矿」',ctime:'2026-10-19'},
+  {name:'黑铁矿包',type:'宝箱',usage:'打开获得20个二级打造材料「黑铁矿」',ctime:'2026-10-19'},  {name:'大经验丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
+  {name:'大还丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},  {name:'玫瑰花种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
+  {name:'经验丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
+  {name:'金疮药种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},  {name:'冷静入门',type:'技能书',usage:'学习「冷静」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'冷静精通',type:'技能书',usage:'学习「冷静」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'冷静进阶',type:'技能书',usage:'学习「冷静」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'勇猛入门',type:'技能书',usage:'学习「勇猛」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'勇猛精通',type:'技能书',usage:'学习「勇猛」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'勇猛进阶',type:'技能书',usage:'学习「勇猛」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'吸收入门',type:'技能书',usage:'学习「吸收」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'吸收精通',type:'技能书',usage:'学习「吸收」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'吸收进阶',type:'技能书',usage:'学习「吸收」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'嗜血入门',type:'技能书',usage:'学习「嗜血」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'嗜血精通',type:'技能书',usage:'学习「嗜血」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'嗜血进阶',type:'技能书',usage:'学习「嗜血」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'坚韧入门',type:'技能书',usage:'学习「坚韧」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'坚韧精通',type:'技能书',usage:'学习「坚韧」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'坚韧进阶',type:'技能书',usage:'学习「坚韧」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'护佑入门',type:'技能书',usage:'学习「护佑」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'护佑精通',type:'技能书',usage:'学习「护佑」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'护佑进阶',type:'技能书',usage:'学习「护佑」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'法能入门',type:'技能书',usage:'学习「法能」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'法能精通',type:'技能书',usage:'学习「法能」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'法能进阶',type:'技能书',usage:'学习「法能」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'自疗入门',type:'技能书',usage:'学习「自疗」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'自疗精通',type:'技能书',usage:'学习「自疗」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'自疗进阶',type:'技能书',usage:'学习「自疗」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'连击入门',type:'技能书',usage:'学习「连击」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'连击精通',type:'技能书',usage:'学习「连击」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'连击进阶',type:'技能书',usage:'学习「连击」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'锐利入门',type:'技能书',usage:'学习「锐利」技能（入门阶段）',ctime:'2026-10-19'},
+  {name:'锐利精通',type:'技能书',usage:'学习「锐利」技能（精通阶段）',ctime:'2026-10-19'},
+  {name:'锐利进阶',type:'技能书',usage:'学习「锐利」技能（进阶阶段）',ctime:'2026-10-19'},
+  {name:'★哥姐徽章',type:'活动',usage:'尊贵身份标识，全服展示',ctime:'2026-10-19'},
+  {name:'图纸·哥姐徽章',type:'活动',usage:'哥姐徽章打造图纸',ctime:'2026-10-19'},
+  {name:'诸侯令1天',type:'活动',usage:'1天诸侯称号加成',ctime:'2026-10-19'},
+  {name:'诸侯令30天',type:'活动',usage:'30天诸侯称号加成',ctime:'2026-10-19'},
+  {name:'诸侯令7天',type:'活动',usage:'7天诸侯称号加成',ctime:'2026-10-19'},
+  {name:'[活]木锤',type:'消耗',usage:'活动道具',ctime:'2026-10-19'},  {name:'催熟剂',type:'消耗',usage:'山庄作物瞬间成熟',ctime:'2026-10-19'},
+  {name:'军团改名卡',type:'消耗',usage:'军团改名',ctime:'2026-10-19'},
+  {name:'凤鳞汁',type:'消耗',usage:'炼丹材料',ctime:'2026-10-19'},
+  {name:'副将中级经验丹',type:'消耗',usage:'副将经验+20000',ctime:'2026-10-19'},
+  {name:'副将低级经验丹',type:'消耗',usage:'副将经验+5000',ctime:'2026-10-19'},
+  {name:'副将双倍经验卡',type:'消耗',usage:'副将获得双倍经验',ctime:'2026-10-19'},
+  {name:'副将增寿丹',type:'消耗',usage:'副将寿命+30天',ctime:'2026-10-19'},
+  {name:'副将强化丹',type:'消耗',usage:'副将强化',ctime:'2026-10-19'},
+  {name:'副将忠诚丹',type:'消耗',usage:'副将忠诚+100',ctime:'2026-10-19'},
+  {name:'副将悟性丹',type:'消耗',usage:'副将悟性提升',ctime:'2026-10-19'},
+  {name:'副将扩技符',type:'消耗',usage:'副将扩展技能槽',ctime:'2026-10-19'},
+  {name:'副将招募令',type:'消耗',usage:'招募副将',ctime:'2026-10-19'},
+  {name:'副将资质丹',type:'消耗',usage:'副将资质提升',ctime:'2026-10-19'},
+  {name:'副将高级经验丹',type:'消耗',usage:'副将经验+100000',ctime:'2026-10-19'},  {name:'双倍经验卡',type:'消耗',usage:'使用后1小时双倍经验',ctime:'2026-10-19'},
+  {name:'大血石',type:'消耗',usage:'装备打造/强化材料',ctime:'2026-10-19'},
+  {name:'大还丹',type:'消耗',usage:'恢复大量气血',ctime:'2026-10-19'},
+  {name:'大魔石',type:'消耗',usage:'装备打造/强化材料',ctime:'2026-10-19'},
+  {name:'孔明灯',type:'消耗',usage:'使用后获得祈福效果',ctime:'2026-10-19'},
+  {name:'宝匣钥匙',type:'消耗',usage:'开启宝匣获得奖励',ctime:'2026-10-19'},
+  {name:'宝箱钥匙',type:'消耗',usage:'开启宝箱获得奖励',ctime:'2026-10-19'},
+  {name:'小喇叭',type:'消耗',usage:'全服广播发言',ctime:'2026-10-19'},
+  {name:'强化宝玉',type:'消耗',usage:'装备强化材料',ctime:'2026-10-19'},
+  {name:'强化小幸运符',type:'消耗',usage:'装备强化时使用，提升成功率与幸运',ctime:'2026-10-19'},
+  {name:'死亡替身符',type:'消耗',usage:'死亡时自动替身，免除经验损失',ctime:'2026-10-19'},
+  {name:'活力卡',type:'消耗',usage:'补充体力',ctime:'2026-10-19'},
+  {name:'混乱入门残页',type:'消耗',usage:'合成混乱技能书',ctime:'2026-10-19'},  {name:'玫瑰花',type:'消耗',usage:'赠送增加好友度',ctime:'2026-10-19'},  {name:'神游果',type:'消耗',usage:'使用后快速传送至任意地图',ctime:'2026-10-19'},
+  {name:'续命灯',type:'消耗',usage:'死亡不掉经验',ctime:'2026-10-19'},
+  {name:'聚魂幡碎片',type:'消耗',usage:'合成聚魂幡',ctime:'2026-10-19'},
+  {name:'背包扩容卷',type:'消耗',usage:'背包格子+10',ctime:'2026-10-19'},
+  {name:'装备重塑符',type:'消耗',usage:'重塑装备属性',ctime:'2026-10-19'},
+  {name:'角色变性卡',type:'消耗',usage:'角色变更性别',ctime:'2026-10-19'},
+  {name:'角色改名卡',type:'消耗',usage:'角色改名',ctime:'2026-10-19'},
+  {name:'角色转国令',type:'消耗',usage:'角色转移阵营',ctime:'2026-10-19'},
+  {name:'追杀令',type:'消耗',usage:'接取追杀任务',ctime:'2026-10-19'},
+  {name:'遗忘之章残页',type:'消耗',usage:'合成技能书',ctime:'2026-10-19'},
+  {name:'都统令',type:'消耗',usage:'使用获得都统令增益',ctime:'2026-10-19'},
+  {name:'金疮药',type:'消耗',usage:'恢复气血',ctime:'2026-10-19'},  {name:'风云令',type:'消耗',usage:'使用获得风云令增益',ctime:'2026-10-19'},];
 function renderItems(c){
   c.innerHTML=`<div class="card"><h3>道具列表</h3><div class="table-wrap" id="itemList"></div></div>`;
   document.getElementById('itemList').innerHTML='<table><tr><th>道具名称</th><th>道具类型</th><th>道具用途</th><th>创建时间</th></tr>'+
     ITEM_CATALOG.map(i=>`<tr><td>${i.name}</td><td>${i.type}</td><td>${i.usage}</td><td>${i.ctime}</td></tr>`).join('')+'</table>';
 }
 
-function renderActivities(c){c.innerHTML=`<div class="card"><h3>活动管理</h3><p style="color:#999">活动配置表待建</p></div>`;}
+/* ===== 活动管理（云端表 admin_activities，游戏运行时合并 ACTIVITY_LIST） ===== */
+async function renderActivities(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editAct()">新增活动</button> <span style="color:#999;font-size:12px">游戏端 ACTIVITY_LIST 会与云端此表合并（enabled=false 的条目在游戏中隐藏）</span></div><div class="table-wrap" id="actList">加载中...</div></div>`;
+  const acts=await api('admin_activities',{query:'select=*&order=act_id.asc',noCache:true});
+  if(!Array.isArray(acts)||!acts.length){document.getElementById('actList').innerHTML='<div class="err">暂无活动配置（可新增）</div>';return;}
+  document.getElementById('actList').innerHTML='<table><tr><th>ID</th><th>活动标识</th><th>活动名称</th><th>说明</th><th>视图</th><th>启用</th><th>操作</th></tr>'+
+    acts.map(a=>`<tr><td>${a.id}</td><td>${a.act_id}</td><td>${a.name}</td><td>${(a.desc||'').substring(0,40)}</td><td>${a.view||'-'}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editAct(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAct(${a.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+function editAct(id){
+  const src=id?null:{act_id:'',name:'',desc:'',view:'',enabled:true};
+  document.getElementById('modalMask').style.display='flex';
+  const box=document.getElementById('modalBox');
+  if(id){
+    box.innerHTML=`<h3>编辑活动</h3><div id="actEditForm">加载中...</div>`;
+    api('admin_activities',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
+      const a=Array.isArray(rows)&&rows.length?rows[0]:{act_id:'',name:'',desc:'',view:'',enabled:true};
+      document.getElementById('actEditForm').innerHTML=actFormHtml(a,id);
+    });
+  }else{
+    box.innerHTML=`<h3>新增活动</h3>`+actFormHtml(src,null);
+  }
+}
+function actFormHtml(a,id){
+  return `<input id="aActId" placeholder="活动标识(act_id)，如 egg/flip/signin/regGift/luckyshop" value="${a.act_id||''}">
+    <input id="aName" placeholder="活动名称" value="${a.name||''}">
+    <input id="aDesc" placeholder="活动说明(desc)" value="${a.desc||''}">
+    <input id="aView" placeholder="游戏视图(view)" value="${a.view||''}">
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="aEnabled" ${a.enabled!==false?'checked':''}> 启用</label>
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAct(${id!=null?id:'null'})">保存</button></div>`;
+}
+async function saveAct(id){
+  const body={act_id:document.getElementById('aActId').value.trim(),name:document.getElementById('aName').value.trim(),desc:document.getElementById('aDesc').value.trim(),view:document.getElementById('aView').value.trim(),enabled:document.getElementById('aEnabled').checked};
+  if(!body.act_id||!body.name){adminTip('请填写活动标识与名称');return;}
+  if(id){await api(`admin_activities?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{await api('admin_activities',{method:'POST',body,noCache:true});}
+  closeModal();renderActivities(document.getElementById('content'));
+}
+async function delAct(id){if(!confirm('确定删除该活动配置？'))return;await api(`admin_activities?id=eq.${id}`,{method:'DELETE',noCache:true});renderActivities(document.getElementById('content'));}
 
 async function renderAnnounce(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editAnn(0)">新增公告</button></div><div id="annList">加载中...</div></div>`;
@@ -347,7 +478,360 @@ async function renderChat(c){
   document.getElementById('chatList').innerHTML=msgs.map(m=>`<div style="padding:8px;border-bottom:1px solid #eee"><b style="color:#136ec2">${m.name}</b>: ${m.content} <span style="color:#999;font-size:12px">${(m.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无消息';
 }
 
-if(localStorage.getItem('tmsg_admin')){document.getElementById('loginPage').style.display='none';document.getElementById('mainPage').style.display='flex';showPage('dashboard',document.querySelector('.menu-item'));}
+/* 装备管理 */
+const EQUIP_SLOTS={weapon:'武器',helm:'头盔',armor:'铠甲',pants:'护腿',gloves:'护手',shoes:'靴子',accessory:'饰品'};
+const DEFAULT_EQUIPS=[
+  {slot:'weapon',name:'青釭剑',lvl:1,atk:20,def:0,hp:100,price:100},
+  {slot:'weapon',name:'冷月枪',lvl:10,atk:60,def:0,hp:300,price:500},
+  {slot:'weapon',name:'开山斧',lvl:20,atk:150,def:0,hp:800,price:2000},
+  {slot:'weapon',name:'狼牙棒',lvl:30,atk:350,def:0,hp:2000,price:8000},
+  {slot:'weapon',name:'破军弓',lvl:40,atk:800,def:0,hp:5000,price:30000},
+  {slot:'weapon',name:'方天画戟',lvl:50,atk:2000,def:0,hp:12000,price:100000},
+  {slot:'helm',name:'玄铁盔',lvl:1,atk:0,def:15,hp:80,price:100},
+  {slot:'helm',name:'虎纹盔',lvl:10,atk:0,def:45,hp:250,price:500},
+  {slot:'helm',name:'凤翎盔',lvl:20,atk:0,def:120,hp:600,price:2000},
+  {slot:'helm',name:'兜鍪',lvl:30,atk:0,def:280,hp:1500,price:8000},
+  {slot:'helm',name:'束发冠',lvl:40,atk:0,def:600,hp:4000,price:30000},
+  {slot:'helm',name:'黄金盔',lvl:50,atk:0,def:1500,hp:10000,price:100000},
+  {slot:'armor',name:'锁子甲',lvl:1,atk:0,def:25,hp:200,price:150},
+  {slot:'armor',name:'玄武甲',lvl:10,atk:0,def:80,hp:600,price:800},
+  {slot:'armor',name:'锦绣袍',lvl:20,atk:0,def:200,hp:1500,price:3000},
+  {slot:'armor',name:'藤甲',lvl:30,atk:0,def:500,hp:4000,price:12000},
+  {slot:'armor',name:'明光铠',lvl:40,atk:0,def:1200,hp:10000,price:50000},
+  {slot:'armor',name:'麒麟甲',lvl:50,atk:0,def:3000,hp:25000,price:150000},
+  {slot:'pants',name:'玄铁护腿',lvl:1,atk:0,def:12,hp:100,price:80},
+  {slot:'pants',name:'连环裤',lvl:10,atk:0,def:40,hp:300,price:400},
+  {slot:'pants',name:'虎纹裤',lvl:20,atk:0,def:100,hp:800,price:1500},
+  {slot:'pants',name:'锦缎裤',lvl:30,atk:0,def:250,hp:2000,price:6000},
+  {slot:'pants',name:'铁甲裙',lvl:40,atk:0,def:600,hp:5000,price:25000},
+  {slot:'pants',name:'麒麟护腿',lvl:50,atk:0,def:1500,hp:12000,price:80000},
+  {slot:'gloves',name:'铁护手',lvl:1,atk:5,def:8,hp:50,price:60},
+  {slot:'gloves',name:'龙纹腕',lvl:10,atk:15,def:25,hp:150,price:300},
+  {slot:'gloves',name:'钢爪',lvl:20,atk:40,def:60,hp:400,price:1200},
+  {slot:'gloves',name:'拳套',lvl:30,atk:100,def:150,hp:1000,price:5000},
+  {slot:'gloves',name:'云纹护腕',lvl:40,atk:250,def:400,hp:3000,price:20000},
+  {slot:'gloves',name:'金丝手套',lvl:50,atk:600,def:1000,hp:8000,price:60000},
+  {slot:'shoes',name:'追风靴',lvl:1,atk:3,def:10,hp:60,price:70},
+  {slot:'shoes',name:'铁履',lvl:10,atk:10,def:30,hp:200,price:350},
+  {slot:'shoes',name:'鹿皮靴',lvl:20,atk:25,def:80,hp:500,price:1400},
+  {slot:'shoes',name:'玄铁靴',lvl:30,atk:60,def:200,hp:1200,price:5500},
+  {slot:'shoes',name:'凌云履',lvl:40,atk:150,def:500,hp:3000,price:22000},
+  {slot:'shoes',name:'踏云靴',lvl:50,atk:400,def:1200,hp:8000,price:70000},
+  {slot:'accessory',name:'玉佩',lvl:1,atk:5,def:5,hp:100,price:120},
+  {slot:'accessory',name:'玉镯',lvl:10,atk:15,def:15,hp:300,price:600},
+  {slot:'accessory',name:'指环',lvl:20,atk:40,def:40,hp:800,price:2500},
+  {slot:'accessory',name:'项链',lvl:30,atk:100,def:100,hp:2000,price:10000},
+  {slot:'accessory',name:'护身符',lvl:40,atk:250,def:250,hp:5000,price:40000},
+  {slot:'accessory',name:'龙纹玉璧',lvl:50,atk:600,def:600,hp:12000,price:120000},
+];
+let _equipList=[];
+async function renderEquip(c){
+  c.innerHTML=`<div class="card"><div class="search-bar"><input id="eqSearch" placeholder="搜索装备名"><button onclick="loadEquips()">搜索</button><button class="btn btn-primary" style="margin-left:auto" onclick="editEquip()">新增装备</button></div><div class="table-wrap" id="equipList">加载中...</div></div>`;
+  loadEquips();
+}
+async function loadEquips(){
+  const eqEl=document.getElementById('eqSearch');const q=eqEl&&eqEl.value?eqEl.value.trim():'';
+  let qs='select=*&order=id.asc';
+  if(q)qs+='&name=ilike.*'+encodeURIComponent(q)+'*';
+  const rows=await api('admin_equips',{query:qs,noCache:true});
+  _equipList=Array.isArray(rows)?rows:[];
+  if(!_equipList.length){document.getElementById('equipList').innerHTML='<div class="err">暂无装备（云端 admin_equips 为空，首次登录将自动写入基础装备种子）</div>';return;}
+  document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>等级</th><th>品质</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>启用</th><th>操作</th></tr>'+
+    _equipList.map(e=>{
+      const qs2=(Array.isArray(e.quality)?e.quality:[]).join('/')||'普通';
+      const srcs=[];if(Array.isArray(e.source_bosses)&&e.source_bosses.length)srcs.push('BOSS');if(e.source_flip)srcs.push('翻牌');if(e.source_egg)srcs.push('砸蛋');
+      return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${e.lvl}</td><td>${qs2}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
+}
+async function editEquip(id){
+  let e={slot:'weapon',name:'',lvl:1,quality:['普通'],atk:0,def:0,hp:0,mp:0,crit:0,dodge:0,star3:false,price:100,source_bosses:[],source_flip:false,source_egg:false,enabled:true};
+  if(id){const rows=await api('admin_equips',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)e=rows[0];}
+  document.getElementById('modalMask').style.display='flex';
+  const quals=['普通','精良','卓越','史诗','神器'];
+  const eqQuals=Array.isArray(e.quality)&&e.quality.length?e.quality:['普通'];
+  const srcBoss=(Array.isArray(e.source_bosses)?e.source_bosses:[]).map(b=>`${b.bid} ${(b.rate!=null?b.rate:'')}`).join('\n');
+  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}装备</h3>
+    <select id="eSlot">${Object.entries(EQUIP_SLOTS).map(([k,v])=>`<option value="${k}" ${e.slot===k?'selected':''}>${v}</option>`).join('')}</select>
+    <input id="eName" placeholder="装备名（游戏按此名字合并生成）" value="${escTextarea(e.name)}">
+    <input id="eLvl" type="number" placeholder="需要等级" value="${e.lvl||1}">
+    <div style="font-size:13px;color:#666;margin:6px 0 2px">品质（可多选，游戏取第一个）</div>
+    <div>${quals.map(q=>`<label style="margin-right:10px;font-size:13px"><input type="checkbox" class="eQual" value="${q}" ${eqQuals.includes(q)?'checked':''}>${q}</label>`).join('')}</div>
+    <input id="eAtk" type="number" placeholder="攻击" value="${e.atk||0}">
+    <input id="eDef" type="number" placeholder="防御" value="${e.def||0}">
+    <input id="eHp" type="number" placeholder="生命" value="${e.hp||0}">
+    <input id="eMp" type="number" placeholder="内力" value="${e.mp||0}">
+    <input id="eCrit" type="number" step="0.01" placeholder="暴击率(如 0.05)" value="${e.crit||0}">
+    <input id="eDodge" type="number" step="0.01" placeholder="闪避率(如 0.05)" value="${e.dodge||0}">
+    <input id="ePrice" type="number" placeholder="价格(银两)" value="${e.price||100}">
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
+    <div style="font-size:13px;color:#666;margin:6px 0 2px">产出途径 - BOSS掉落（每行：BOSS标识 概率，如 圣兽青龙 0.3）</div>
+    <textarea id="eSourceBoss" rows="3" placeholder="圣兽青龙 0.3&#10;兽王翼虎 0.5">${escTextarea(srcBoss)}</textarea>
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="eSourceFlip" ${e.source_flip?'checked':''}> 翻牌奖池替换（加入 FLIP_POOL）</label>
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="eSourceEgg" ${e.source_egg?'checked':''}> 砸蛋奖池加入（EGG_POOL）</label>
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveEquip(${id!=null?id:'null'})">保存</button></div>`;
+}
+function escTextarea(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function saveEquip(id){
+  const quals=Array.from(document.querySelectorAll('.eQual:checked')).map(x=>x.value);
+  const srcBossLines=document.getElementById('eSourceBoss').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const source_bosses=srcBossLines.map(line=>{
+    const m=line.match(/^(\S+)\s+([\d.]+)%?$/);
+    return m?{bid:m[1],rate:parseFloat(m[2])}:{bid:line,rate:0.3};
+  });
+  const obj={
+    slot:document.getElementById('eSlot').value,
+    name:document.getElementById('eName').value.trim(),
+    lvl:parseInt(document.getElementById('eLvl').value)||1,
+    quality:quals.length?quals:['普通'],
+    atk:parseInt(document.getElementById('eAtk').value)||0,
+    def:parseInt(document.getElementById('eDef').value)||0,
+    hp:parseInt(document.getElementById('eHp').value)||0,
+    mp:parseInt(document.getElementById('eMp').value)||0,
+    crit:parseFloat(document.getElementById('eCrit').value)||0,
+    dodge:parseFloat(document.getElementById('eDodge').value)||0,
+    star3:document.getElementById('eStar3').checked,
+    price:parseInt(document.getElementById('ePrice').value)||100,
+    source_bosses:source_bosses,
+    source_flip:document.getElementById('eSourceFlip').checked,
+    source_egg:document.getElementById('eSourceEgg').checked,
+    enabled:document.getElementById('eEnabled').checked,
+  };
+  if(!obj.name){adminTip('请输入装备名');return;}
+  if(id){await api(`admin_equips?id=eq.${id}`,{method:'PATCH',body:obj,noCache:true});}
+  else{await api('admin_equips',{method:'POST',body:obj,noCache:true});}
+  closeModal();loadEquips();
+}
+async function delEquip(id){if(!confirm('确定删除该装备配置？'))return;await api(`admin_equips?id=eq.${id}`,{method:'DELETE',noCache:true});loadEquips();}
+
+/* ===== 礼包管理（云端表 admin_gifts，游戏运行时合并礼包） ===== */
+const GIFT_KINDS={vip_daily:'每日贵宾礼包',flip:'翻牌礼包',egg:'砸蛋礼包',normal:'普通礼包'};
+const GIFT_REWARD_KINDS=[['yuanbao','元宝'],['item','道具'],['material','装备材料'],['equip','装备']];
+async function renderGift(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editGift()">新增礼包</button> <span style="color:#999;font-size:12px">礼包经游戏端背包道具打开发放；每日贵宾礼包（vip_daily）会覆盖游戏内默认发放内容</span></div><div class="table-wrap" id="giftList">加载中...</div></div>`;
+  const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true});
+  if(!Array.isArray(gifts)||!gifts.length){document.getElementById('giftList').innerHTML='<div class="err">暂无礼包配置（可新增）</div>';return;}
+  document.getElementById('giftList').innerHTML='<table><tr><th>ID</th><th>类型</th><th>礼包名</th><th>说明</th><th>奖励数</th><th>概率</th><th>启用</th><th>操作</th></tr>'+
+    gifts.map(g=>`<tr><td>${g.id}</td><td>${GIFT_KINDS[g.kind]||g.kind}</td><td>${g.name}</td><td>${(g.desc||'').substring(0,40)}</td><td>${(Array.isArray(g.rewards)?g.rewards:[]).length}</td><td>${(g.p!=null?g.p:'-')}</td><td>${g.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editGift(${g.id})">编辑</button><button class="btn btn-danger" onclick="delGift(${g.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+function giftRowHtml(r){
+  r=r||{kind:'yuanbao',name:'',num:1,p:0};
+  return `<div class="gr-row" style="display:flex;gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap">
+    <select class="gr-kind" style="flex:0 0 90px">${GIFT_REWARD_KINDS.map(([k,v])=>`<option value="${k}" ${r.kind===k?'selected':''}>${v}</option>`).join('')}</select>
+    <input class="gr-name" placeholder="名称" value="${escTextarea(r.name)}" style="flex:1;min-width:120px">
+    <input class="gr-num" type="number" placeholder="数量" value="${r.num||1}" style="flex:0 0 70px">
+    <input class="gr-p" type="number" step="0.01" placeholder="概率%" value="${(r.p!=null?r.p:'')}" style="flex:0 0 80px">
+    <button class="btn btn-default" onclick="this.parentNode.remove()">移除</button></div>`;
+}
+function editGift(id){
+  document.getElementById('modalMask').style.display='flex';
+  const box=document.getElementById('modalBox');
+  if(id){
+    box.innerHTML=`<h3>编辑礼包</h3><div id="giftEditForm">加载中...</div>`;
+    api('admin_gifts',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
+      const g=Array.isArray(rows)&&rows.length?rows[0]:{kind:'normal',name:'',desc:'',rewards:[],p:0,enabled:true};
+      document.getElementById('giftEditForm').innerHTML=giftFormHtml(g,id);
+    });
+  }else{
+    const g={kind:'normal',name:'',desc:'',rewards:[{}],p:0,enabled:true};
+    box.innerHTML=`<h3>新增礼包</h3>`+giftFormHtml(g,null);
+  }
+}
+function giftFormHtml(g,id){
+  const rows=(Array.isArray(g.rewards)&&g.rewards.length?g.rewards:[{}]).map(r=>giftRowHtml(r)).join('');
+  return `<select id="gKind">${Object.entries(GIFT_KINDS).map(([k,v])=>`<option value="${k}" ${g.kind===k?'selected':''}>${v}</option>`).join('')}</select>
+    <input id="gName" placeholder="礼包名" value="${escTextarea(g.name)}">
+    <input id="gDesc" placeholder="说明" value="${escTextarea(g.desc)}">
+    <input id="gP" type="number" step="0.01" placeholder="触发概率%（如掉落/翻牌概率，0 表示不参与概率）" value="${(g.p!=null?g.p:'')}">
+    <div style="font-size:13px;color:#666;margin:6px 0 2px">奖励列表（类型+名称+数量+概率%）</div>
+    <div id="giftRewards">${rows}</div>
+    <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button>
+    <label style="font-size:13px;color:#666;display:block;margin-top:6px"><input type="checkbox" id="gEnabled" ${g.enabled!==false?'checked':''}> 启用</label>
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveGift(${id!=null?id:'null'})">保存</button></div>`;
+}
+async function saveGift(id){
+  const rewards=Array.from(document.querySelectorAll('#giftRewards .gr-row')).map(row=>{
+    const kind=row.querySelector('.gr-kind').value,name=row.querySelector('.gr-name').value.trim(),num=parseInt(row.querySelector('.gr-num').value)||1,p=parseFloat(row.querySelector('.gr-p').value)||0;
+    return {kind,name,num,p};
+  }).filter(r=>r.name);
+  const body={kind:document.getElementById('gKind').value,name:document.getElementById('gName').value.trim(),desc:document.getElementById('gDesc').value.trim(),rewards:rewards,p:parseFloat(document.getElementById('gP').value)||0,enabled:document.getElementById('gEnabled').checked};
+  if(!body.name){adminTip('请输入礼包名');return;}
+  if(id){await api(`admin_gifts?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{await api('admin_gifts',{method:'POST',body,noCache:true});}
+  closeModal();renderGift(document.getElementById('content'));
+}
+async function delGift(id){if(!confirm('确定删除该礼包配置？'))return;await api(`admin_gifts?id=eq.${id}`,{method:'DELETE',noCache:true});renderGift(document.getElementById('content'));}
+
+/* ===== BOSS管理（云端表 admin_bosses，游戏运行时合并 MONSTER_DEFS） ===== */
+const BOSS_CATS=[['all','全部'],['shen','神兽/圣兽'],['ling','灵兽'],['wang','兽王'],['huo','活动兽']];
+const DEFAULT_BOSSES=[
+  {bid:'圣兽朱雀',name:'【圣兽】朱雀',lvl:58,hp:2400000,atk:6000,def:12000,exp:50000,silver:50000,map:'北门',shared:true,respawn:86400,drop:[]},
+  {bid:'玄武60',name:'【圣兽】玄武',lvl:60,hp:2400000,atk:6000,def:12000,exp:50000,silver:50000,map:'伏燕宫(北区)',shared:true,respawn:86400,drop:[]},
+  {bid:'圣兽青龙',name:'【圣兽】青龙',lvl:60,hp:2400000,atk:6000,def:12000,exp:50000,silver:50000,map:'洛阳南门',shared:true,respawn:86400,drop:[]},
+  {bid:'圣兽白虎',name:'【圣兽】白虎',lvl:60,hp:2400000,atk:6000,def:12000,exp:50000,silver:50000,map:'洛阳西门',shared:true,respawn:86400,drop:[]},
+  {bid:'神兽60级',name:'【活】神兽',lvl:60,hp:100000,atk:800,def:5000,exp:50000,silver:5000,map:'洛阳广场(中区)',shared:false,respawn:600,drop:[{name:'【神器】七圣刀（60级）',type:'weapon',job:'warrior',level:60,rate:0.3}]},
+  {bid:'江陵灵兽辟邪50',name:'【灵兽】辟邪',lvl:50,hp:1200000,atk:5000,def:10000,exp:30000,silver:30000,map:'江城河(江陵南区)',shared:true,respawn:86400,drop:[]},
+  {bid:'江陵灵兽蛟龙50',name:'【灵兽】蛟龙',lvl:50,hp:1200000,atk:5000,def:10000,exp:30000,silver:30000,map:'荆水门(江陵南区)',shared:true,respawn:86400,drop:[]},
+  {bid:'灵兽青鸾',name:'【灵兽】青鸾',lvl:50,hp:1200000,atk:5000,def:10000,exp:30000,silver:30000,map:'江陵广场(中区)',shared:true,respawn:86400,drop:[]},
+  {bid:'灵兽毕方',name:'【灵兽】毕方',lvl:50,hp:1200000,atk:5000,def:10000,exp:30000,silver:30000,map:'汉中广场(中区)',shared:true,respawn:86400,drop:[]},
+  {bid:'【兽王】应龙',name:'【兽王】应龙',lvl:58,hp:450000,atk:4000,def:8000,exp:20000,silver:20000,map:'峡道',shared:true,respawn:86400,drop:[]},
+  {bid:'兽王囚牛',name:'【兽王】囚牛',lvl:55,hp:450000,atk:4000,def:8000,exp:20000,silver:20000,map:'下邳广场(中区)',shared:true,respawn:86400,drop:[]},
+  {bid:'兽王翼虎',name:'【兽王】翼虎',lvl:55,hp:450000,atk:4000,def:8000,exp:20000,silver:20000,map:'洛阳广场(中区)',shared:true,respawn:86400,drop:[]},
+  {bid:'【兽王】青蛇40',name:'【兽王】青蛇',lvl:40,hp:450000,atk:4000,def:8000,exp:20000,silver:20000,map:'青龙街(许昌中区)',shared:true,respawn:86400,drop:[]},
+];
+function bossCat(b){
+  const n=b.name||'';
+  if(n.indexOf('圣兽')>=0||n.indexOf('神兽')>=0)return 'shen';
+  if(n.indexOf('灵兽')>=0)return 'ling';
+  if(n.indexOf('兽王')>=0)return 'wang';
+  if(n.indexOf('【活】')>=0)return 'huo';
+  return 'all';
+}
+async function renderBoss(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="editBoss()">新增BOSS</button>
+    <button class="btn btn-default" onclick="renderBoss(document.getElementById('content'))">刷新列表</button>
+    <span style="color:#999;font-size:12px">复活由游戏端 respawn 冷却自动处理；游戏运行时与本表合并 MONSTER_DEFS</span></div>
+    <div style="margin-bottom:12px">${BOSS_CATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-bcat="${k}" onclick="bossSetCat('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="bossList">加载中...</div></div>`;
+  loadBosses();
+}
+let _bossCat='all';
+function bossSetCat(k){_bossCat=k;document.querySelectorAll('[data-bcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-bcat')===k?'btn-primary':'btn-default'));loadBosses();}
+async function loadBosses(){
+  const rows=await api('admin_bosses',{query:'select=*&order=id.asc',noCache:true});
+  let list=Array.isArray(rows)?rows:[];
+  if(_bossCat!=='all')list=list.filter(b=>bossCat(b)===_bossCat);
+  if(!list.length){document.getElementById('bossList').innerHTML='<div class="err">该分类暂无BOSS</div>';return;}
+  document.getElementById('bossList').innerHTML='<table><tr><th>标识</th><th>BOSS名</th><th>等级</th><th>血量</th><th>攻击</th><th>防御</th><th>经验</th><th>银两</th><th>地图</th><th>共享</th><th>复活(秒)</th><th>掉落</th><th>启用</th><th>操作</th></tr>'+
+    list.map(b=>`<tr><td>${b.bid}</td><td>${b.name}</td><td>${b.lvl}</td><td>${(b.hp||0).toLocaleString()}</td><td>${b.atk}</td><td>${b.def}</td><td>${b.exp}</td><td>${b.silver}</td><td>${b.map}</td><td>${b.shared?'<span class="tag tag-on">共享</span>':'-'}</td><td>${b.respawn||0}</td><td>${(Array.isArray(b.drop)?b.drop:[]).length}</td><td>${b.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editBoss(${b.id})">编辑</button><button class="btn btn-danger" onclick="delBoss(${b.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+async function editBoss(id){
+  let b={bid:'',name:'',lvl:60,hp:100000,atk:1000,def:500,exp:10000,silver:5000,map:'',respawn:3600,shared:false,drop:[],enabled:true};
+  if(id){const rows=await api('admin_bosses',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)b=rows[0];}
+  document.getElementById('modalMask').style.display='flex';
+  const dropTxt=JSON.stringify(Array.isArray(b.drop)?b.drop:[],null,1);
+  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}BOSS</h3>
+    <input id="bBid" placeholder="BOSS标识(bid)，需唯一" value="${escTextarea(b.bid)}">
+    <input id="bName" placeholder="BOSS名（含【圣兽】【灵兽】【兽王】【活】自动分类）" value="${escTextarea(b.name)}">
+    <input id="bLvl" type="number" placeholder="等级" value="${b.lvl||60}">
+    <input id="bHp" type="number" placeholder="血量" value="${b.hp||100000}">
+    <input id="bAtk" type="number" placeholder="攻击" value="${b.atk||1000}">
+    <input id="bDef" type="number" placeholder="防御" value="${b.def||500}">
+    <input id="bExp" type="number" placeholder="经验" value="${b.exp||10000}">
+    <input id="bSilver" type="number" placeholder="银两" value="${b.silver||5000}">
+    <input id="bMap" placeholder="地图(与游戏 MAPS 节点名对应)" value="${escTextarea(b.map)}">
+    <input id="bRespawn" type="number" placeholder="复活冷却(秒)" value="${b.respawn||3600}">
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="bShared" ${b.shared?'checked':''}> 全服共享BOSS</label>
+    <div style="font-size:13px;color:#666;margin:6px 0 2px">掉落配置(JSON数组：[{"name":"装备名","type":"weapon","job":"warrior","level":60,"rate":0.3}])</div>
+    <textarea id="bDrop" rows="4">${escTextarea(dropTxt)}</textarea>
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="bEnabled" ${b.enabled!==false?'checked':''}> 启用</label>
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveBoss(${id!=null?id:'null'})">保存</button></div>`;
+}
+async function saveBoss(id){
+  let drop=[];
+  try{drop=JSON.parse(document.getElementById('bDrop').value)||[];}catch(e){adminTip('掉落配置不是合法JSON');return;}
+  if(!Array.isArray(drop)){adminTip('掉落配置需为数组');return;}
+  const body={bid:document.getElementById('bBid').value.trim(),name:document.getElementById('bName').value.trim(),lvl:parseInt(document.getElementById('bLvl').value)||60,hp:parseInt(document.getElementById('bHp').value)||0,atk:parseInt(document.getElementById('bAtk').value)||0,def:parseInt(document.getElementById('bDef').value)||0,exp:parseInt(document.getElementById('bExp').value)||0,silver:parseInt(document.getElementById('bSilver').value)||0,map:document.getElementById('bMap').value.trim(),respawn:parseInt(document.getElementById('bRespawn').value)||3600,shared:document.getElementById('bShared').checked,drop:drop,enabled:document.getElementById('bEnabled').checked};
+  if(!body.bid||!body.name){adminTip('请填写BOSS标识与名称');return;}
+  if(id){await api(`admin_bosses?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{await api('admin_bosses',{method:'POST',body,noCache:true});}
+  closeModal();loadBosses();
+}
+async function delBoss(id){if(!confirm('确定删除该BOSS配置？'))return;await api(`admin_bosses?id=eq.${id}`,{method:'DELETE',noCache:true});loadBosses();}
+
+/* ===== 权限管理（admin_accounts + 五模块菜单权限） ===== */
+async function renderPerm(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editPerm()">新增管理员</button> <span style="color:#999;font-size:12px">菜单权限位：装备/礼包/BOSS/权限/活动；无权限账号登录后仅显示有权限的菜单；超管拥有全部权限</span></div><div class="table-wrap" id="permList">加载中...</div></div>`;
+  const rows=await api('admin_accounts',{query:'select=*&order=id.asc',noCache:true});
+  if(!Array.isArray(rows)||!rows.length){document.getElementById('permList').innerHTML='<div class="err">暂无管理员账号</div>';return;}
+  document.getElementById('permList').innerHTML='<table><tr><th>ID</th><th>账号</th><th>密码</th><th>类型</th><th>装备</th><th>礼包</th><th>BOSS</th><th>权限</th><th>活动</th><th>创建时间</th><th>操作</th></tr>'+
+    rows.map(a=>{
+      const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
+      const tag=v=>v?'<span class="tag tag-on">有</span>':'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">无</span>';
+      return `<tr><td>${a.id}</td><td>${a.username}</td><td>******</td><td>${a.is_super?'<span class="tag tag-vip">超管</span>':'<span class="tag">普通</span>'}</td><td>${tag(pm.equip)}</td><td>${tag(pm.gift)}</td><td>${tag(pm.boss)}</td><td>${tag(pm.perm)}</td><td>${tag(pm.activity)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editPerm(${a.id})">编辑</button><button class="btn btn-danger" onclick="delPerm(${a.id},'${a.username}')">删除</button></td></tr>`;}).join('')+'</table>';
+}
+function editPerm(id){
+  document.getElementById('modalMask').style.display='flex';
+  const box=document.getElementById('modalBox');
+  if(id){
+    box.innerHTML=`<h3>编辑管理员</h3><div id="permEditForm">加载中...</div>`;
+    api('admin_accounts',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
+      const a=Array.isArray(rows)&&rows.length?rows[0]:{username:'',is_super:false,perms:{}};
+      document.getElementById('permEditForm').innerHTML=permFormHtml(a,id);
+    });
+  }else{
+    box.innerHTML=`<h3>新增管理员</h3>`+permFormHtml({username:'',is_super:false,perms:{}},null);
+  }
+}
+function permFormHtml(a,id){
+  const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
+  const cb=(k,label)=>`<label style="margin-right:12px;font-size:13px"><input type="checkbox" id="p${k}" ${pm[k]?'checked':''}> ${label}</label>`;
+  return `<input id="pUser" placeholder="账号" value="${escTextarea(a.username)}" ${id?'disabled':''}>
+    <input id="pPass" type="password" placeholder="${id?'新密码（留空则不修改）':'密码'}">
+    <label style="font-size:13px;color:#666"><input type="checkbox" id="pSuper" ${a.is_super?'checked':''}> 超级管理员（拥有全部菜单权限）</label>
+    <div style="font-size:13px;color:#666;margin:8px 0 2px">五模块菜单权限</div>
+    <div>${cb('equip','装备')}${cb('gift','礼包')}${cb('boss','BOSS')}${cb('perm','权限')}${cb('activity','活动')}</div>
+    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="savePerm(${id!=null?id:'null'})">保存</button></div>`;
+}
+async function savePerm(id){
+  const username=document.getElementById('pUser').value.trim();
+  const password=document.getElementById('pPass').value;
+  const is_super=document.getElementById('pSuper').checked;
+  const perms={equip:document.getElementById('pequip').checked,gift:document.getElementById('pgift').checked,boss:document.getElementById('pboss').checked,perm:document.getElementById('pperm').checked,activity:document.getElementById('pactivity').checked};
+  if(!username){adminTip('请输入账号');return;}
+  const body={username:username,is_super:is_super,perms:perms};
+  if(password)body.password=password;
+  if(id){
+    if(is_super)body.perms={equip:true,gift:true,boss:true,perm:true,activity:true};
+    await api(`admin_accounts?id=eq.${id}`,{method:'PATCH',body,noCache:true});
+  }else{
+    if(!password){adminTip('请输入初始密码');return;}
+    body.password=password;
+    if(is_super)body.perms={equip:true,gift:true,boss:true,perm:true,activity:true};
+    await api('admin_accounts',{method:'POST',body,noCache:true});
+  }
+  closeModal();renderPerm(document.getElementById('content'));
+}
+async function delPerm(id,username){
+  if(username===CURRENT_ADMIN){adminTip('不能删除当前登录账号');return;}
+  if(!confirm('确定删除管理员 '+username+' ？'))return;
+  await api(`admin_accounts?id=eq.${id}`,{method:'DELETE',noCache:true});
+  renderPerm(document.getElementById('content'));
+}
+
+/* ===== 种子初始化：表空时自动写入基础数据 ===== */
+async function ensureAdminSeeds(){
+  try{
+    let menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true});
+    if(Array.isArray(menus)&&!menus.length){
+      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['perm','权限管理','perm',8],['activities','活动管理','activity',9],['announce','公告管理','',10],['chat','聊天监控','',11]];
+      for(const m of defMenus)await api('admin_menus',{method:'POST',body:{menu_key:m[0],name:m[1],perm_key:m[2],sort:m[3]},noCache:true});
+    }
+    let acts=await api('admin_activities',{query:'select=*&limit=100',noCache:true});
+    if(Array.isArray(acts)&&!acts.length){
+      const defActs=[['egg','快乐砸蛋','每次砸蛋消耗10元宝','egg'],['flip','幸运翻牌','翻牌有几率额外获得三国币','flip'],['signin','签到好礼','每日签到领好礼','signin'],['regGift','注册领好礼','新玩家注册好礼','regGift'],['luckyshop','三国币兑换','三国币兑奖商店','luckyshop']];
+      for(const a of defActs)await api('admin_activities',{method:'POST',body:{act_id:a[0],name:a[1],desc:a[2],view:a[3]},noCache:true});
+    }
+    let gifts=await api('admin_gifts',{query:'select=*&limit=100',noCache:true});
+    if(Array.isArray(gifts)&&!gifts.length){
+      await api('admin_gifts',{method:'POST',body:{kind:'vip_daily',name:'每日贵宾礼包',desc:'每日贵宾可领取，打开获得丰厚奖励',rewards:[{name:'元宝',kind:'yuanbao',num:288},{name:'[活]砸蛋锤',kind:'eggToken',num:1},{name:'[活]翻牌令',kind:'flipToken',num:1},{name:'大魔石',kind:'dms',num:1},{name:'大血石',kind:'dxs',num:1}],p:0,enabled:true},noCache:true});
+    }
+    let eqs=await api('admin_equips',{query:'select=*&limit=100',noCache:true});
+    if(Array.isArray(eqs)&&!eqs.length){
+      for(const e of DEFAULT_EQUIPS){
+        await api('admin_equips',{method:'POST',body:{slot:e.slot,name:e.name,lvl:e.lvl,quality:['普通'],atk:e.atk,def:e.def,hp:e.hp,mp:0,crit:0,dodge:0,star3:false,price:e.price,source_bosses:[],source_flip:false,source_egg:false,enabled:true},noCache:true});
+      }
+    }
+    let bosses=await api('admin_bosses',{query:'select=*&limit=100',noCache:true});
+    if(Array.isArray(bosses)&&!bosses.length){
+      for(const b of DEFAULT_BOSSES){
+        await api('admin_bosses',{method:'POST',body:b,noCache:true});
+      }
+    }
+  }catch(e){console.error('种子初始化失败',e);}
+}
+
+if(localStorage.getItem('tmsg_admin')){enterAdmin();}
 </script>
 </body>
 </html>
