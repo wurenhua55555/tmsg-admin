@@ -5,42 +5,69 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>三国风云 - 管理后台</title>
 <style>
+:root{--brand:#2266cc}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#f0f2f5;font-size:14px}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#eef1f6;font-size:19px;color:#2c3a52}
 .login-wrap{display:flex;align-items:center;justify-content:center;height:100vh}
-.login-box{background:#fff;padding:40px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.1);width:360px;max-width:90vw}
-.login-box h2{text-align:center;margin-bottom:24px;color:#136ec2}
-.login-box input{width:100%;padding:10px;margin:8px 0;border:1px solid #ddd;border-radius:4px;font-size:14px}
-.login-box button{width:100%;padding:10px;background:#136ec2;color:#fff;border:none;border-radius:4px;font-size:16px;cursor:pointer;margin-top:12px}
+.login-box{background:#fff;padding:44px;border-radius:12px;box-shadow:0 6px 24px rgba(20,60,140,.14);width:380px;max-width:90vw}
+.login-box h2{text-align:center;margin-bottom:26px;color:#2266cc;font-size:22px}
+.login-box input{width:100%;padding:11px 12px;margin:8px 0;border:1px solid #c9d4e4;border-radius:6px;font-size:16px;transition:border-color .15s,box-shadow .15s}
+.login-box input:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.12)}
+.login-box button{width:100%;padding:11px;background:#2266cc;color:#fff;border:none;border-radius:6px;font-size:17px;cursor:pointer;margin-top:12px;transition:background .15s}
+.login-box button:hover{background:#1a54ad}
 .layout{display:flex;min-height:100vh}
-.sidebar{width:200px;background:#001529;color:#fff;flex-shrink:0}
-.sidebar .logo{padding:20px;font-size:16px;font-weight:bold;text-align:center;border-bottom:1px solid #333}
-.sidebar .menu-item{padding:12px 20px;cursor:pointer;color:rgba(255,255,255,.65)}
-.sidebar .menu-item:hover,.sidebar .menu-item.active{background:#136ec2;color:#fff}
-.topbar{background:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.1)}
-.card{background:#fff;padding:16px;border-radius:8px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.sidebar{width:200px;background:#0b1f3a;color:#fff;flex-shrink:0}
+.sidebar .logo{padding:20px;font-size:16px;font-weight:bold;text-align:center;border-bottom:1px solid #1c3a63;color:#e6edf7;letter-spacing:2px}
+.sidebar .menu-item{padding:12px 20px;cursor:pointer;color:rgba(255,255,255,.68);transition:background .15s,color .15s}
+.sidebar .menu-item:hover,.sidebar .menu-item.active{background:#2266cc;color:#fff}
+.topbar{background:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.card{background:#fff;padding:18px;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 8px rgba(20,60,140,.06);border:1px solid #e8edf5}
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
-.stat-card{background:#fff;padding:16px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-.stat-card .num{font-size:24px;font-weight:bold;color:#136ec2;margin-top:8px}
-.stat-card .label{color:#999;font-size:12px}
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;min-width:800px}
-th,td{padding:10px;border-bottom:1px solid #eee;text-align:left;font-size:13px;white-space:nowrap}
-th{background:#fafafa;font-weight:600;color:#666}
-.btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:13px;margin-right:4px}
-.btn-primary{background:#136ec2;color:#fff}
+.stat-card{background:#fff;padding:16px;border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid #eef2f8}
+.stat-card .num{font-size:26px;font-weight:bold;color:#2266cc;margin-top:8px}
+.stat-card .label{color:#8a94a6;font-size:13px}
+.table-wrap{overflow-x:auto;border:1px solid #eef2f8;border-radius:8px}
+table{width:100%;border-collapse:collapse;min-width:860px}
+th,td{padding:11px 12px;border-bottom:1px solid #eef2f8;text-align:left;white-space:nowrap}
+th{background:linear-gradient(180deg,#2f6ccf,#2266cc);color:#fff;font-weight:600;font-size:14px;letter-spacing:.5px;position:sticky;top:0;z-index:1}
+td{font-size:14px;color:#3d4b66}
+tbody tr:hover{background:#f2f6ff}
+.btn{padding:7px 15px;border:none;border-radius:6px;cursor:pointer;font-size:14px;margin-right:4px;transition:all .15s;line-height:1.5}
+.btn:hover{opacity:.92}
+.btn-primary{background:#2266cc;color:#fff;box-shadow:0 2px 6px rgba(34,102,204,.28)}
+.btn-primary:hover{background:#1a54ad;opacity:1}
 .btn-danger{background:#ff4d4f;color:#fff}
-.btn-default{background:#fff;border:1px solid #ddd;color:#666}
-.search-bar{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap}
-.search-bar input{padding:8px;border:1px solid #ddd;border-radius:4px;flex:1;min-width:150px}
-.search-bar button{padding:8px 16px;background:#136ec2;color:#fff;border:none;border-radius:4px;cursor:pointer}
-.modal-mask{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center}
-.modal{background:#fff;padding:24px;border-radius:8px;width:420px;max-width:90vw;max-height:80vh;overflow:auto}
-.modal h3{margin-bottom:16px}
-.modal input,.modal textarea,.modal select{width:100%;padding:8px;margin:6px 0;border:1px solid #ddd;border-radius:4px}
-.modal .modal-footer{margin-top:16px;text-align:right}
-.tag{padding:2px 8px;border-radius:4px;font-size:12px}
-.tag-on{background:#f6ffed;color:#52c41a;border:1px solid #b7eb8f}
+.btn-danger:hover{background:#e43a3c;opacity:1}
+.btn-default{background:#fff;border:1px solid #c9d4e4;color:#5a6a84}
+.btn-default:hover{border-color:#2266cc;color:#2266cc;opacity:1}
+.search-bar{margin-bottom:16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-bar input{padding:8px 12px;border:1px solid #c9d4e4;border-radius:6px;flex:1;min-width:150px;font-size:14px;transition:border-color .15s,box-shadow .15s}
+.search-bar input:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.12)}
+.search-bar button{padding:8px 18px;background:#2266cc;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px}
+.modal-mask{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(15,28,52,.55);z-index:100;align-items:center;justify-content:center}
+.modal{background:#fff;padding:26px;border-radius:12px;width:460px;max-width:92vw;max-height:82vh;overflow:auto;box-shadow:0 10px 40px rgba(15,28,52,.25)}
+.modal h3{display:flex;align-items:center;gap:8px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid #eef2f8;font-size:19px;color:#1f2d3d}
+.modal h3::before{content:"";width:4px;height:18px;background:#2266cc;border-radius:2px}
+.modal input,.modal textarea,.modal select{width:100%;padding:8px 11px;margin:6px 0;border:1px solid #c9d4e4;border-radius:6px;font-size:14px;color:#33445f;background:#fff;transition:border-color .15s,box-shadow .15s}
+.modal input:hover,.modal textarea:hover,.modal select:hover{border-color:#9db8e8}
+.modal input:focus,.modal textarea:focus,.modal select:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.12)}
+.modal select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+.modal label.f{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:14px;color:#44546b;white-space:nowrap}
+.modal label.f>span{flex:0 0 112px;text-align:right;color:#33445f;font-weight:500}
+.modal label.f>input,.modal label.f>select{flex:1;min-width:0;width:auto;margin:0}
+.modal .form-group{background:#f6f8fc;border:1px solid #e3eaf5;border-radius:8px;padding:12px 14px;margin:10px 0}
+.modal .form-group .fg-title{font-size:13px;color:#52617a;margin-bottom:6px}
+.modal .form-group .fg-note{font-size:12px;color:#9aa5b8;margin-bottom:6px}
+.modal .modal-footer{margin-top:18px;padding-top:14px;border-top:1px solid #eef2f8;text-align:right}
+.modal .modal-footer .btn{margin-left:8px;margin-right:0}
+.modal input[type="checkbox"]{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:0 6px 0 0;vertical-align:-4px;border:2px solid #b9c4d6;border-radius:5px;background:#fff;cursor:pointer;position:relative;transition:border-color .15s,background .15s;flex:none}
+.modal input[type="checkbox"]::before{content:"";position:absolute;top:-9px;left:-9px;right:-9px;bottom:-9px}
+.modal input[type="checkbox"]:hover{border-color:#2266cc}
+.modal input[type="checkbox"]:checked{background:#2266cc;border-color:#2266cc}
+.modal input[type="checkbox"]:checked::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:500;line-height:1.5}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
+.tag-on{background:#e8f7ee;color:#1a9c50;border:1px solid #b8e6c9}
 .tag-vip{background:#fff7e6;color:#fa8c16;border:1px solid #ffd591}
 @media(max-width:768px){
   .sidebar{width:60px}
@@ -49,8 +76,28 @@ th{background:#fafafa;font-weight:600;color:#666}
   .stat-row{grid-template-columns:repeat(2,1fr)}
   .topbar{padding:10px}
   .card{padding:10px}
+  .modal{width:96vw;padding:16px}
 }
 .err{color:#ff4d4f;padding:20px;text-align:center}
+/* 装备编辑二级页 */
+.edit-page{animation:fadeIn .2s ease}
+.edit-page .ep-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.edit-page .ep-head h3{margin:0;font-size:20px;color:#1c2b4a}
+.edit-page .ep-form{max-width:780px;background:#fff;border:1px solid #e3eaf5;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(34,102,204,.05)}
+.edit-page .ep-form .f{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:14px}
+.edit-page .ep-form label.f>span{flex:0 0 112px;text-align:right;color:#33445f;font-weight:500}
+.edit-page .ep-form label.f>input,.edit-page .ep-form label.f>select{flex:1;min-width:0;width:auto;margin:0}
+.edit-page .ep-actions{margin-top:20px;display:flex;gap:10px}
+.edit-page .ep-actions .btn{min-width:96px}
+/* BOSS掉落配置 */
+.dc-add-row{display:flex;gap:8px;align-items:center;margin:6px 0}
+.dc-add-row select{flex:1;min-width:0}
+.dc-add-row input{width:110px}
+.dc-add-row .btn{flex:none}
+.dc-row{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:6px 0;background:#fff;border:1px solid #e3eaf5;border-radius:6px;font-size:13px}
+.dc-row .tag{flex:none}
+.dc-row b{flex:none;min-width:56px;text-align:right}
+.dc-row .btn{padding:3px 10px;font-size:12px;flex:none}
 </style>
 </head>
 <body>
@@ -74,6 +121,7 @@ th{background:#fafafa;font-weight:600;color:#666}
     <div class="menu-item" onclick="showPage('equip',this)" data-page="equip" data-perm="equip">装备管理</div>
     <div class="menu-item" onclick="showPage('gift',this)" data-page="gift" data-perm="gift">礼包管理</div>
     <div class="menu-item" onclick="showPage('boss',this)" data-page="boss" data-perm="boss">BOSS管理</div>
+    <div class="menu-item" onclick="showPage('locations',this)" data-page="locations" data-perm="locations">地图管理</div>
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
     <div class="menu-item" onclick="showPage('activities',this)" data-page="activities" data-perm="activity">活动管理</div>
     <div class="menu-item" onclick="showPage('announce',this)" data-page="announce">公告管理</div>
@@ -98,10 +146,10 @@ const SUPABASE_URL='https://vdckluemzmzfancascek.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkY2tsdWVtem16ZmFuY2FzY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTc3MzQsImV4cCI6MjEwNzM3MzczNH0.i4cW81Lk6joaaWJKmR_uF4TvBdyRhO9QOOEkIggeLFw';
 let _cache={};
 let CURRENT_ADMIN='admin';
-let CURRENT_PERMS={equip:true,gift:true,boss:true,perm:true,activity:true};
+let CURRENT_PERMS={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
 let CURRENT_IS_SUPER=false;
-const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',perm:'权限管理',activity:'活动管理'};
-const DEFAULT_PERMS={equip:false,gift:false,boss:false,perm:false,activity:false};
+const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',locations:'地图管理',perm:'权限管理',activity:'活动管理'};
+const DEFAULT_PERMS={equip:false,gift:false,boss:false,locations:false,perm:false,activity:false};
 
 async function api(table,opts={}){
   const cacheKey=table+'?'+(opts.query||'');
@@ -117,7 +165,11 @@ async function api(table,opts={}){
       headers:headers,
       body:opts.body?JSON.stringify(opts.body):undefined
     });
-    const data=await res.json();
+    if(!res.ok){console.error('API错误:',table,res.status);alert('接口错误:HTTP '+res.status+' 表:'+table);return [];}
+    /* 204/POST创建/DELETE等返回空body时，res.json()会抛"Unexpected end of JSON input"，改用text兼容 */
+    const txt=await res.text();
+    let data=null;
+    if(txt){try{data=JSON.parse(txt);}catch(e){data={ok:true};}}else{data={ok:true};}
     if(opts.method==='GET'&&Array.isArray(data)&&!opts.noCache)_cache[cacheKey]={t:Date.now(),data};
     return data;
   }catch(e){console.error('API错误:',table,e);alert('接口错误:'+e.message+' 表:'+table);return [];}
@@ -139,9 +191,9 @@ async function doLogin(){
   if(!Array.isArray(rows))rows=[];
   if(!rows.length){
     // 无管理员账号时，首个进入的账号自动置为超级管理员
-    const body={username:u,password:p,is_super:true,perms:{equip:true,gift:true,boss:true,perm:true,activity:true}};
+    const body={username:u,password:p,is_super:true,perms:{equip:true,gift:true,boss:true,locations:true,perm:true,activity:true}};
     await api('admin_accounts',{method:'POST',body:body,noCache:true});
-    CURRENT_ADMIN=u;CURRENT_IS_SUPER=true;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,{equip:true,gift:true,boss:true,perm:true,activity:true});
+    CURRENT_ADMIN=u;CURRENT_IS_SUPER=true;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,{equip:true,gift:true,boss:true,locations:true,perm:true,activity:true});
     localStorage.setItem('tmsg_admin','1');
     adminTip('首个账号已自动设为超级管理员');
     enterAdmin();
@@ -169,9 +221,13 @@ function enterAdmin(){
 function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
 
 function showPage(name,el){
+  /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',boss:'boss',locations:'locations',locations_edit:'locations',perm:'perm',activities:'activity',announce:'',chat:''};
+  const pk=permMap[name]||'';
+  if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',perm:'权限管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',boss:'BOSS管理',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -179,8 +235,11 @@ function showPage(name,el){
   if(name==='sponsor')renderSponsor(c);
   if(name==='items')renderItems(c);
   if(name==='equip')renderEquip(c);
+  if(name==='equip_edit')renderEquipEdit(c);
   if(name==='gift')renderGift(c);
   if(name==='boss')renderBoss(c);
+  if(name==='locations')renderLocations(c);
+  if(name==='locations_edit')renderLocationEdit(c);
   if(name==='perm')renderPerm(c);
   if(name==='activities')renderActivities(c);
   if(name==='announce')renderAnnounce(c);
@@ -226,10 +285,8 @@ async function loadUsers(){
 function openPoints(uname){
   document.getElementById('modalMask').style.display='flex';
   document.getElementById('modalBox').innerHTML=`<h3>给 ${uname} 加赞助积分</h3>
-    <div style="font-size:13px;color:#666;margin:10px 0 2px">积分数</div>
-    <input type="number" id="pointNum" placeholder="输入积分数" value="100">
-    <div style="font-size:13px;color:#666;margin:10px 0 2px">原因备注（选填，会写入赞助记录）</div>
-    <input type="text" id="pointReason" placeholder="如：充值100元" value="充值">
+    <label class="f"><span>积分数：</span><input type="number" id="pointNum" placeholder="输入积分数" value="100"></label>
+    <label class="f"><span>原因备注：</span><input type="text" id="pointReason" placeholder="如：充值100元" value="充值"></label>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="addPoints('${uname}')">提交</button></div>`;
 }
 function closeModal(){document.getElementById('modalMask').style.display='none';}
@@ -437,11 +494,11 @@ function editAct(id){
   }
 }
 function actFormHtml(a,id){
-  return `<input id="aActId" placeholder="活动标识(act_id)，如 egg/flip/signin/regGift/luckyshop" value="${a.act_id||''}">
-    <input id="aName" placeholder="活动名称" value="${a.name||''}">
-    <input id="aDesc" placeholder="活动说明(desc)" value="${a.desc||''}">
-    <input id="aView" placeholder="游戏视图(view)" value="${a.view||''}">
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="aEnabled" ${a.enabled!==false?'checked':''}> 启用</label>
+  return `<label class="f"><span>活动标识：</span><input id="aActId" placeholder="如 egg/flip/signin/regGift/luckyshop" value="${a.act_id||''}"></label>
+    <label class="f"><span>活动名称：</span><input id="aName" placeholder="活动名称" value="${a.name||''}"></label>
+    <label class="f"><span>活动说明：</span><input id="aDesc" placeholder="活动说明(desc)" value="${a.desc||''}"></label>
+    <label class="f"><span>游戏视图：</span><input id="aView" placeholder="游戏视图(view)" value="${a.view||''}"></label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="aEnabled" ${a.enabled!==false?'checked':''}> 启用</label>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAct(${id!=null?id:'null'})">保存</button></div>`;
 }
 async function saveAct(id){
@@ -463,7 +520,7 @@ async function loadAnns(){
 }
 function editAnn(id){
   document.getElementById('modalMask').style.display='flex';
-  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}公告</h3><input id="aTitle" placeholder="公告标题"><textarea id="aContent" rows="4" placeholder="公告内容"></textarea><div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAnn(${id})">保存</button></div>`;
+  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}公告</h3><label class="f"><span>公告标题：</span><input id="aTitle" placeholder="公告标题"></label><label class="f"><span>公告内容：</span><textarea id="aContent" rows="4" placeholder="公告内容"></textarea></label><div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAnn(${id})">保存</button></div>`;
 }
 async function saveAnn(id){
   const title=document.getElementById('aTitle').value,content=document.getElementById('aContent').value;
@@ -475,11 +532,28 @@ function delAnn(id){if(confirm('确定删除？')){api(`announcements?id=eq.${id
 async function renderChat(c){
   c.innerHTML=`<div class="card"><h3>公共频道消息</h3><div id="chatList">加载中...</div></div>`;
   const msgs=await api('chat?select=*&order=created_at.desc&limit=100').catch(()=>[]);
-  document.getElementById('chatList').innerHTML=msgs.map(m=>`<div style="padding:8px;border-bottom:1px solid #eee"><b style="color:#136ec2">${m.name}</b>: ${m.content} <span style="color:#999;font-size:12px">${(m.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无消息';
+  document.getElementById('chatList').innerHTML=msgs.map(m=>`<div style="padding:8px;border-bottom:1px solid #eee"><b style="color:#2266cc">${m.name}</b>: ${m.content} <span style="color:#999;font-size:12px">${(m.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无消息';
 }
 
 /* 装备管理 */
 const EQUIP_SLOTS={weapon:'武器',helm:'头盔',armor:'铠甲',pants:'护腿',gloves:'护手',shoes:'靴子',accessory:'饰品'};
+const EQUIP_JOBS=[['warrior','战士'],['assassin','刺客'],['warlock','术士'],['all','全职']];
+const EQUIP_JOB_LABELS={warrior:'战士',assassin:'刺客',warlock:'术士',all:'全职'};
+const EQUIP_ATTRS=[['atk','攻击'],['def','防御'],['hp','生命'],['mp','魔法'],['crit','暴击'],['dodge','闪避']];
+const ATTR_LABELS={atk:'攻击',def:'防御',hp:'生命',mp:'魔法',crit:'暴击',dodge:'闪避'};
+function toggleAttrInput(id){
+  const inp=document.getElementById(id);
+  if(inp)inp.style.display=(inp.style.display==='none')?'':'none';
+}
+function attrBlockHtml(prefix,valsMap,checkedMap){
+  return EQUIP_ATTRS.map(([k,label])=>{
+    const on=checkedMap&&checkedMap[k];
+    const v=valsMap&&valsMap[k]!=null?valsMap[k]:'';
+    const step=(k==='crit'||k==='dodge')?'0.01':'1';
+    return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${on?'':'display:none;'}width:140px;margin:0"></div>`;
+  }).join('');
+}
+function bossBidOf(x){return (typeof x==='object'&&x!=null)?(x.bid!=null?x.bid:x.name||''):String(x==null?'':x);}
 const DEFAULT_EQUIPS=[
   {slot:'weapon',name:'青釭剑',lvl:1,atk:20,def:0,hp:100,price:100},
   {slot:'weapon',name:'冷月枪',lvl:10,atk:60,def:0,hp:300,price:500},
@@ -536,59 +610,99 @@ async function loadEquips(){
   const rows=await api('admin_equips',{query:qs,noCache:true});
   _equipList=Array.isArray(rows)?rows:[];
   if(!_equipList.length){document.getElementById('equipList').innerHTML='<div class="err">暂无装备（云端 admin_equips 为空，首次登录将自动写入基础装备种子）</div>';return;}
-  document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>等级</th><th>品质</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>启用</th><th>操作</th></tr>'+
+  document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>职业</th><th>等级</th><th>品质</th><th>主属性</th><th>附加属性</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>启用</th><th>操作</th></tr>'+
     _equipList.map(e=>{
-      const qs2=(Array.isArray(e.quality)?e.quality:[]).join('/')||'普通';
+      const qs2=(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通';
+      const mains=[];if(e.atk)mains.push('攻'+e.atk);if(e.def)mains.push('防'+e.def);if(e.hp)mains.push('生'+e.hp);if(e.mp)mains.push('魔'+e.mp);if(e.crit)mains.push('暴'+e.crit);if(e.dodge)mains.push('闪'+e.dodge);
+      const subs=(Array.isArray(e.sub_stats)?e.sub_stats:[]).map(s=>{const lb=ATTR_LABELS[s.attr]||s.attr;return lb+' +'+(s.val!=null?s.val:'');}).join('、');
       const srcs=[];if(Array.isArray(e.source_bosses)&&e.source_bosses.length)srcs.push('BOSS');if(e.source_flip)srcs.push('翻牌');if(e.source_egg)srcs.push('砸蛋');
-      return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${e.lvl}</td><td>${qs2}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
+      return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
 }
+let _equipEditId=null,_equipEditData=null;
 async function editEquip(id){
-  let e={slot:'weapon',name:'',lvl:1,quality:['普通'],atk:0,def:0,hp:0,mp:0,crit:0,dodge:0,star3:false,price:100,source_bosses:[],source_flip:false,source_egg:false,enabled:true};
+  let e={slot:'weapon',name:'',lvl:1,quality:['普通'],atk:0,def:0,hp:0,mp:0,crit:0,dodge:0,sub_stats:[],star3:false,price:100,source_bosses:[],source_flip:false,source_egg:false,enabled:true};
   if(id){const rows=await api('admin_equips',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)e=rows[0];}
-  document.getElementById('modalMask').style.display='flex';
-  const quals=['普通','精良','卓越','史诗','神器'];
-  const eqQuals=Array.isArray(e.quality)&&e.quality.length?e.quality:['普通'];
-  const srcBoss=(Array.isArray(e.source_bosses)?e.source_bosses:[]).map(b=>`${b.bid} ${(b.rate!=null?b.rate:'')}`).join('\n');
-  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}装备</h3>
-    <select id="eSlot">${Object.entries(EQUIP_SLOTS).map(([k,v])=>`<option value="${k}" ${e.slot===k?'selected':''}>${v}</option>`).join('')}</select>
-    <input id="eName" placeholder="装备名（游戏按此名字合并生成）" value="${escTextarea(e.name)}">
-    <input id="eLvl" type="number" placeholder="需要等级" value="${e.lvl||1}">
-    <div style="font-size:13px;color:#666;margin:6px 0 2px">品质（可多选，游戏取第一个）</div>
-    <div>${quals.map(q=>`<label style="margin-right:10px;font-size:13px"><input type="checkbox" class="eQual" value="${q}" ${eqQuals.includes(q)?'checked':''}>${q}</label>`).join('')}</div>
-    <input id="eAtk" type="number" placeholder="攻击" value="${e.atk||0}">
-    <input id="eDef" type="number" placeholder="防御" value="${e.def||0}">
-    <input id="eHp" type="number" placeholder="生命" value="${e.hp||0}">
-    <input id="eMp" type="number" placeholder="内力" value="${e.mp||0}">
-    <input id="eCrit" type="number" step="0.01" placeholder="暴击率(如 0.05)" value="${e.crit||0}">
-    <input id="eDodge" type="number" step="0.01" placeholder="闪避率(如 0.05)" value="${e.dodge||0}">
-    <input id="ePrice" type="number" placeholder="价格(银两)" value="${e.price||100}">
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
-    <div style="font-size:13px;color:#666;margin:6px 0 2px">产出途径 - BOSS掉落（每行：BOSS标识 概率，如 圣兽青龙 0.3）</div>
-    <textarea id="eSourceBoss" rows="3" placeholder="圣兽青龙 0.3&#10;兽王翼虎 0.5">${escTextarea(srcBoss)}</textarea>
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="eSourceFlip" ${e.source_flip?'checked':''}> 翻牌奖池替换（加入 FLIP_POOL）</label>
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="eSourceEgg" ${e.source_egg?'checked':''}> 砸蛋奖池加入（EGG_POOL）</label>
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
-    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveEquip(${id!=null?id:'null'})">保存</button></div>`;
+  _equipEditId=id!=null?id:null;
+  _equipEditData=e;
+  showPage('equip_edit',document.querySelector('.menu-item[data-page="equip"]'));
+}
+function showEquipList(){
+  const c=document.getElementById('content');
+  renderEquip(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="equip"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='装备管理';
+}
+function renderEquipEdit(c){
+  const e=_equipEditData||{};
+  const id=_equipEditId;
+  const mainVals={atk:e.atk||0,def:e.def||0,hp:e.hp||0,mp:e.mp||0,crit:e.crit||0,dodge:e.dodge||0};
+  const mainChecked={};EQUIP_ATTRS.forEach(([k])=>{if(mainVals[k])mainChecked[k]=true;});
+  const subVals={};const subChecked={};
+  (Array.isArray(e.sub_stats)?e.sub_stats:[]).forEach(s=>{if(s&&s.attr){subVals[s.attr]=s.val;subChecked[s.attr]=true;}});
+  const eqQual=(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通';
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showEquipList()">← 返回装备列表</button><h3>${id?'编辑装备':'新增装备'}</h3></div>
+    <div class="ep-form">
+    <label class="f"><span>部位：</span><select id="eSlot">${Object.entries(EQUIP_SLOTS).map(([k,v])=>`<option value="${k}" ${e.slot===k?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label class="f"><span>装备名：</span><input id="eName" value="${escTextarea(e.name)}"></label>
+    <label class="f"><span>需要等级：</span><input id="eLvl" type="number" value="${e.lvl||1}"></label>
+    <label class="f"><span>品质：</span><select id="eQuality">${['普通','精良','卓越','史诗','神器'].map(q=>`<option value="${q}" ${eqQual===q?'selected':''}>${q}</option>`).join('')}</select></label>
+    <label class="f"><span>职业：</span><select id="eJob">${EQUIP_JOBS.map(([k,v])=>`<option value="${k}" ${(e.job||'all')===k?'selected':''}>${v}</option>`).join('')}</select></label>
+    <div class="form-group"><div class="fg-title">主属性（3星标准数值，勾选后填写，可多选）</div>
+    ${attrBlockHtml('eMain',mainVals,mainChecked)}</div>
+    <div class="form-group"><div class="fg-title">附加属性（勾选后填写数值，可多选，保存为 sub_stats）</div>
+    ${attrBlockHtml('eSub',subVals,subChecked)}</div>
+    <label class="f"><span>价格(银两)：</span><input id="ePrice" type="number" value="${e.price||100}"></label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
+    <div class="form-group"><div class="fg-title">产出BOSS（从 BOSS 管理列表多选，写入 source_bosses）</div>
+    <div style="max-height:140px;overflow:auto;border:1px solid #dfe6f2;border-radius:6px;padding:8px;background:#fff" id="epBossBox">加载中...</div></div>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eSourceFlip" ${e.source_flip?'checked':''}> 翻牌奖池替换（加入 FLIP_POOL）</label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eSourceEgg" ${e.source_egg?'checked':''}> 砸蛋奖池加入（EGG_POOL）</label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
+    <div class="ep-actions"><button class="btn btn-default" onclick="showEquipList()">取消</button><button class="btn btn-primary" onclick="saveEquip(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+  (async()=>{
+    let bossRows=[];
+    try{bossRows=await api('admin_bosses',{query:'select=bid,name&order=id.asc',noCache:true});}catch(err){bossRows=[];}
+    if(!Array.isArray(bossRows))bossRows=[];
+    const bossSel=new Set((Array.isArray(e.source_bosses)?e.source_bosses:[]).map(bossBidOf));
+    const box=document.getElementById('epBossBox');
+    if(box)box.innerHTML=bossRows.map(b=>`<label style="display:block;font-size:13px;color:#666;margin:2px 0"><input type="checkbox" class="eSrcBoss" value="${escTextarea(b.bid)}" ${bossSel.has(b.bid)?'checked':''}> ${b.name||b.bid}</label>`).join('')||'<span style="color:#999">暂无BOSS，请先在BOSS管理中创建</span>';
+  })();
 }
 function escTextarea(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 async function saveEquip(id){
-  const quals=Array.from(document.querySelectorAll('.eQual:checked')).map(x=>x.value);
-  const srcBossLines=document.getElementById('eSourceBoss').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  const source_bosses=srcBossLines.map(line=>{
-    const m=line.match(/^(\S+)\s+([\d.]+)%?$/);
-    return m?{bid:m[1],rate:parseFloat(m[2])}:{bid:line,rate:0.3};
+  const quality=[document.getElementById('eQuality').value];
+  const mains={};
+  EQUIP_ATTRS.forEach(([k])=>{
+    if(document.getElementById('eMain_cb_'+k).checked){
+      const v=parseFloat(document.getElementById('eMain_'+k).value);
+      if(!isNaN(v))mains[k]=v;
+    }
   });
+  const sub_stats=[];
+  EQUIP_ATTRS.forEach(([k])=>{
+    if(document.getElementById('eSub_cb_'+k).checked){
+      const v=parseFloat(document.getElementById('eSub_'+k).value);
+      if(!isNaN(v)&&v!==0)sub_stats.push({attr:k,val:v});
+    }
+  });
+  const source_bosses=Array.from(document.querySelectorAll('.eSrcBoss:checked')).map(x=>x.value);
   const obj={
     slot:document.getElementById('eSlot').value,
     name:document.getElementById('eName').value.trim(),
     lvl:parseInt(document.getElementById('eLvl').value)||1,
-    quality:quals.length?quals:['普通'],
-    atk:parseInt(document.getElementById('eAtk').value)||0,
-    def:parseInt(document.getElementById('eDef').value)||0,
-    hp:parseInt(document.getElementById('eHp').value)||0,
-    mp:parseInt(document.getElementById('eMp').value)||0,
-    crit:parseFloat(document.getElementById('eCrit').value)||0,
-    dodge:parseFloat(document.getElementById('eDodge').value)||0,
+    quality:quality,
+    job:document.getElementById('eJob').value,
+    atk:mains.atk||0,
+    def:mains.def||0,
+    hp:mains.hp||0,
+    mp:mains.mp||0,
+    crit:mains.crit||0,
+    dodge:mains.dodge||0,
+    sub_stats:sub_stats,
     star3:document.getElementById('eStar3').checked,
     price:parseInt(document.getElementById('ePrice').value)||100,
     source_bosses:source_bosses,
@@ -599,7 +713,7 @@ async function saveEquip(id){
   if(!obj.name){adminTip('请输入装备名');return;}
   if(id){await api(`admin_equips?id=eq.${id}`,{method:'PATCH',body:obj,noCache:true});}
   else{await api('admin_equips',{method:'POST',body:obj,noCache:true});}
-  closeModal();loadEquips();
+  showEquipList();
 }
 async function delEquip(id){if(!confirm('确定删除该装备配置？'))return;await api(`admin_equips?id=eq.${id}`,{method:'DELETE',noCache:true});loadEquips();}
 
@@ -638,14 +752,14 @@ function editGift(id){
 }
 function giftFormHtml(g,id){
   const rows=(Array.isArray(g.rewards)&&g.rewards.length?g.rewards:[{}]).map(r=>giftRowHtml(r)).join('');
-  return `<select id="gKind">${Object.entries(GIFT_KINDS).map(([k,v])=>`<option value="${k}" ${g.kind===k?'selected':''}>${v}</option>`).join('')}</select>
-    <input id="gName" placeholder="礼包名" value="${escTextarea(g.name)}">
-    <input id="gDesc" placeholder="说明" value="${escTextarea(g.desc)}">
-    <input id="gP" type="number" step="0.01" placeholder="触发概率%（如掉落/翻牌概率，0 表示不参与概率）" value="${(g.p!=null?g.p:'')}">
-    <div style="font-size:13px;color:#666;margin:6px 0 2px">奖励列表（类型+名称+数量+概率%）</div>
+  return `<label class="f"><span>礼包类型：</span><select id="gKind">${Object.entries(GIFT_KINDS).map(([k,v])=>`<option value="${k}" ${g.kind===k?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label class="f"><span>礼包名：</span><input id="gName" placeholder="礼包名" value="${escTextarea(g.name)}"></label>
+    <label class="f"><span>说明：</span><input id="gDesc" placeholder="说明" value="${escTextarea(g.desc)}"></label>
+    <label class="f"><span>触发概率%：</span><input id="gP" type="number" step="0.01" placeholder="如掉落/翻牌概率，0 表示不参与" value="${(g.p!=null?g.p:'')}"></label>
+    <div class="form-group"><div class="fg-title">奖励列表（类型+名称+数量+概率%）</div>
     <div id="giftRewards">${rows}</div>
-    <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button>
-    <label style="font-size:13px;color:#666;display:block;margin-top:6px"><input type="checkbox" id="gEnabled" ${g.enabled!==false?'checked':''}> 启用</label>
+    <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button></div>
+    <label style="font-size:14px;color:#44546b;display:block;margin-top:6px"><input type="checkbox" id="gEnabled" ${g.enabled!==false?'checked':''}> 启用</label>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveGift(${id!=null?id:'null'})">保存</button></div>`;
 }
 async function saveGift(id){
@@ -662,6 +776,29 @@ async function saveGift(id){
 async function delGift(id){if(!confirm('确定删除该礼包配置？'))return;await api(`admin_gifts?id=eq.${id}`,{method:'DELETE',noCache:true});renderGift(document.getElementById('content'));}
 
 /* ===== BOSS管理（云端表 admin_bosses，游戏运行时合并 MONSTER_DEFS） ===== */
+const ADMIN_MAPS={'中立城市': {'洛阳': ['七星阁(北区)', '东城楼(东区)', '东御道(北区)', '东门', '乌林', '乐东(东区)', '乐东前街(东区)', '乐东后街(东区)', '伏燕宫(北区)', '军营', '函谷(西区)', '北城楼(中区)', '北门', '华亭楼', '南门', '后殿', '大石山', '大石桥', '天月亭', '女兵营', '孟津关', '孟津关入口(中区)', '安南前街(南区)', '安南后街(南区)', '定北前街(中区)', '定北后街(中区)', '寒门(北区)', '战场', '无双殿(北区)', '曹营', '杂货铺', '栖雀宫', '汜水关', '洛阳东界', '洛阳南界', '洛阳南郊', '洛阳南门', '洛阳城', '洛阳宫(中区)', '洛阳广场(中区)', '洛阳西郊', '洛阳西门', '洛阳郊外', '洛阳铁匠铺(中区)', '特权V5地图', '玄武殿(北区)', '白虎殿(北区)', '西御道(北区)', '西郊', '西门', '邙岭', '钱庄(中区)', '镇西中街(中区)', '镇西后街(中区)', '青龙殿(北区)'], '下邳': ['下邳东界', '下邳东门', '下邳北界', '下邳北郊', '下邳北门', '下邳南郊', '下邳南门', '下邳广场(中区)', '下邳西界', '下邳西郊', '下邳西门', '东前街', '东后街', '东城楼', '东岭', '东郊', '北前街', '北后军营', '北后街', '北城楼', '南前街', '南后街', '南城', '南城楼', '古城', '吴中营', '吴仓', '吴右营', '吴左营', '吴火库', '太守府', '客栈', '密道一', '密道二', '小师桥', '小沛', '峡道', '张中营', '张右营', '张左营', '濡须', '粮草营', '茅屋', '药铺', '葛坡', '蜀中营', '蜀仓库', '蜀右营', '蜀左营', '蜀火库', '西中街', '西前街', '西后街', '西城楼', '诛仙剑阵', '逍遥津', '酒馆', '钱庄', '铁匠铺', '阵一', '阵三', '阵二', '阵口', '颍川', '驿站', '魏中营', '魏仓库', '魏右营', '魏左营', '魏火库'], '汉中': ['东东街(汉中中区)', '东中街(汉中中区)', '东前街(汉中中区)', '东后街(汉中中区)', '东城楼(汉中东区)', '东郊(汉中东区)', '东门(汉中东区)', '云台山(汉中西区)', '军营(汉中中区)', '北前街(汉中中区)', '北后街(汉中中区)', '北城楼(汉中北区)', '北门(汉中北区)', '华阳镇(汉中北区)', '南前街(汉中中区)', '南后街(汉中中区)', '南城楼(汉中南区)', '南门(汉中南区)', '古镇(汉中南区)', '吴中营(汉中东区)', '吴仓库(汉中东区)', '吴前营(汉中东区)', '吴右营(汉中东区)', '吴后营(汉中东区)', '吴左营(汉中东区)', '吴火库(汉中东区)', '太守府(汉中中区)', '客栈(汉中中区)', '汉中东界', '汉中北界', '汉中南界', '汉中广场(中区)', '汉中西界', '药铺(汉中中区)', '蜀中营(汉中南区)', '蜀仓库(汉中南区)', '蜀前营(汉中南区)', '蜀右营(汉中南区)', '蜀后营(汉中南区)', '蜀左营(汉中南区)', '蜀火库(汉中南区)', '西中街(汉中中区)', '西前街(汉中中区)', '西后街(汉中中区)', '西城楼(汉中西区)', '西柳湖(汉中西区)', '西郊(汉中西区)', '西门(汉中西区)', '诸葛亭(汉中北区)', '酒馆(汉中中区)', '钱庄(汉中中区)', '铁匠铺(汉中中区)', '青亭(汉中西区)', '驿站(汉中中区)', '魏中营(汉中北区)', '魏仓库(汉中北区)', '魏前营(汉中北区)', '魏右营(汉中北区)', '魏后营(汉中北区)', '魏左营(汉中北区)', '魏火库(汉中北区)', '鼓楼(汉中西区)'], '江陵': ['东前街(江陵中区)', '东后街(江陵中区)', '东城楼(江陵中区)', '东岳庙(江陵东区)', '东郊(江陵东区)', '东门(江陵东区)', '军营(江陵中区)', '北前街(江陵中区)', '北后街(江陵中区)', '北城楼(江陵中区)', '北郊(江陵北区)', '北门(江陵北区)', '南前街(江陵中区)', '南后街(江陵中区)', '南城楼(江陵中区)', '南郊(江陵南区)', '南门(江陵南区)', '吴中营(江陵东区)', '吴仓库(江陵东区)', '吴前营(江陵东区)', '吴右营(江陵东区)', '吴后营(江陵东区)', '吴左营(江陵东区)', '吴火库(江陵东区)', '城隍庙(江陵东区)', '太守府(江陵中区)', '客栈(江陵中区)', '江城河(江陵南区)', '江陵东界(江陵东区)', '江陵北界(江陵北区)', '江陵南界(江陵南区)', '江陵广场(中区)', '江陵西界(江陵西区)', '荆水门(江陵南区)', '药铺(江陵中区)', '蜀中营(江陵西区)', '蜀仓库(江陵西区)', '蜀前营(江陵西区)', '蜀右营(江陵西区)', '蜀后营(江陵西区)', '蜀左营(江陵西区)', '蜀火库(江陵西区)', '西中街(江陵中区)', '西前街(江陵中区)', '西后街(江陵中区)', '西城楼(江陵中区)', '西岭(江陵北区)', '西郊(江陵西区)', '西门(江陵西区)', '酒馆(江陵中区)', '钱庄(江陵中区)', '铁匠铺(江陵中区)', '驿站(江陵中区)', '魏中营(江陵北区)', '魏仓库(江陵北区)', '魏前营(江陵北区)', '魏右营(江陵北区)', '魏后营(江陵北区)', '魏左营(江陵北区)', '魏火库(江陵北区)', '龙子湖(江陵西区)']}, '魏国城镇': {'曹操故居': ['厢房(曹操故居)', '大殿(曹操故居)', '大院(曹操故居)'], '北平': ['东城楼(北平中区)', '乌桓部落(北平北区)', '云鹤崖(北平西区)', '冀南(北平南区)', '军营(北平东区)', '北城(北平中区)', '北平西界(北平西区)', '北街(北平中区)', '南城楼(北平中区)', '南街(北平中区)', '南门(北平南区)', '古道(北平西区)', '太守府(北平中区)', '客栈(北平中区)', '小巷(北平中区)', '常山(北平南区)', '广场(北平中区)', '技能馆(北平中区)', '易水湖(北平南区)', '燕山(北平北区)', '界桥(北平南区)', '白马(北平北区)', '磐河(北平南区)', '箭楼(北平中区)', '药铺(北平中区)', '菊花山(北平北区)', '西城楼(北平中区)', '西门(北平西区)', '观星台(北平中区)', '谷底洞天(北平北区)', '辽东(北平北区)', '钱庄(北平中区)', '铁匠铺(北平东区)', '长亭(北平西区)', '雪花谷(北平北区)', '驿站(北平中区)'], '晋阳': ['晋阳东界(晋阳东区)', '晋阳南界(晋阳北区)', '黑水河(晋阳东区)'], '许昌': ['东城楼(许昌中区)', '东门(许昌东区)', '军营(许昌中区)', '北城楼(许昌中区)', '北门(许昌北区)', '南城楼(许昌南区)', '南门(许昌南区)', '客栈(许昌中区)', '射鹿台(许昌东区)', '广场(许昌中区)', '战场(许昌中区)', '技能馆(许昌中区)', '护城河(许昌北区)', '春秋地(许昌东区)', '朱雀街(许昌中区)', '校军场(许昌中区)', '武宣殿(许昌中区)', '独木桥(许昌南区)', '玄武街(许昌中区)', '皇宫(许昌中区)', '药铺(许昌中区)', '虎豹山(许昌南区)', '许昌东界(许昌东区)', '许昌北界(许昌北区)', '许昌南界(许昌南区)', '钱庄(许昌中区)', '铁匠铺(许昌中区)', '铜雀台(许昌东区)', '陆小(许昌北区)', '青梅村(许昌中区)', '青龙街(许昌中区)', '风陵渡(许昌东区)', '驿站(许昌中区)']}, '其他区域': {'许都': ['技能馆', '许都东市', '许都南街', '许都城北', '许都郊外', '许都驿馆(中区)'], '虎牢关': ['虎牢关', '虎牢关(北区)'], '寒冰塔': ['寒冰一层中', '寒冰一层右1', '寒冰一层右2', '寒冰一层左1', '寒冰一层左2', '寒冰三层中', '寒冰三层右1', '寒冰三层右2', '寒冰三层左1', '寒冰三层左2', '寒冰二层中', '寒冰二层右1', '寒冰二层右2', '寒冰二层左1', '寒冰二层左2', '寒冰五层中', '寒冰五层右1', '寒冰五层右2', '寒冰五层左1', '寒冰五层左2', '寒冰四层中', '寒冰四层右1', '寒冰四层右2', '寒冰四层左1', '寒冰四层左2', '寒冰塔入口', '寒冰顶层']}};
+const ADMIN_MAP_GROUPS=Object.keys(ADMIN_MAPS);
+function bossMapFillCities(){
+  const g=document.getElementById('bMapGroup').value;
+  const cities=ADMIN_MAPS[g]?Object.keys(ADMIN_MAPS[g]):[];
+  document.getElementById('bMapCity').innerHTML=cities.map(c=>`<option value="${escTextarea(c)}">${c}</option>`).join('');
+  bossMapFillAreas();
+}
+function bossMapFillAreas(){
+  const g=document.getElementById('bMapGroup').value;
+  const c=document.getElementById('bMapCity').value;
+  const areas=(ADMIN_MAPS[g]&&ADMIN_MAPS[g][c])?ADMIN_MAPS[g][c]:[];
+  document.getElementById('bMapArea').innerHTML=areas.map(a=>`<option value="${escTextarea(a)}">${a}</option>`).join('');
+}
+function bossMapFind(mapName){
+  for(const g of ADMIN_MAP_GROUPS){
+    const cityMap=ADMIN_MAPS[g]||{};
+    for(const c of Object.keys(cityMap)){
+      if((cityMap[c]||[]).indexOf(mapName)>=0)return {group:g,city:c,area:mapName};
+    }
+  }
+  return null;
+}
 const BOSS_CATS=[['all','全部'],['shen','神兽/圣兽'],['ling','灵兽'],['wang','兽王'],['huo','活动兽']];
 const DEFAULT_BOSSES=[
   {bid:'圣兽朱雀',name:'【圣兽】朱雀',lvl:58,hp:2400000,atk:6000,def:12000,exp:50000,silver:50000,map:'北门',shared:true,respawn:86400,drop:[]},
@@ -703,35 +840,64 @@ async function loadBosses(){
   if(_bossCat!=='all')list=list.filter(b=>bossCat(b)===_bossCat);
   if(!list.length){document.getElementById('bossList').innerHTML='<div class="err">该分类暂无BOSS</div>';return;}
   document.getElementById('bossList').innerHTML='<table><tr><th>标识</th><th>BOSS名</th><th>等级</th><th>血量</th><th>攻击</th><th>防御</th><th>经验</th><th>银两</th><th>地图</th><th>共享</th><th>复活(秒)</th><th>掉落</th><th>启用</th><th>操作</th></tr>'+
-    list.map(b=>`<tr><td>${b.bid}</td><td>${b.name}</td><td>${b.lvl}</td><td>${(b.hp||0).toLocaleString()}</td><td>${b.atk}</td><td>${b.def}</td><td>${b.exp}</td><td>${b.silver}</td><td>${b.map}</td><td>${b.shared?'<span class="tag tag-on">共享</span>':'-'}</td><td>${b.respawn||0}</td><td>${(Array.isArray(b.drop)?b.drop:[]).length}</td><td>${b.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editBoss(${b.id})">编辑</button><button class="btn btn-danger" onclick="delBoss(${b.id})">删除</button></td></tr>`).join('')+'</table>';
+    list.map(b=>`<tr><td>${b.bid}</td><td>${b.name}</td><td>${b.lvl}</td><td>${(b.hp||0).toLocaleString()}</td><td>${b.atk}</td><td>${b.def}</td><td>${b.exp}</td><td>${b.silver}</td><td>${b.map}</td><td>${b.shared?'<span class="tag tag-on">共享</span>':'-'}</td><td>${b.respawn||0}</td><td>${(Array.isArray(b.drop)?b.drop:[]).length+(Array.isArray(b.drop_config)?b.drop_config:[]).length}</td><td>${b.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editBoss(${b.id})">编辑</button><button class="btn btn-danger" onclick="delBoss(${b.id})">删除</button></td></tr>`).join('')+'</table>';
 }
 async function editBoss(id){
   let b={bid:'',name:'',lvl:60,hp:100000,atk:1000,def:500,exp:10000,silver:5000,map:'',respawn:3600,shared:false,drop:[],enabled:true};
   if(id){const rows=await api('admin_bosses',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)b=rows[0];}
   document.getElementById('modalMask').style.display='flex';
-  const dropTxt=JSON.stringify(Array.isArray(b.drop)?b.drop:[],null,1);
+  const eqs=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
+  const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
+  _dcEquips=Array.isArray(eqs)?eqs:[];
+  _dcGifts=Array.isArray(gifts)?gifts:[];
+  _dropConfig=(Array.isArray(b.drop_config)?b.drop_config:[]).map(d=>({type:d.type==='equip'?'equip':'gift',cat:d.type==='equip'?'equip':(d.cat==='gift'?'gift':'item'),id:d.id,prob:d.prob,name:''}));
+  const curMap=bossMapFind(b.map);
+  const selGroup=curMap?curMap.group:ADMIN_MAP_GROUPS[0];
+  const cityMap=ADMIN_MAPS[selGroup]||{};
+  const cities=Object.keys(cityMap);
+  const selCity=curMap?curMap.city:cities[0];
+  const areas=(ADMIN_MAPS[selGroup]&&ADMIN_MAPS[selGroup][selCity])?ADMIN_MAPS[selGroup][selCity]:[];
+  const selArea=curMap?curMap.area:areas[0];
+  const groupOpts=ADMIN_MAP_GROUPS.map(g=>`<option value="${escTextarea(g)}" ${selGroup===g?'selected':''}>${g}</option>`).join('');
+  const cityOpts=cities.map(c=>`<option value="${escTextarea(c)}" ${selCity===c?'selected':''}>${c}</option>`).join('');
+  const areaOpts=areas.map(a=>`<option value="${escTextarea(a)}" ${selArea===a?'selected':''}>${a}</option>`).join('');
   document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}BOSS</h3>
-    <input id="bBid" placeholder="BOSS标识(bid)，需唯一" value="${escTextarea(b.bid)}">
-    <input id="bName" placeholder="BOSS名（含【圣兽】【灵兽】【兽王】【活】自动分类）" value="${escTextarea(b.name)}">
-    <input id="bLvl" type="number" placeholder="等级" value="${b.lvl||60}">
-    <input id="bHp" type="number" placeholder="血量" value="${b.hp||100000}">
-    <input id="bAtk" type="number" placeholder="攻击" value="${b.atk||1000}">
-    <input id="bDef" type="number" placeholder="防御" value="${b.def||500}">
-    <input id="bExp" type="number" placeholder="经验" value="${b.exp||10000}">
-    <input id="bSilver" type="number" placeholder="银两" value="${b.silver||5000}">
-    <input id="bMap" placeholder="地图(与游戏 MAPS 节点名对应)" value="${escTextarea(b.map)}">
-    <input id="bRespawn" type="number" placeholder="复活冷却(秒)" value="${b.respawn||3600}">
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="bShared" ${b.shared?'checked':''}> 全服共享BOSS</label>
-    <div style="font-size:13px;color:#666;margin:6px 0 2px">掉落配置(JSON数组：[{"name":"装备名","type":"weapon","job":"warrior","level":60,"rate":0.3}])</div>
-    <textarea id="bDrop" rows="4">${escTextarea(dropTxt)}</textarea>
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="bEnabled" ${b.enabled!==false?'checked':''}> 启用</label>
+    <label class="f"><span>BOSS标识：</span><input id="bBid" placeholder="需唯一" value="${escTextarea(b.bid)}"></label>
+    <label class="f"><span>BOSS名称：</span><input id="bName" placeholder="含【圣兽】【灵兽】【兽王】【活】自动分类" value="${escTextarea(b.name)}"></label>
+    <div class="form-group">
+    <label class="f"><span>等级：</span><input id="bLvl" type="number" value="${b.lvl||60}"></label>
+    <label class="f"><span>血量：</span><input id="bHp" type="number" value="${b.hp||100000}"></label>
+    <label class="f"><span>攻击：</span><input id="bAtk" type="number" value="${b.atk||1000}"></label>
+    <label class="f"><span>防御：</span><input id="bDef" type="number" value="${b.def||500}"></label>
+    <label class="f"><span>经验：</span><input id="bExp" type="number" value="${b.exp||10000}"></label>
+    <label class="f"><span>银两：</span><input id="bSilver" type="number" value="${b.silver||5000}"></label>
+    </div>
+    <div class="form-group"><div class="fg-title">地图（与游戏 MAPS 节点对应，三级联动选择地区）</div>
+    <label class="f"><span>地图：</span><select id="bMapGroup" onchange="bossMapFillCities()">${groupOpts}</select></label>
+    <label class="f"><span>城市：</span><select id="bMapCity" onchange="bossMapFillAreas()">${cityOpts}</select></label>
+    <label class="f"><span>地区：</span><select id="bMapArea">${areaOpts}</select></label></div>
+    <label class="f"><span>复活冷却(秒)：</span><input id="bRespawn" type="number" value="${b.respawn||3600}"></label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="bShared" ${b.shared?'checked':''}> 全服共享BOSS</label>
+    <div class="form-group"><div class="fg-title">掉落配置 drop_config（装备/道具/礼包 多选 + 概率%，jsonb 数组）</div>
+      <div class="fg-title" style="margin-top:8px">装备</div>
+      <div class="dc-add-row"><select id="dcEquipSel"></select><input id="dcEquipProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('equip')">添加</button></div>
+      <div id="dcEquipList"></div>
+      <div class="fg-title" style="margin-top:8px">道具</div>
+      <div class="dc-add-row"><select id="dcItemSel"></select><input id="dcItemProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('item')">添加</button></div>
+      <div id="dcItemList"></div>
+      <div class="fg-title" style="margin-top:8px">礼包</div>
+      <div class="dc-add-row"><select id="dcGiftSel"></select><input id="dcGiftProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('gift')">添加</button></div>
+      <div id="dcGiftList"></div>
+      <div class="fg-note">保存写入 drop_config：[{type:'equip'|'gift', id, prob}]；若表无该列请先执行 ALTER TABLE public.admin_bosses ADD COLUMN IF NOT EXISTS drop_config jsonb NOT NULL DEFAULT '[]'</div>
+    </div>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="bEnabled" ${b.enabled!==false?'checked':''}> 启用</label>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveBoss(${id!=null?id:'null'})">保存</button></div>`;
+  dcFillOptions();dcRender();
 }
 async function saveBoss(id){
-  let drop=[];
-  try{drop=JSON.parse(document.getElementById('bDrop').value)||[];}catch(e){adminTip('掉落配置不是合法JSON');return;}
-  if(!Array.isArray(drop)){adminTip('掉落配置需为数组');return;}
-  const body={bid:document.getElementById('bBid').value.trim(),name:document.getElementById('bName').value.trim(),lvl:parseInt(document.getElementById('bLvl').value)||60,hp:parseInt(document.getElementById('bHp').value)||0,atk:parseInt(document.getElementById('bAtk').value)||0,def:parseInt(document.getElementById('bDef').value)||0,exp:parseInt(document.getElementById('bExp').value)||0,silver:parseInt(document.getElementById('bSilver').value)||0,map:document.getElementById('bMap').value.trim(),respawn:parseInt(document.getElementById('bRespawn').value)||3600,shared:document.getElementById('bShared').checked,drop:drop,enabled:document.getElementById('bEnabled').checked};
+  const drop_config=_dropConfig.map(d=>({type:d.type,id:d.id,prob:d.prob}));
+  const body={bid:document.getElementById('bBid').value.trim(),name:document.getElementById('bName').value.trim(),lvl:parseInt(document.getElementById('bLvl').value)||60,hp:parseInt(document.getElementById('bHp').value)||0,atk:parseInt(document.getElementById('bAtk').value)||0,def:parseInt(document.getElementById('bDef').value)||0,exp:parseInt(document.getElementById('bExp').value)||0,silver:parseInt(document.getElementById('bSilver').value)||0,map:document.getElementById('bMapArea').value,respawn:parseInt(document.getElementById('bRespawn').value)||3600,shared:document.getElementById('bShared').checked,drop_config:drop_config,enabled:document.getElementById('bEnabled').checked};
+  if(!id)body.drop=[];
   if(!body.bid||!body.name){adminTip('请填写BOSS标识与名称');return;}
   if(id){await api(`admin_bosses?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
   else{await api('admin_bosses',{method:'POST',body,noCache:true});}
@@ -739,16 +905,298 @@ async function saveBoss(id){
 }
 async function delBoss(id){if(!confirm('确定删除该BOSS配置？'))return;await api(`admin_bosses?id=eq.${id}`,{method:'DELETE',noCache:true});loadBosses();}
 
+/* ===== BOSS 掉落配置（drop_config jsonb：装备/道具/礼包 多选+概率%） ===== */
+let _dropConfig=[],_dcEquips=[],_dcGifts=[];
+function dcFillOptions(){
+  const qualOrder={'普通':0,'精良':1,'卓越':2,'史诗':3,'神器':4};
+  const eqs=[..._dcEquips].sort((a,b)=>{
+    const qa=(Array.isArray(a.quality)&&a.quality.length)?a.quality[0]:'普通';
+    const qb=(Array.isArray(b.quality)&&b.quality.length)?b.quality[0]:'普通';
+    return (qualOrder[qa]||0)-(qualOrder[qb]||0)||String(a.name||'').localeCompare(String(b.name||''),'zh');
+  });
+  const eqSel=document.getElementById('dcEquipSel');
+  if(eqSel)eqSel.innerHTML='<option value="">选择装备</option>'+eqs.map(e=>`<option value="${e.id}">${escTextarea(e.name)}（${(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通'}）</option>`).join('');
+  const itemSel=document.getElementById('dcItemSel');
+  if(itemSel)itemSel.innerHTML='<option value="">选择道具</option>'+_dcGifts.map(g=>`<option value="${g.id}">${escTextarea(g.name)}</option>`).join('');
+  const giftSel=document.getElementById('dcGiftSel');
+  if(giftSel)giftSel.innerHTML='<option value="">选择礼包</option>'+_dcGifts.map(g=>`<option value="${g.id}">${escTextarea(g.name)}</option>`).join('');
+}
+function dcAdd(cat){
+  const conf={equip:['dcEquipSel','dcEquipProb','equip','equip'],item:['dcItemSel','dcItemProb','gift','item'],gift:['dcGiftSel','dcGiftProb','gift','gift']};
+  const [selId,probId,type,cat2]=conf[cat];
+  const sel=document.getElementById(selId);const probEl=document.getElementById(probId);
+  const id=parseInt(sel.value);
+  const prob=parseFloat(probEl.value);
+  if(!id||isNaN(prob)||prob<=0){adminTip('请选择条目并填写大于0的概率%');return;}
+  const pool=cat==='equip'?_dcEquips:_dcGifts;
+  const obj=pool.find(x=>x.id===id);
+  _dropConfig.push({type:type,cat:cat2,id:id,prob:prob,name:obj?obj.name:('#'+id)});
+  probEl.value='';
+  dcRender();
+}
+function dcRemove(cat,idx){
+  const arr=_dropConfig.filter(x=>x.cat===cat);
+  const t=arr[idx];
+  if(!t)return;
+  const i=_dropConfig.indexOf(t);
+  if(i>=0)_dropConfig.splice(i,1);
+  dcRender();
+}
+function dcRender(){
+  const labels={equip:'装备',item:'道具',gift:'礼包'};
+  const colors={equip:'#2266cc',item:'#fa8c16',gift:'#1a9c50'};
+  ['equip','item','gift'].forEach(cat=>{
+    const list=document.getElementById('dc'+cat.charAt(0).toUpperCase()+cat.slice(1)+'List');
+    if(!list)return;
+    const arr=_dropConfig.filter(x=>x.cat===cat);
+    list.innerHTML=arr.length?arr.map((d,i)=>`<div class="dc-row"><span class="tag" style="background:#eef3ff;color:${colors[cat]};border:1px solid #d5e2ff">${labels[cat]}</span><span style="flex:1;color:#33445f">${escTextarea(d.name)}</span><b style="color:#fa8c16">${d.prob}%</b><button class="btn btn-danger" onclick="dcRemove('${cat}',${i})">删除</button></div>`).join(''):'<div style="color:#9aa5b8;font-size:13px;padding:4px 0">暂无配置</div>';
+  });
+}
+
+/* ===== 地图管理（云端表 admin_locations，游戏 MAPS 全量地点 + 野怪/BOSS/NPC 配置） ===== */
+let _locTab='中立城市';
+let _locList=[];
+let _locEditId=null,_locEditData=null;
+let _locDropConfig=[],_locEquips=[],_locGifts=[],_locBosses=[];
+let _locParentPool=[];
+const LOC_TABS=[['中立城市','中立地图'],['魏国城镇','本国地图'],['其他区域','其他区域']];
+const LOC_REGIONS=['','北区','中区','南区','东区','西区'];
+const LOC_NPC_TYPES=[['','—'],['野怪','野怪'],['BOSS','BOSS'],['NPC','NPC']];
+function locPath(r){
+  const parts=[r.city];
+  if(r.region)parts.push(r.region);
+  if(r.parent)parts.push(r.parent);
+  parts.push(r.name);
+  return parts.join('-');
+}
+async function renderLocations(c){
+  c.innerHTML=`<div class="card">
+    <div style="margin-bottom:12px">
+      <button class="btn btn-primary" onclick="editLocation()">新增地点</button>
+      <button class="btn btn-default" onclick="loadLocations()">刷新列表</button>
+      <span style="color:#999;font-size:12px">后台保存写入 admin_locations；游戏端 tmsg.html 后续经 /sbrest 拉取本表合并生成（本次仅后台侧就绪，游戏端合并逻辑后续单独处理）</span>
+    </div>
+    <div style="margin-bottom:12px">${LOC_TABS.map(([k,v])=>`<button class="btn ${k===_locTab?'btn-primary':'btn-default'}" data-loctab="${k}" onclick="locSetTab('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="locList">加载中...</div>
+  </div>`;
+  loadLocations();
+}
+function locSetTab(k){
+  _locTab=k;
+  document.querySelectorAll('[data-loctab]').forEach(b=>b.className='btn '+(b.getAttribute('data-loctab')===k?'btn-primary':'btn-default'));
+  loadLocations();
+}
+async function loadLocations(){
+  const rows=await api('admin_locations',{query:`select=*&map_name=eq.${encodeURIComponent(_locTab)}&order=city.asc,id.asc`,noCache:true});
+  if(!Array.isArray(rows)){
+    document.getElementById('locList').innerHTML='<div class="err">admin_locations 表不存在：请先在 Supabase SQL Editor 执行 init_admin_tables.sql（含建表+374条地点种子）</div>';
+    return;
+  }
+  _locList=rows;
+  if(!_locList.length){document.getElementById('locList').innerHTML='<div class="err">该分组暂无地点数据（种子导入后自动出现）</div>';return;}
+  document.getElementById('locList').innerHTML='<table><tr><th>层级路径</th><th>城市</th><th>区域</th><th>NPC类型</th><th>NPC名称</th><th>等级</th><th>启用</th><th>更新时间</th><th>操作</th></tr>'+
+    _locList.map(r=>{
+      const npcTag=r.npc_type==='BOSS'?'<span class="tag" style="background:#fff7e6;color:#fa8c16;border:1px solid #ffd591">BOSS</span>':r.npc_type==='野怪'?'<span class="tag" style="background:#eef3ff;color:#2266cc;border:1px solid #d5e2ff">野怪</span>':r.npc_type==='NPC'?'<span class="tag tag-vip">NPC</span>':'<span class="tag">区域</span>';
+      return `<tr><td style="text-align:left">${locPath(r)}</td><td>${r.city}</td><td>${r.region||'-'}</td><td>${npcTag}</td><td>${r.npc_name||'-'}</td><td>${r.npc_level||'-'}</td><td>${r.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td>${(r.updated_at||r.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editLocation(${r.id})">编辑</button><button class="btn btn-danger" onclick="delLocation(${r.id},'${locPath(r).replace(/'/g,"\\'")}')">删除</button></td></tr>`;}).join('')+'</table>';
+}
+async function editLocation(id){
+  let r={map_name:_locTab,city:'',region:'',parent:'',name:'',npc_type:'野怪',npc_name:'',npc_level:1,respawn:0,hp:0,atk:0,def:0,crit:0,boss_id:'',drop_items:[],npc_talk:'',enabled:true};
+  if(id){const rows=await api('admin_locations',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)r=rows[0];}
+  _locEditId=id!=null?id:null;
+  _locEditData=Object.assign({},r);
+  const eqs=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
+  const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
+  const bosses=await api('admin_bosses',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
+  _locEquips=Array.isArray(eqs)?eqs:[];
+  _locGifts=Array.isArray(gifts)?gifts:[];
+  _locBosses=Array.isArray(bosses)?bosses:[];
+  const pool=await api('admin_locations',{query:`select=*&map_name=eq.${encodeURIComponent(r.map_name||_locTab)}`,noCache:true}).catch(()=>[]);
+  _locParentPool=Array.isArray(pool)?pool:[];
+  _locDropConfig=(Array.isArray(r.drop_items)?r.drop_items:[]).map(d=>({type:d.type==='equip'?'equip':'gift',cat:d.type==='equip'?'equip':(d.cat==='gift'?'gift':'item'),id:d.id,prob:d.prob,name:''}));
+  showPage('locations_edit',document.querySelector('.menu-item[data-page="locations"]'));
+}
+function showLocationList(){
+  const c=document.getElementById('content');
+  renderLocations(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="locations"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='地图管理';
+}
+async function renderLocationEdit(c){
+  const r=_locEditData||{};
+  const id=_locEditId;
+  const curGroup=ADMIN_MAPS[r.map_name]?r.map_name:LOC_TABS[0][0];
+  const cityMap=ADMIN_MAPS[curGroup]||{};
+  const cities=Object.keys(cityMap);
+  const selCity=cityMap[r.city]?r.city:(cities[0]||'');
+  const groupOpts=LOC_TABS.map(([k,v])=>`<option value="${escTextarea(k)}" ${curGroup===k?'selected':''}>${v}</option>`).join('');
+  const cityOpts=cities.map(cc=>`<option value="${escTextarea(cc)}" ${selCity===cc?'selected':''}>${cc}</option>`).join('');
+  const regionOpts=LOC_REGIONS.map(x=>`<option value="${escTextarea(x)}" ${(r.region||'')===x?'selected':''}>${x||'—（无）'}</option>`).join('');
+  const npcOpts=LOC_NPC_TYPES.map(([v,lab])=>`<option value="${escTextarea(v)}" ${(r.npc_type||'')===v?'selected':''}>${lab}</option>`).join('');
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showLocationList()">← 返回地图列表</button><h3>${id?'编辑地点':'新增地点'}</h3></div>
+    <div class="ep-form">
+    <div class="form-group"><div class="fg-title">归属（地图-城市-区域-上级地点 层级路径）</div>
+    <label class="f"><span>地图：</span><select id="lMapGroup" onchange="locFillCities()">${groupOpts}</select></label>
+    <label class="f"><span>城市：</span><select id="lCity" onchange="locFillAreas()">${cityOpts}</select></label>
+    <label class="f"><span>区域：</span><select id="lRegion">${regionOpts}</select></label>
+    <label class="f"><span>上级地点：</span><select id="lParent"></select></label>
+    <label class="f"><span>地点名称：</span><input id="lName" placeholder="如 东城楼(东区)" value="${escTextarea(r.name)}"></label></div>
+    <label class="f"><span>NPC类型：</span><select id="lNpcType" onchange="locRenderTypeForm()">${npcOpts}</select></label>
+    <div id="locTypeForm"></div>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="lEnabled" ${r.enabled!==false?'checked':''}> 启用</label>
+    <div class="ep-actions"><button class="btn btn-default" onclick="showLocationList()">取消</button><button class="btn btn-primary" onclick="saveLocation(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+  locFillParents();
+  locRenderTypeForm();
+}
+function locFillCities(){
+  const g=document.getElementById('lMapGroup').value;
+  const cityMap=ADMIN_MAPS[g]||{};
+  const cities=Object.keys(cityMap);
+  document.getElementById('lCity').innerHTML=cities.map(c=>`<option value="${escTextarea(c)}">${c}</option>`).join('');
+  locFillAreas();
+}
+function locFillAreas(){
+  locFillParents();
+}
+function locFillParents(){
+  const g=document.getElementById('lMapGroup').value;
+  const c=document.getElementById('lCity').value;
+  const cur=_locEditData||{};
+  const names=[];
+  const pool=_locParentPool.length?_locParentPool:(_locList||[]);
+  pool.forEach(x=>{if(x.map_name===g&&x.city===c&&x.name&&x.id!==_locEditId&&names.indexOf(x.name)<0)names.push(x.name);});
+  document.getElementById('lParent').innerHTML='<option value="">无（直接挂城市/区域下）</option>'+names.map(n=>`<option value="${escTextarea(n)}" ${(cur.parent||'')===n?'selected':''}>${n}</option>`).join('');
+}
+function locRenderTypeForm(){
+  const t=document.getElementById('lNpcType').value;
+  const r=_locEditData||{};
+  const box=document.getElementById('locTypeForm');
+  if(t==='野怪'){
+    box.innerHTML=`<div class="form-group"><div class="fg-title">野怪配置（等级/刷新/属性/掉落）</div>
+      <label class="f"><span>野怪名称：</span><input id="lNpcName" value="${escTextarea(r.npc_name||'')}"></label>
+      <label class="f"><span>等级：</span><input id="lNpcLevel" type="number" value="${r.npc_level||1}"></label>
+      <label class="f"><span>刷新时间(秒)：</span><input id="lRespawn" type="number" value="${r.respawn!=null?r.respawn:0}"></label>
+      <label class="f"><span>血量：</span><input id="lHp" type="number" value="${r.hp||0}"></label>
+      <label class="f"><span>攻击：</span><input id="lAtk" type="number" value="${r.atk||0}"></label>
+      <label class="f"><span>防御：</span><input id="lDef" type="number" value="${r.def||0}"></label>
+      <label class="f"><span>暴击：</span><input id="lCrit" type="number" value="${r.crit||0}"></label>
+      <div class="fg-title" style="margin-top:8px">掉落物品（装备/道具/礼包 多选 + 概率%，写入 drop_items jsonb）</div>
+      <div class="dc-add-row"><select id="locEquipSel"></select><input id="locEquipProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="locDcAdd('equip')">添加</button></div>
+      <div id="locEquipList"></div>
+      <div class="dc-add-row"><select id="locItemSel"></select><input id="locItemProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="locDcAdd('item')">添加</button></div>
+      <div id="locItemList"></div>
+      <div class="dc-add-row"><select id="locGiftSel"></select><input id="locGiftProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="locDcAdd('gift')">添加</button></div>
+      <div id="locGiftList"></div>
+      <div class="fg-note">刷新时间 0=击杀即复活；格式 [{type:'equip'|'gift', id, prob}]</div>
+    </div>`;
+    locDcFillOptions();locDcRender();
+  }else if(t==='BOSS'){
+    box.innerHTML=`<div class="form-group"><div class="fg-title">BOSS 关联（从 admin_bosses 选择，保存 boss_id）</div>
+      <label class="f"><span>关联BOSS：</span><select id="lBossId">${_locBosses.map(b=>`<option value="${escTextarea(b.bid)}" ${(r.boss_id||'')===b.bid?'selected':''}>${escTextarea(b.name||b.bid)}（${escTextarea(b.bid)}）</option>`).join('')}</select></label>
+      <div class="fg-note">BOSS 等级/属性/掉落以 admin_bosses 为准；此处仅建立地点到 BOSS 的关联</div>
+    </div>`;
+  }else if(t==='NPC'){
+    box.innerHTML=`<div class="form-group"><div class="fg-title">NPC 配置（谈话内容）</div>
+      <label class="f"><span>NPC名称：</span><input id="lNpcName" value="${escTextarea(r.npc_name||'')}"></label>
+      <label class="f"><span>谈话内容：</span><textarea id="lNpcTalk" rows="4" style="width:100%;box-sizing:border-box">${escTextarea(r.npc_talk||'')}</textarea></label>
+    </div>`;
+  }else{
+    box.innerHTML='<div class="fg-note" style="color:#9aa5b8">未选 NPC 类型：该地点仅作为地图层级节点展示</div>';
+  }
+}
+async function saveLocation(id){
+  const map_name=document.getElementById('lMapGroup').value;
+  const city=document.getElementById('lCity').value;
+  const region=document.getElementById('lRegion').value;
+  const parent=document.getElementById('lParent').value;
+  const name=document.getElementById('lName').value.trim();
+  const npc_type=document.getElementById('lNpcType').value;
+  if(!name){adminTip('请输入地点名称');return;}
+  const body={map_name:map_name,city:city,region:region,parent:parent,name:name,npc_type:npc_type,enabled:document.getElementById('lEnabled').checked,
+    npc_name:'',npc_level:0,respawn:0,hp:0,atk:0,def:0,crit:0,boss_id:'',drop_items:[],npc_talk:''};
+  if(npc_type==='野怪'){
+    body.npc_name=document.getElementById('lNpcName').value.trim();
+    body.npc_level=parseInt(document.getElementById('lNpcLevel').value)||1;
+    body.respawn=parseInt(document.getElementById('lRespawn').value)||0;
+    body.hp=parseInt(document.getElementById('lHp').value)||0;
+    body.atk=parseInt(document.getElementById('lAtk').value)||0;
+    body.def=parseInt(document.getElementById('lDef').value)||0;
+    body.crit=parseInt(document.getElementById('lCrit').value)||0;
+    body.drop_items=_locDropConfig.map(d=>({type:d.type,id:d.id,prob:d.prob}));
+  }else if(npc_type==='BOSS'){
+    body.boss_id=document.getElementById('lBossId').value;
+    const b=_locBosses.find(x=>x.bid===body.boss_id);
+    if(b)body.npc_name=b.name||b.bid;
+  }else if(npc_type==='NPC'){
+    body.npc_name=document.getElementById('lNpcName').value.trim();
+    body.npc_talk=document.getElementById('lNpcTalk').value;
+  }
+  if(id){await api(`admin_locations?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{await api('admin_locations',{method:'POST',body,noCache:true});}
+  showLocationList();
+}
+async function delLocation(id,path){if(!confirm('确定删除地点：'+path+' ？'))return;await api(`admin_locations?id=eq.${id}`,{method:'DELETE',noCache:true});loadLocations();}
+
+/* ===== 地点掉落配置（locDc*：与 BOSS 掉落组件同构，独立状态防串扰） ===== */
+function locDcFillOptions(){
+  const qualOrder={'普通':0,'精良':1,'卓越':2,'史诗':3,'神器':4};
+  const eqs=[..._locEquips].sort((a,b)=>{
+    const qa=(Array.isArray(a.quality)&&a.quality.length)?a.quality[0]:'普通';
+    const qb=(Array.isArray(b.quality)&&b.quality.length)?b.quality[0]:'普通';
+    return (qualOrder[qa]||0)-(qualOrder[qb]||0)||String(a.name||'').localeCompare(String(b.name||''),'zh');
+  });
+  const eqSel=document.getElementById('locEquipSel');
+  if(eqSel)eqSel.innerHTML='<option value="">选择装备</option>'+eqs.map(e=>`<option value="${e.id}">${escTextarea(e.name)}（${(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通'}）</option>`).join('');
+  const itemSel=document.getElementById('locItemSel');
+  if(itemSel)itemSel.innerHTML='<option value="">选择道具</option>'+_locGifts.map(g=>`<option value="${g.id}">${escTextarea(g.name)}</option>`).join('');
+  const giftSel=document.getElementById('locGiftSel');
+  if(giftSel)giftSel.innerHTML='<option value="">选择礼包</option>'+_locGifts.map(g=>`<option value="${g.id}">${escTextarea(g.name)}</option>`).join('');
+}
+function locDcAdd(cat){
+  const conf={equip:['locEquipSel','locEquipProb','equip','equip'],item:['locItemSel','locItemProb','gift','item'],gift:['locGiftSel','locGiftProb','gift','gift']};
+  const [selId,probId,type,cat2]=conf[cat];
+  const sel=document.getElementById(selId);const probEl=document.getElementById(probId);
+  const id=parseInt(sel.value);
+  const prob=parseFloat(probEl.value);
+  if(!id||isNaN(prob)||prob<=0){adminTip('请选择条目并填写大于0的概率%');return;}
+  const pool=cat==='equip'?_locEquips:_locGifts;
+  const obj=pool.find(x=>x.id===id);
+  _locDropConfig.push({type:type,cat:cat2,id:id,prob:prob,name:obj?obj.name:('#'+id)});
+  probEl.value='';
+  locDcRender();
+}
+function locDcRemove(cat,idx){
+  const arr=_locDropConfig.filter(x=>x.cat===cat);
+  const t=arr[idx];
+  if(!t)return;
+  const i=_locDropConfig.indexOf(t);
+  if(i>=0)_locDropConfig.splice(i,1);
+  locDcRender();
+}
+function locDcRender(){
+  const labels={equip:'装备',item:'道具',gift:'礼包'};
+  const colors={equip:'#2266cc',item:'#fa8c16',gift:'#1a9c50'};
+  ['equip','item','gift'].forEach(cat=>{
+    const list=document.getElementById('loc'+cat.charAt(0).toUpperCase()+cat.slice(1)+'List');
+    if(!list)return;
+    const arr=_locDropConfig.filter(x=>x.cat===cat);
+    list.innerHTML=arr.length?arr.map((d,i)=>`<div class="dc-row"><span class="tag" style="background:#eef3ff;color:${colors[cat]};border:1px solid #d5e2ff">${labels[cat]}</span><span style="flex:1;color:#33445f">${escTextarea(d.name)}</span><b style="color:#fa8c16">${d.prob}%</b><button class="btn btn-danger" onclick="locDcRemove('${cat}',${i})">删除</button></div>`).join(''):'<div style="color:#9aa5b8;font-size:13px;padding:4px 0">暂无配置</div>';
+  });
+}
+
 /* ===== 权限管理（admin_accounts + 五模块菜单权限） ===== */
 async function renderPerm(c){
-  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editPerm()">新增管理员</button> <span style="color:#999;font-size:12px">菜单权限位：装备/礼包/BOSS/权限/活动；无权限账号登录后仅显示有权限的菜单；超管拥有全部权限</span></div><div class="table-wrap" id="permList">加载中...</div></div>`;
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editPerm()">新增管理员</button> <span style="color:#999;font-size:12px">菜单权限位：装备/礼包/BOSS/地图/权限/活动；无权限账号登录后仅显示有权限的菜单；超管拥有全部权限</span></div><div class="table-wrap" id="permList">加载中...</div></div>`;
   const rows=await api('admin_accounts',{query:'select=*&order=id.asc',noCache:true});
   if(!Array.isArray(rows)||!rows.length){document.getElementById('permList').innerHTML='<div class="err">暂无管理员账号</div>';return;}
-  document.getElementById('permList').innerHTML='<table><tr><th>ID</th><th>账号</th><th>密码</th><th>类型</th><th>装备</th><th>礼包</th><th>BOSS</th><th>权限</th><th>活动</th><th>创建时间</th><th>操作</th></tr>'+
+  document.getElementById('permList').innerHTML='<table><tr><th>ID</th><th>账号</th><th>密码</th><th>类型</th><th>装备</th><th>礼包</th><th>BOSS</th><th>地图</th><th>权限</th><th>活动</th><th>创建时间</th><th>操作</th></tr>'+
     rows.map(a=>{
       const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
       const tag=v=>v?'<span class="tag tag-on">有</span>':'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">无</span>';
-      return `<tr><td>${a.id}</td><td>${a.username}</td><td>******</td><td>${a.is_super?'<span class="tag tag-vip">超管</span>':'<span class="tag">普通</span>'}</td><td>${tag(pm.equip)}</td><td>${tag(pm.gift)}</td><td>${tag(pm.boss)}</td><td>${tag(pm.perm)}</td><td>${tag(pm.activity)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editPerm(${a.id})">编辑</button><button class="btn btn-danger" onclick="delPerm(${a.id},'${a.username}')">删除</button></td></tr>`;}).join('')+'</table>';
+      return `<tr><td>${a.id}</td><td>${a.username}</td><td>******</td><td>${a.is_super?'<span class="tag tag-vip">超管</span>':'<span class="tag">普通</span>'}</td><td>${tag(pm.equip)}</td><td>${tag(pm.gift)}</td><td>${tag(pm.boss)}</td><td>${tag(pm.locations)}</td><td>${tag(pm.perm)}</td><td>${tag(pm.activity)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editPerm(${a.id})">编辑</button><button class="btn btn-danger" onclick="delPerm(${a.id},'${a.username}')">删除</button></td></tr>`;}).join('')+'</table>';
 }
 function editPerm(id){
   document.getElementById('modalMask').style.display='flex';
@@ -765,29 +1213,29 @@ function editPerm(id){
 }
 function permFormHtml(a,id){
   const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
-  const cb=(k,label)=>`<label style="margin-right:12px;font-size:13px"><input type="checkbox" id="p${k}" ${pm[k]?'checked':''}> ${label}</label>`;
-  return `<input id="pUser" placeholder="账号" value="${escTextarea(a.username)}" ${id?'disabled':''}>
-    <input id="pPass" type="password" placeholder="${id?'新密码（留空则不修改）':'密码'}">
-    <label style="font-size:13px;color:#666"><input type="checkbox" id="pSuper" ${a.is_super?'checked':''}> 超级管理员（拥有全部菜单权限）</label>
-    <div style="font-size:13px;color:#666;margin:8px 0 2px">五模块菜单权限</div>
-    <div>${cb('equip','装备')}${cb('gift','礼包')}${cb('boss','BOSS')}${cb('perm','权限')}${cb('activity','活动')}</div>
+  const cb=(k,label)=>`<label style="margin-right:12px;font-size:14px;color:#44546b"><input type="checkbox" id="p${k}" ${pm[k]?'checked':''}> ${label}</label>`;
+  return `<label class="f"><span>账号：</span><input id="pUser" placeholder="账号" value="${escTextarea(a.username)}" ${id?'disabled':''}></label>
+    <label class="f"><span>密码：</span><input id="pPass" type="password" placeholder="${id?'新密码（留空则不修改）':'密码'}"></label>
+    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="pSuper" ${a.is_super?'checked':''}> 超级管理员（拥有全部菜单权限）</label>
+    <div class="form-group"><div class="fg-title">六模块菜单权限</div>
+    <div>${cb('equip','装备')}${cb('gift','礼包')}${cb('boss','BOSS')}${cb('locations','地图')}${cb('perm','权限')}${cb('activity','活动')}</div></div>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="savePerm(${id!=null?id:'null'})">保存</button></div>`;
 }
 async function savePerm(id){
   const username=document.getElementById('pUser').value.trim();
   const password=document.getElementById('pPass').value;
   const is_super=document.getElementById('pSuper').checked;
-  const perms={equip:document.getElementById('pequip').checked,gift:document.getElementById('pgift').checked,boss:document.getElementById('pboss').checked,perm:document.getElementById('pperm').checked,activity:document.getElementById('pactivity').checked};
+  const perms={equip:document.getElementById('pequip').checked,gift:document.getElementById('pgift').checked,boss:document.getElementById('pboss').checked,locations:document.getElementById('plocations').checked,perm:document.getElementById('pperm').checked,activity:document.getElementById('pactivity').checked};
   if(!username){adminTip('请输入账号');return;}
   const body={username:username,is_super:is_super,perms:perms};
   if(password)body.password=password;
   if(id){
-    if(is_super)body.perms={equip:true,gift:true,boss:true,perm:true,activity:true};
+    if(is_super)body.perms={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
     await api(`admin_accounts?id=eq.${id}`,{method:'PATCH',body,noCache:true});
   }else{
     if(!password){adminTip('请输入初始密码');return;}
     body.password=password;
-    if(is_super)body.perms={equip:true,gift:true,boss:true,perm:true,activity:true};
+    if(is_super)body.perms={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
     await api('admin_accounts',{method:'POST',body,noCache:true});
   }
   closeModal();renderPerm(document.getElementById('content'));
@@ -804,7 +1252,7 @@ async function ensureAdminSeeds(){
   try{
     let menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(menus)&&!menus.length){
-      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['perm','权限管理','perm',8],['activities','活动管理','activity',9],['announce','公告管理','',10],['chat','聊天监控','',11]];
+      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['announce','公告管理','',11],['chat','聊天监控','',12]];
       for(const m of defMenus)await api('admin_menus',{method:'POST',body:{menu_key:m[0],name:m[1],perm_key:m[2],sort:m[3]},noCache:true});
     }
     let acts=await api('admin_activities',{query:'select=*&limit=100',noCache:true});
@@ -819,7 +1267,7 @@ async function ensureAdminSeeds(){
     let eqs=await api('admin_equips',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(eqs)&&!eqs.length){
       for(const e of DEFAULT_EQUIPS){
-        await api('admin_equips',{method:'POST',body:{slot:e.slot,name:e.name,lvl:e.lvl,quality:['普通'],atk:e.atk,def:e.def,hp:e.hp,mp:0,crit:0,dodge:0,star3:false,price:e.price,source_bosses:[],source_flip:false,source_egg:false,enabled:true},noCache:true});
+        await api('admin_equips',{method:'POST',body:{slot:e.slot,name:e.name,lvl:e.lvl,quality:['普通'],job:'all',atk:e.atk,def:e.def,hp:e.hp,mp:0,crit:0,dodge:0,sub_stats:[],star3:false,price:e.price,source_bosses:[],source_flip:false,source_egg:false,enabled:true},noCache:true});
       }
     }
     let bosses=await api('admin_bosses',{query:'select=*&limit=100',noCache:true});
