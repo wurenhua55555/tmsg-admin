@@ -628,5 +628,7 @@ insert into public.admin_shop_items(item_key,item_type,cat,name,qty,price,price_
   ('silver_big','宝箱','辅助','大银两包',1,450,0,false,true,40),
   ('sex_card','消耗','其他','角色变性卡',1,3000,0,false,true,41),
   ('seed6','种子','其他','金疮药种子',1,200,0,false,true,42),
-  ('seed7','种子','其他','大还丹种子',1,1920,0,false,true,43)
+  ('seed7','种子','其他','大还丹种子',1,1920,0,false,true,43),
+  ('honor_scroll','消耗','辅助','荣誉卷轴',1,5000,0,false,true,44),
+  ('juhunfan','道具','副将','聚魂幡',1,300,300,false,true,90)
 on conflict (item_key) do nothing;

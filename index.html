@@ -745,7 +745,10 @@ const ITEM_CATALOG=[
   {name:'观音水种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
   {name:'天蚕丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
   {name:'化神水种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
-  {name:'装备解绑符',type:'道具',usage:'解绑装备时消耗，商城可购买',ctime:'2026-10-22'}];
+  {name:'装备解绑符',type:'道具',usage:'解绑装备时消耗，商城可购买',ctime:'2026-10-22'},
+  {name:'荣誉卷轴',type:'消耗',usage:'使用获得荣誉值加成',ctime:'2026-10-22'},
+  {name:'聚魂幡',type:'道具',usage:'商城副将栏目300金珠/元宝购买；使用后随机获得三级65%/二级30%/一级5%副将魂魄',ctime:'2026-10-22'},
+  {name:'副将魂魄',type:'消耗',usage:'使用后招募对应副将加入副将列表（聚魂幡开出，绑定不可卖店）',ctime:'2026-10-22'}];
 function renderItems(c){
   c.innerHTML=`<div class="card"><h3>道具列表</h3><div class="table-wrap" id="itemList"></div></div>`;
   document.getElementById('itemList').innerHTML='<table><tr><th>道具名称</th><th>道具类型</th><th>道具用途</th><th>创建时间</th></tr>'+
@@ -1657,7 +1660,7 @@ function renderShopItemEdit(c){
         <label class="f"><span>道具类型：</span><select id="siType" onchange="shopTypeChanged()">${typeOpts}</select></label>
         <label class="f"><span>道具：</span><select id="siItemSel" onchange="shopItemPicked()">${nameOpts}</select></label>
         <label class="f"><span>道具名称：</span><input id="siName" value="${escTextarea(s.name)}" placeholder="道具列表中未收录时可手填"></label>
-        <label class="f"><span>商城分类：</span><select id="siCat">${['促销','打造材料','其他','辅助'].map(v=>`<option value="${v}" ${(s.cat||'其他')===v?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>商城分类：</span><select id="siCat">${['促销','打造材料','其他','辅助','副将'].map(v=>`<option value="${v}" ${(s.cat||'其他')===v?'selected':''}>${v}</option>`).join('')}</select></label>
         <label class="f"><span>单次购买数量：</span><input id="siQty" type="number" min="1" value="${s.qty||1}" placeholder="每次购买获得的数量"></label>
         <label class="f"><span>价格（金珠）：</span><input id="siPrice" type="number" min="0" value="${s.price||0}"></label>
         <label class="f"><span>元宝购买价格：</span><input id="siPriceYb" type="number" min="0" value="${s.price_yb||0}" placeholder="留0表示与金珠同价"></label>
