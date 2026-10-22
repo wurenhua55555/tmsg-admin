@@ -160,6 +160,7 @@ tbody tr:hover{background:#f2f6ff}
     <div class="menu-item" onclick="showPage('locations',this)" data-page="locations" data-perm="locations">地图管理</div>
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
     <div class="menu-item" onclick="showPage('activities',this)" data-page="activities" data-perm="activity">活动管理</div>
+    <div class="menu-item" onclick="showPage('achievements',this)" data-page="achievements" data-perm="achievement">成就管理</div>
     <div class="menu-item" onclick="showPage('announce',this)" data-page="announce">公告管理</div>
     <div class="menu-item" onclick="showPage('chat',this)" data-page="chat">聊天监控</div>
     <div class="menu-item" onclick="doLogout()">退出</div>
@@ -188,7 +189,7 @@ const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',loca
 /* 权限位动态化：单一数据源=admin_menus 表（perm_key 非空的菜单即权限位）。
  * 后台新增带 perm_key 的管理模块后，权限页自动显示对应列与勾选框，无需改渲染代码。
  * PERM_SHORT 为新模块登记短标签的唯一落点（key=perm_key，label=勾选/列头显示名）。 */
-const PERM_SHORT={'equip':'装备','gift':'礼包','boss':'BOSS','locations':'地图','perm':'权限','activity':'活动','shop':'商城'};
+const PERM_SHORT={'equip':'装备','gift':'礼包','boss':'BOSS','locations':'地图','perm':'权限','activity':'活动','shop':'商城','achievement':'成就'};
 let PERM_SRC=Object.keys(PERM_SHORT).map(k=>({key:k,label:PERM_SHORT[k]}));
 function ensurePermSrc(menus){
   const labelOf=m=>{
@@ -280,12 +281,12 @@ function doLogout(){localStorage.removeItem('tmsg_admin');localStorage.removeIte
 
 function showPage(name,el){
   /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
-  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',announce:'',chat:''};
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',announce:'',chat:''};
   const pk=permMap[name]||'';
   if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -306,6 +307,8 @@ function showPage(name,el){
   if(name==='perm_edit')renderPermEdit(c);
   if(name==='activities')renderActivities(c);
   if(name==='activities_edit')renderActEdit(c);
+  if(name==='achievements')renderAchievements(c);
+  if(name==='achievements_edit')renderAchievementEdit(c);
   if(name==='announce')renderAnnounce(c);
   if(name==='chat')renderChat(c);
 }
@@ -653,6 +656,99 @@ async function saveAct(id){
   showActList();
 }
 async function delAct(id){if(!confirm('确定删除该活动配置？'))return;await api(`admin_activities?id=eq.${id}`,{method:'DELETE',noCache:true});renderActivities(document.getElementById('content'));}
+
+/* ===== 成就管理（achievements 表，字段对齐游戏端 ACHIEVE_DATA：id/cat/name/key/target/pts/diff/bonus/cond） ===== */
+const ACH_CATS=['活动','副将','道具','成长','副本','杀怪','社交','PK','赛事','装备','财富','任务','其他'];
+const ACH_DIFFS=['简单','普通','困难','大师','传说'];
+async function renderAchievements(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="editAchievement()">新增成就</button>
+    <button class="btn btn-default" onclick="loadAchievements()">刷新列表</button>
+    <span style="color:#999;font-size:12px">成就数据存 achievements 表（字段对齐游戏端 ACHIEVE_DATA：分类/成就名/触发key/目标值/积分/难度/属性加成/条件）</span></div>
+    <div style="margin-bottom:12px"><button class="btn ${_achCat==='all'?'btn-primary':'btn-default'}" data-achcat="all" onclick="achSetCat('all')">全部</button>${ACH_CATS.map(k=>`<button class="btn ${_achCat===k?'btn-primary':'btn-default'}" data-achcat="${k}" onclick="achSetCat('${k}')">${k}</button>`).join('')}</div>
+    <div class="table-wrap" id="achList">加载中...</div></div>`;
+  loadAchievements();
+}
+let _achCat='all';
+function achSetCat(k){_achCat=k;document.querySelectorAll('[data-achcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-achcat')===k?'btn-primary':'btn-default'));loadAchievements();}
+function achBonusTxt(b){
+  if(!b)return '-';
+  try{const o=typeof b==='string'?JSON.parse(b):b;const names={hp:'生命',mp:'魔法',atk:'攻击',def:'防御',crit:'暴击',dodge:'闪避'};
+    return Object.keys(o).map(k=>`${names[k]||k}+${o[k]}`).join(' ');}catch(e){return String(b).substring(0,40);}
+}
+async function loadAchievements(){
+  const rows=await api('achievements',{query:'select=*&order=id.asc&limit=2000',noCache:true});
+  if(!Array.isArray(rows)){
+    document.getElementById('achList').innerHTML='<div class="err">achievements 表不存在：请先在 Supabase SQL Editor 执行 init_achievements_table.sql（建表+503条游戏成就种子同步）</div>';
+    return;
+  }
+  let list=rows;
+  if(_achCat!=='all')list=list.filter(a=>a.cat===_achCat);
+  if(!list.length){document.getElementById('achList').innerHTML='<div class="err">该分类暂无成就（可新增）</div>';return;}
+  document.getElementById('achList').innerHTML='<table><tr><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>操作</th></tr>'+
+    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+let _achEditId=null,_achEditData=null;
+function editAchievement(id){
+  if(id){
+    api('achievements',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
+      const a=Array.isArray(rows)&&rows.length?rows[0]:{};
+      _achEditId=id;_achEditData=Object.assign({},a);
+      showPage('achievements_edit',document.querySelector('.menu-item[data-page="achievements"]'));
+    });
+  }else{
+    _achEditId=null;
+    _achEditData={cat:'活动',name:'',key:'',target:0,pts:10,diff:'简单',bonus:'',cond:''};
+    showPage('achievements_edit',document.querySelector('.menu-item[data-page="achievements"]'));
+  }
+}
+function showAchievementList(){
+  const c=document.getElementById('content');
+  renderAchievements(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="achievements"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='成就管理';
+}
+function renderAchievementEdit(c){
+  const a=_achEditData||{};
+  const id=_achEditId;
+  const bonusStr=(typeof a.bonus==='object'&&a.bonus)?JSON.stringify(a.bonus):(a.bonus||'');
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showAchievementList()">← 返回成就列表</button><h3>${id?'编辑成就':'新增成就'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">成就配置（字段对齐游戏端 ACHIEVE_DATA）</div>
+        <label class="f"><span>分类：</span><select id="acCat">${ACH_CATS.map(v=>`<option value="${v}" ${(a.cat||'活动')===v?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>成就名称：</span><input id="acName" placeholder="如 【初来乍到】" value="${escTextarea(a.name||'')}"></label>
+        <label class="f"><span>触发key：</span><input id="acKey" placeholder="如 level/kill:神兽/use:止血草/inst:名将试炼，无则留空" value="${escTextarea(a.key||'')}"></label>
+        <label class="f"><span>目标值：</span><input id="acTarget" type="number" min="0" value="${a.target||0}"></label>
+        <label class="f"><span>积分：</span><input id="acPts" type="number" min="0" value="${a.pts||0}"></label>
+        <label class="f"><span>难度：</span><select id="acDiff">${ACH_DIFFS.map(v=>`<option value="${v}" ${(a.diff||'简单')===v?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>属性加成(bonus)：</span><input id="acBonus" placeholder='JSON 如 {"hp":10,"mp":5,"atk":3} 或 {"crit":0.001}' value="${escTextarea(bonusStr)}"></label>
+        <label class="f"><span>完成条件：</span><input id="acCond" placeholder="完成条件说明" value="${escTextarea(a.cond||'')}"></label>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showAchievementList()">取消</button><button class="btn btn-primary" onclick="saveAchievement(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+}
+async function saveAchievement(id){
+  const name=document.getElementById('acName').value.trim();
+  if(!name){adminTip('请填写成就名称');return;}
+  const bonusRaw=document.getElementById('acBonus').value.trim();
+  let bonus={};
+  if(bonusRaw){try{bonus=JSON.parse(bonusRaw);}catch(e){adminTip('属性加成(bonus) 不是合法 JSON：'+bonusRaw);return;}}
+  const body={cat:document.getElementById('acCat').value,key:document.getElementById('acKey').value.trim()||null,target:parseInt(document.getElementById('acTarget').value)||0,pts:parseInt(document.getElementById('acPts').value)||0,diff:document.getElementById('acDiff').value,cond:document.getElementById('acCond').value.trim(),name:name,bonus:bonus};
+  if(id){await api(`achievements?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{
+    /* 新增成就：id 自动取当前最大 id+1（表 id 无自增，保持与游戏成就 id 同域） */
+    const rows=await api('achievements',{query:'select=id&order=id.desc&limit=1',noCache:true}).catch(()=>[]);
+    const maxId=(Array.isArray(rows)&&rows.length)?rows[0].id:0;
+    body.id=(maxId||500)+1;
+    await api('achievements',{method:'POST',body,noCache:true});
+  }
+  showAchievementList();
+}
+async function delAchievement(id){if(!confirm('确定删除该成就？'))return;await api(`achievements?id=eq.${id}`,{method:'DELETE',noCache:true});renderAchievements(document.getElementById('content'));}
 
 async function renderAnnounce(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editAnn(0)">新增公告</button></div><div id="annList">加载中...</div></div>`;
@@ -1669,7 +1765,7 @@ async function ensureAdminSeeds(){
   try{
     let menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(menus)&&!menus.length){
-      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['shop','商城管理','shop',13],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['announce','公告管理','',11],['chat','聊天监控','',12]];
+      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['shop','商城管理','shop',13],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['achievements','成就管理','achievement',14],['announce','公告管理','',11],['chat','聊天监控','',12]];
       for(const m of defMenus)await api('admin_menus',{method:'POST',body:{menu_key:m[0],name:m[1],perm_key:m[2],sort:m[3]},noCache:true});
     }
     ensurePermSrc(Array.isArray(menus)?menus:[]);
