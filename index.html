@@ -65,6 +65,12 @@ tbody tr:hover{background:#f2f6ff}
 .modal input[type="checkbox"]:hover{border-color:#2266cc}
 .modal input[type="checkbox"]:checked{background:#2266cc;border-color:#2266cc}
 .modal input[type="checkbox"]:checked::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+/* 用户赠送弹框 */
+.gift-type-bar{display:flex;gap:10px;flex-wrap:wrap;margin-top:2px}
+.gift-type-btn{padding:8px 22px;border:1px solid #c9d4e4;border-radius:20px;background:#fff;color:#5a6a84;font-size:14px;cursor:pointer;transition:border-color .15s,color .15s,background .15s,box-shadow .15s}
+.gift-type-btn:hover{border-color:#2266cc;color:#2266cc}
+.gift-type-btn.active{background:#2266cc;border-color:#2266cc;color:#fff;box-shadow:0 4px 12px rgba(34,102,204,.3)}
+.gift-loading{color:#9aa5b8;font-size:13px;padding:4px 0}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:500;line-height:1.5}
 .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.9}
 .tag-on{background:#e8f7ee;color:#1a9c50;border:1px solid #b8e6c9}
@@ -348,8 +354,137 @@ async function loadUsers(){
   });
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
-  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册时间</th><th>赞助积分</th><th>账号状态</th><th>操作</th></tr>'+
-    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const isAdmin=adminSet.has(u.username);return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag">普通玩家</span>'}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
+  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册手机号</th><th>注册IP</th><th>最近登录</th><th>注册时间</th><th>赞助积分</th><th>账号状态</th><th>操作</th></tr>'+
+    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${u.phone}</td><td>${u.regIp}</td><td>${lt}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag">普通玩家</span>'}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
+}
+/* ===== 用户赠送（装备/道具/礼包） ===== */
+const GIFT_QUALITY_NAMES=['普通','精良','卓越','史诗','神器'];
+const GIFT_JOB_MAP={warrior:'战士',mage:'术士',warlock:'术士',assassin:'刺客',allround:'全职',all:'全职'};
+let _giftData={uname:'',type:'equip',list:[],pool:[]};
+function openGift(uname){
+  _giftData={uname:uname,type:'equip',list:[],pool:[]};
+  document.getElementById('modalMask').style.display='flex';
+  document.getElementById('modalBox').innerHTML=`<h3>向玩家 ${escTextarea(uname)} 赠送</h3>
+    <div class="form-group"><div class="fg-title">赠送类型</div>
+      <div class="gift-type-bar">
+        <button class="gift-type-btn active" data-t="equip" onclick="giftSetType('equip')">装备</button>
+        <button class="gift-type-btn" data-t="item" onclick="giftSetType('item')">道具</button>
+        <button class="gift-type-btn" data-t="gift" onclick="giftSetType('gift')">礼包</button>
+      </div>
+    </div>
+    <div class="form-group"><div class="fg-title" id="giftPickTitle">请选择装备</div>
+      <select id="giftPick"><option value="">加载中...</option></select>
+      <div class="gift-loading" id="giftLoading"></div>
+    </div>
+    <label class="f"><span>赠送数量：</span><input type="number" id="giftNum" min="1" value="1"></label>
+    <div class="modal-footer">
+      <button class="btn btn-default" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="doGift()">确认赠送</button>
+    </div>`;
+  giftSetType('equip');
+}
+function giftSetType(t){
+  _giftData.type=t;_giftData.list=[];
+  document.querySelectorAll('.gift-type-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('data-t')===t));
+  const title=document.getElementById('giftPickTitle');
+  const sel=document.getElementById('giftPick');
+  sel.innerHTML='<option value="">加载中...</option>';
+  if(t==='equip'){title.textContent='请选择装备';loadGiftEquips();}
+  else if(t==='item'){title.textContent='请选择道具';loadGiftItems();}
+  else{title.textContent='请选择礼包';loadGiftGifts();}
+}
+async function loadGiftEquips(){
+  const rows=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true});
+  _giftData.list=Array.isArray(rows)?rows.filter(r=>r&&r.name&&r.enabled!==false):[];
+  _giftData.pool=_giftData.list.slice();
+  const sel=document.getElementById('giftPick');
+  if(!_giftData.list.length){sel.innerHTML='<option value="">暂无装备（云端 admin_equips 为空）</option>';return;}
+  sel.innerHTML='<option value="">请选择装备</option>'+_giftData.list.map(e=>`<option value="${escTextarea(e.id)}">${escTextarea(e.name)}（${e.slot||'-'} Lv${e.lvl||1} ${escTextarea((e.quality&&e.quality[0])||'普通')}）</option>`).join('');
+}
+async function loadGiftItems(){
+  let rows=await api('admin_shop_items',{query:'select=*&order=sort.asc,id.asc',noCache:true});
+  rows=Array.isArray(rows)?rows:[];
+  if(!rows.length){
+    const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true});
+    const seen={};
+    (Array.isArray(gifts)?gifts:[]).forEach(g=>{(g.rewards||[]).forEach(r=>{if(r&&r.name&&r.kind!=='yuanbao'&&r.kind!=='equip'&&!seen[r.name]){seen[r.name]=1;rows.push({id:'auto_'+r.name,item_type:r.kind||'item',name:r.name,cat:g.name||''});}});});
+  }
+  _giftData.list=rows.filter(r=>r&&r.name);
+  const sel=document.getElementById('giftPick');
+  if(!_giftData.list.length){sel.innerHTML='<option value="">暂无道具（admin_shop_items 为空）</option>';return;}
+  sel.innerHTML='<option value="">请选择道具</option>'+_giftData.list.map(r=>`<option value="${escTextarea(r.id)}">${escTextarea(r.name)}${r.cat?'（'+escTextarea(r.cat)+'）':''}</option>`).join('');
+}
+async function loadGiftGifts(){
+  const rows=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true});
+  _giftData.list=Array.isArray(rows)?rows.filter(r=>r&&r.name&&r.enabled!==false):[];
+  const eqs=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true});
+  _giftData.pool=Array.isArray(eqs)?eqs:[];
+  const sel=document.getElementById('giftPick');
+  if(!_giftData.list.length){sel.innerHTML='<option value="">暂无礼包（云端 admin_gifts 为空）</option>';return;}
+  sel.innerHTML='<option value="">请选择礼包</option>'+_giftData.list.map(g=>`<option value="${escTextarea(g.id)}">${escTextarea(g.name)}（${(g.rewards||[]).length}项奖励）</option>`).join('');
+}
+function giftBuildEquip(e,owner){
+  const qIdx=Math.max(0,GIFT_QUALITY_NAMES.indexOf((e.quality&&e.quality[0])||'普通'));
+  const bonus={};
+  if(e.atk)bonus.atk=Number(e.atk);
+  if(e.def)bonus.def=Number(e.def);
+  if(e.hp)bonus.hp=Number(e.hp);
+  if(e.mp)bonus.mp=Number(e.mp);
+  if(e.crit)bonus.crit=Number(e.crit);
+  if(e.dodge)bonus.dodge=Number(e.dodge);
+  const jb=GIFT_JOB_MAP[e.job]||GIFT_JOB_MAP[String(e.job)]||'全职';
+  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:e.star3?3:1,requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:{},bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null};
+}
+function giftUnpackRewards(g,owner,times,d){
+  const lines=[];
+  (g.rewards||[]).forEach(function(r){
+    if(!r||!r.name)return;
+    const n=(r.num||1)*times;
+    if(r.kind==='yuanbao'){d.char.yuanbao=(d.char.yuanbao||0)+n;lines.push('元宝 x'+n);}
+    else if(r.kind==='equip'){
+      const nm=String(r.name).replace(/【神器】|【史诗】|【卓越】|【精良】|【普通】|（\d+级）|\(\d+级\)/g,'').trim();
+      const hit=(_giftData.pool||[]).find(function(e){return e.name===nm;});
+      if(hit){d.char.bag.push(giftBuildEquip(hit,owner));lines.push('装备 '+hit.name);}
+    }
+    else{d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:r.kind||'item',name:r.name,type:'item',count:n});lines.push(r.name+' x'+n);}
+  });
+  return lines;
+}
+async function doGift(){
+  const uname=_giftData.uname;
+  const sel=document.getElementById('giftPick');
+  const id=sel.value;
+  const num=parseInt(document.getElementById('giftNum').value)||1;
+  if(!id){adminTip('请先选择要赠送的物品');return;}
+  if(num<1){adminTip('数量需大于0');return;}
+  if(_giftData.type==='equip'&&num!==1){adminTip('装备每次赠送数量固定为1');return;}
+  const item=_giftData.list.find(x=>String(x.id)===String(id));
+  if(!item){adminTip('所选物品不存在，请重新选择');return;}
+  const enc=encodeURIComponent(uname);
+  const rows=await api('saves',{query:`username=eq.${enc}&select=data`});
+  if(!rows||!rows.length){adminTip('玩家账号不存在：'+uname);return;}
+  const d=parseData(rows[0].data);
+  if(!d.char)d.char={};
+  if(!Array.isArray(d.char.bag))d.char.bag=[];
+  const lines=[];
+  if(_giftData.type==='equip'){
+    const eq=giftBuildEquip(item,uname);
+    d.char.bag.push(eq);
+    lines.push('装备 '+item.name+' x1');
+  }else if(_giftData.type==='item'){
+    for(let i=0;i<num;i++){d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:item.item_type||'item',name:item.name,type:'item',count:1});}
+    lines.push('道具 '+item.name+' x'+num);
+  }else{
+    const glines=giftUnpackRewards(item,uname,num,d);
+    if(!glines.length){adminTip('该礼包无可发放奖励，请检查礼包配置');return;}
+    lines.push.apply(lines,glines);
+  }
+  const upd=await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
+  await api('sponsor_logs',{method:'POST',body:{username:uname,jifen_delta:0,reason:'赠送：'+lines.join('、'),operator:CURRENT_ADMIN}});
+  Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
+  closeModal();
+  loadUsers();
+  adminTip('已向 '+uname+' 赠送：'+lines.join('、'));
 }
 function openPoints(uname){
   document.getElementById('modalMask').style.display='flex';
@@ -586,7 +721,8 @@ const ITEM_CATALOG=[
   {name:'还阳丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
   {name:'观音水种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
   {name:'天蚕丹种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
-  {name:'化神水种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},];
+  {name:'化神水种子',type:'种子',usage:'山庄百草园种植，收获对应产物',ctime:'2026-10-19'},
+  {name:'装备解绑符',type:'道具',usage:'解绑装备时消耗，商城可购买',ctime:'2026-10-22'}];
 function renderItems(c){
   c.innerHTML=`<div class="card"><h3>道具列表</h3><div class="table-wrap" id="itemList"></div></div>`;
   document.getElementById('itemList').innerHTML='<table><tr><th>道具名称</th><th>道具类型</th><th>道具用途</th><th>创建时间</th></tr>'+
