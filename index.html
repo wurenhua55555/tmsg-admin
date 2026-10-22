@@ -98,6 +98,41 @@ tbody tr:hover{background:#f2f6ff}
 .dc-row .tag{flex:none}
 .dc-row b{flex:none;min-width:56px;text-align:right}
 .dc-row .btn{padding:3px 10px;font-size:12px;flex:none}
+/* ===== 后台统一专业化控件（二级页） ===== */
+.edit-page .ep-form input[type="text"],.edit-page .ep-form input[type="number"],.edit-page .ep-form input[type="password"],.edit-page .ep-form select,.edit-page .ep-form textarea{
+  width:100%;padding:9px 12px;margin:4px 0;border:1px solid #c9d4e4;border-radius:8px;font-size:14px;color:#33445f;background:#fff;transition:border-color .15s,box-shadow .15s,background .15s}
+.edit-page .ep-form input:hover,.edit-page .ep-form select:hover,.edit-page .ep-form textarea:hover{border-color:#9db8e8}
+.edit-page .ep-form input:focus,.edit-page .ep-form select:focus,.edit-page .ep-form textarea:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.14)}
+.edit-page .ep-form select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
+.edit-page .ep-form textarea{resize:vertical;min-height:72px}
+.edit-page input[type="checkbox"]{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:0 6px 0 0;vertical-align:-4px;border:2px solid #b9c4d6;border-radius:5px;background:#fff;cursor:pointer;position:relative;transition:border-color .15s,background .15s;flex:none}
+.edit-page input[type="checkbox"]::before{content:"";position:absolute;top:-9px;left:-9px;right:-9px;bottom:-9px}
+.edit-page input[type="checkbox"]:hover{border-color:#2266cc}
+.edit-page input[type="checkbox"]:checked{background:#2266cc;border-color:#2266cc}
+.edit-page input[type="checkbox"]:checked::after{content:"";position:absolute;left:5px;top:1px;width:5px;height:10px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.edit-page .ep-form label.f{display:flex;align-items:center;gap:10px;margin:10px 0;font-size:14px}
+.edit-page .ep-form label.f>span{flex:0 0 112px;text-align:right;color:#33445f;font-weight:500}
+.edit-page .ep-form label.f>input,.edit-page .ep-form label.f>select,.edit-page .ep-form label.f>textarea{flex:1;min-width:0;width:auto;margin:0}
+.edit-page .ep-form .form-group{background:#f6f8fc;border:1px solid #e3eaf5;border-radius:10px;padding:12px 14px;margin:10px 0;box-shadow:0 1px 2px rgba(34,102,204,.03)}
+.edit-page .ep-form .form-group .fg-title{font-size:13px;color:#52617a;margin-bottom:6px;font-weight:600}
+.edit-page .ep-form .form-group .fg-note{font-size:12px;color:#9aa5b8;margin-bottom:6px}
+.edit-page .ep-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+@media(max-width:900px){.edit-page .ep-grid{grid-template-columns:1fr}}
+.edit-page .ep-card{background:#f6f8fc;border:1px solid #e3eaf5;border-radius:10px;padding:14px 16px;box-shadow:0 1px 2px rgba(34,102,204,.03)}
+.edit-page .ep-card .ep-card-title{font-size:14px;font-weight:600;color:#1c2b4a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #e3eaf5;display:flex;align-items:center;gap:6px}
+.edit-page .ep-card .ep-card-title::before{content:"";width:4px;height:14px;background:#2266cc;border-radius:2px}
+/* 装备产出BOSS 分组二级选择 */
+.ep-boss-bar{display:flex;align-items:center;gap:10px;margin:6px 0;flex-wrap:wrap}
+.ep-boss-bar select{width:auto;flex:0 0 140px}
+.ep-boss-count{font-size:12px;color:#2266cc;background:#eef3ff;border:1px solid #d5e2ff;padding:2px 10px;border-radius:20px;font-weight:600}
+.ep-boss-box{max-height:210px;overflow:auto;border:1px solid #dfe6f2;border-radius:8px;padding:8px 10px;background:#fff;margin:6px 0}
+.ep-boss-box .ep-boss-item{display:flex;align-items:center;gap:8px;padding:5px 6px;margin:2px 0;border-radius:6px;font-size:13px;color:#44546b;cursor:pointer}
+.ep-boss-box .ep-boss-item:hover{background:#f2f6ff}
+.ep-boss-box .ep-boss-item.selected{background:#eef3ff}
+.ep-boss-box .ep-boss-item input{flex:none}
+.ep-boss-tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.ep-boss-tags .ep-boss-tag{display:inline-flex;align-items:center;gap:4px;background:#eef3ff;color:#2266cc;border:1px solid #d5e2ff;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500}
+.ep-boss-empty{color:#9aa5b8;font-size:13px;padding:8px 4px}
 </style>
 </head>
 <body>
@@ -121,6 +156,7 @@ tbody tr:hover{background:#f2f6ff}
     <div class="menu-item" onclick="showPage('equip',this)" data-page="equip" data-perm="equip">装备管理</div>
     <div class="menu-item" onclick="showPage('gift',this)" data-page="gift" data-perm="gift">礼包管理</div>
     <div class="menu-item" onclick="showPage('boss',this)" data-page="boss" data-perm="boss">BOSS管理</div>
+    <div class="menu-item" onclick="showPage('shop',this)" data-page="shop" data-perm="shop">商城管理</div>
     <div class="menu-item" onclick="showPage('locations',this)" data-page="locations" data-perm="locations">地图管理</div>
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
     <div class="menu-item" onclick="showPage('activities',this)" data-page="activities" data-perm="activity">活动管理</div>
@@ -146,10 +182,30 @@ const SUPABASE_URL='https://vdckluemzmzfancascek.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkY2tsdWVtem16ZmFuY2FzY2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3OTc3MzQsImV4cCI6MjEwNzM3MzczNH0.i4cW81Lk6joaaWJKmR_uF4TvBdyRhO9QOOEkIggeLFw';
 let _cache={};
 let CURRENT_ADMIN='admin';
-let CURRENT_PERMS={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
+let CURRENT_PERMS={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true,shop:true};
 let CURRENT_IS_SUPER=false;
-const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',locations:'地图管理',perm:'权限管理',activity:'活动管理'};
-const DEFAULT_PERMS={equip:false,gift:false,boss:false,locations:false,perm:false,activity:false};
+const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',locations:'地图管理',perm:'权限管理',activity:'活动管理',shop:'商城管理'};
+/* 权限位动态化：单一数据源=admin_menus 表（perm_key 非空的菜单即权限位）。
+ * 后台新增带 perm_key 的管理模块后，权限页自动显示对应列与勾选框，无需改渲染代码。
+ * PERM_SHORT 为新模块登记短标签的唯一落点（key=perm_key，label=勾选/列头显示名）。 */
+const PERM_SHORT={'equip':'装备','gift':'礼包','boss':'BOSS','locations':'地图','perm':'权限','activity':'活动','shop':'商城'};
+let PERM_SRC=Object.keys(PERM_SHORT).map(k=>({key:k,label:PERM_SHORT[k]}));
+function ensurePermSrc(menus){
+  const labelOf=m=>{
+    if(PERM_SHORT[m.perm_key])return PERM_SHORT[m.perm_key];
+    let nm=(m.name||'').replace(/管理$/,'');
+    return nm||m.perm_key;
+  };
+  const list=[];
+  (menus||[]).forEach(m=>{if(m&&m.perm_key&&(PERM_SHORT[m.perm_key]||m.name))list.push({key:m.perm_key,label:labelOf(m)});});
+  /* 表驱动在前 + 静态全量兜底：表缺项自动补齐，新模块（表新增 perm_key 菜单）自动追加，无需改渲染代码 */
+  const seen={};list.forEach(p=>{seen[p.key]=true;});
+  Object.keys(PERM_SHORT).forEach(k=>{if(!seen[k])list.push({key:k,label:PERM_SHORT[k]});});
+  PERM_SRC=list;
+  return PERM_SRC;
+}
+function fullPerms(){const f={};Object.keys(PERM_SHORT).forEach(k=>f[k]=true);return f;}
+const DEFAULT_PERMS={equip:false,gift:false,boss:false,locations:false,perm:false,activity:false,shop:false};
 
 async function api(table,opts={}){
   const cacheKey=table+'?'+(opts.query||'');
@@ -181,7 +237,7 @@ async function doLogin(){
   if(!u||!p){alert('请输入账号和密码');return;}
   let rows;
   try{
-    const raw=await fetch(`${SUPABASE_URL}/rest/v1/admin_accounts?select=*&limit=1000`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    const raw=await fetch(`${SUPABASE_URL}/rest/v1/admin_accounts?select=*&limit=5000`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
     if(!raw.ok){
       adminTip('管理员表不存在：请先在 Supabase SQL Editor 执行 init_admin_tables.sql 后再登录');
       return;
@@ -191,18 +247,20 @@ async function doLogin(){
   if(!Array.isArray(rows))rows=[];
   if(!rows.length){
     // 无管理员账号时，首个进入的账号自动置为超级管理员
-    const body={username:u,password:p,is_super:true,perms:{equip:true,gift:true,boss:true,locations:true,perm:true,activity:true}};
+    const body={username:u,password:p,is_super:true,perms:fullPerms()};
     await api('admin_accounts',{method:'POST',body:body,noCache:true});
-    CURRENT_ADMIN=u;CURRENT_IS_SUPER=true;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,{equip:true,gift:true,boss:true,locations:true,perm:true,activity:true});
+    CURRENT_ADMIN=u;CURRENT_IS_SUPER=true;CURRENT_PERMS=fullPerms();
     localStorage.setItem('tmsg_admin','1');
+    localStorage.setItem('tmsg_admin_user',u);
     adminTip('首个账号已自动设为超级管理员');
     enterAdmin();
     return;
   }
   const acc=rows.find(r=>r.username===u);
   if(!acc||acc.password!==p){alert('账号或密码错误');return;}
-  CURRENT_ADMIN=u;CURRENT_IS_SUPER=!!acc.is_super;CURRENT_PERMS=Object.assign({},DEFAULT_PERMS,parseData(acc.perms));
+  CURRENT_ADMIN=u;CURRENT_IS_SUPER=!!acc.is_super;CURRENT_PERMS=CURRENT_IS_SUPER?fullPerms():Object.assign({},DEFAULT_PERMS,parseData(acc.perms));
   localStorage.setItem('tmsg_admin','1');
+  localStorage.setItem('tmsg_admin_user',u);
   enterAdmin();
 }
 function enterAdmin(){
@@ -218,16 +276,16 @@ function enterAdmin(){
   showPage('dashboard',document.querySelector('.menu-item[data-page="dashboard"]'));
   ensureAdminSeeds();
 }
-function doLogout(){localStorage.removeItem('tmsg_admin');location.reload();}
+function doLogout(){localStorage.removeItem('tmsg_admin');localStorage.removeItem('tmsg_admin_user');location.reload();}
 
 function showPage(name,el){
   /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
-  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',boss:'boss',locations:'locations',locations_edit:'locations',perm:'perm',activities:'activity',announce:'',chat:''};
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',announce:'',chat:''};
   const pk=permMap[name]||'';
   if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',boss:'BOSS管理',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',activities:'活动管理',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -237,11 +295,17 @@ function showPage(name,el){
   if(name==='equip')renderEquip(c);
   if(name==='equip_edit')renderEquipEdit(c);
   if(name==='gift')renderGift(c);
+  if(name==='gift_edit')renderGiftEdit(c);
   if(name==='boss')renderBoss(c);
+  if(name==='boss_edit')renderBossEdit(c);
+  if(name==='shop')renderShopAdmin(c);
+  if(name==='shop_edit')renderShopItemEdit(c);
   if(name==='locations')renderLocations(c);
   if(name==='locations_edit')renderLocationEdit(c);
   if(name==='perm')renderPerm(c);
+  if(name==='perm_edit')renderPermEdit(c);
   if(name==='activities')renderActivities(c);
+  if(name==='activities_edit')renderActEdit(c);
   if(name==='announce')renderAnnounce(c);
   if(name==='chat')renderChat(c);
 }
@@ -273,14 +337,16 @@ async function loadUsers(){
   document.getElementById('userList').innerHTML='加载中...';
   const saves=await api('saves',{query:'select=username,data,updated_at'});
   if(!Array.isArray(saves)||!saves.length){document.getElementById('userList').innerHTML='<div class="err">暂无用户数据</div>';return;}
+  const admins=await api('admin_accounts',{query:'select=username',noCache:true}).catch(()=>[]);
+  const adminSet=new Set(Array.isArray(admins)?admins.map(a=>a.username):[]);
   let list=saves.map(r=>{
     const d=parseData(r.data);const ch=d.char||{};
     return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,created:r.updated_at||''};
   });
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
-  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册时间</th><th>赞助积分</th><th>操作</th></tr>'+
-    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
+  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册时间</th><th>赞助积分</th><th>账号状态</th><th>操作</th></tr>'+
+    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const isAdmin=adminSet.has(u.username);return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag">普通玩家</span>'}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
 }
 function openPoints(uname){
   document.getElementById('modalMask').style.display='flex';
@@ -309,6 +375,20 @@ async function addPoints(uname){
   Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
   loadUsers();
   adminTip('已为 '+uname+' 加 '+num+' 积分，已记录');
+}
+async function resetUserPwd(uname){
+  if(!confirm('确定将玩家账号「'+uname+'」的密码重置为 123456 ？'))return;
+  const enc=encodeURIComponent(uname);
+  const r=await api('saves',{query:`username=eq.${enc}&select=data`});
+  if(!r||!r.length){adminTip('玩家不存在：'+uname);return;}
+  let d=parseData(r[0].data);
+  if(!d.char&&!d.pwd){adminTip('该玩家无存档数据，无法重置');return;}
+  d.pwd='123456';
+  if(d.char)d.char.pwd='123456';
+  await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
+  Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
+  loadUsers();
+  adminTip('已重置 '+uname+' 的密码为初始密码 123456');
 }
 
 // 顶部白底黑字提示（不用原生alert）
@@ -479,19 +559,44 @@ async function renderActivities(c){
   document.getElementById('actList').innerHTML='<table><tr><th>ID</th><th>活动标识</th><th>活动名称</th><th>说明</th><th>视图</th><th>启用</th><th>操作</th></tr>'+
     acts.map(a=>`<tr><td>${a.id}</td><td>${a.act_id}</td><td>${a.name}</td><td>${(a.desc||'').substring(0,40)}</td><td>${a.view||'-'}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editAct(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAct(${a.id})">删除</button></td></tr>`).join('')+'</table>';
 }
+let _actEditId=null,_actEditData=null;
 function editAct(id){
-  const src=id?null:{act_id:'',name:'',desc:'',view:'',enabled:true};
-  document.getElementById('modalMask').style.display='flex';
-  const box=document.getElementById('modalBox');
   if(id){
-    box.innerHTML=`<h3>编辑活动</h3><div id="actEditForm">加载中...</div>`;
     api('admin_activities',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
       const a=Array.isArray(rows)&&rows.length?rows[0]:{act_id:'',name:'',desc:'',view:'',enabled:true};
-      document.getElementById('actEditForm').innerHTML=actFormHtml(a,id);
+      _actEditId=id;_actEditData=Object.assign({},a);
+      showPage('activities_edit',document.querySelector('.menu-item[data-page="activities"]'));
     });
   }else{
-    box.innerHTML=`<h3>新增活动</h3>`+actFormHtml(src,null);
+    _actEditId=null;
+    _actEditData={act_id:'',name:'',desc:'',view:'',enabled:true};
+    showPage('activities_edit',document.querySelector('.menu-item[data-page="activities"]'));
   }
+}
+function showActList(){
+  const c=document.getElementById('content');
+  renderActivities(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="activities"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='活动管理';
+}
+function renderActEdit(c){
+  const a=_actEditData||{};
+  const id=_actEditId;
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showActList()">← 返回活动列表</button><h3>${id?'编辑活动':'新增活动'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">活动信息</div>
+        <label class="f"><span>活动标识：</span><input id="aActId" placeholder="如 egg/flip/signin/regGift/luckyshop" value="${escTextarea(a.act_id||'')}"></label>
+        <label class="f"><span>活动名称：</span><input id="aName" placeholder="活动名称" value="${escTextarea(a.name||'')}"></label>
+        <label class="f"><span>活动说明：</span><input id="aDesc" placeholder="活动说明(desc)" value="${escTextarea(a.desc||'')}"></label>
+        <label class="f"><span>游戏视图：</span><input id="aView" placeholder="游戏视图(view)" value="${escTextarea(a.view||'')}"></label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="aEnabled" ${a.enabled!==false?'checked':''}> 启用</label>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showActList()">取消</button><button class="btn btn-primary" onclick="saveAct(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
 }
 function actFormHtml(a,id){
   return `<label class="f"><span>活动标识：</span><input id="aActId" placeholder="如 egg/flip/signin/regGift/luckyshop" value="${a.act_id||''}"></label>
@@ -506,7 +611,7 @@ async function saveAct(id){
   if(!body.act_id||!body.name){adminTip('请填写活动标识与名称');return;}
   if(id){await api(`admin_activities?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
   else{await api('admin_activities',{method:'POST',body,noCache:true});}
-  closeModal();renderActivities(document.getElementById('content'));
+  showActList();
 }
 async function delAct(id){if(!confirm('确定删除该活动配置？'))return;await api(`admin_activities?id=eq.${id}`,{method:'DELETE',noCache:true});renderActivities(document.getElementById('content'));}
 
@@ -619,6 +724,7 @@ async function loadEquips(){
       return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
 }
 let _equipEditId=null,_equipEditData=null;
+let _epBossList=[],_epBossSel=new Set();
 async function editEquip(id){
   let e={slot:'weapon',name:'',lvl:1,quality:['普通'],atk:0,def:0,hp:0,mp:0,crit:0,dodge:0,sub_stats:[],star3:false,price:100,source_bosses:[],source_flip:false,source_egg:false,enabled:true};
   if(id){const rows=await api('admin_equips',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)e=rows[0];}
@@ -645,32 +751,87 @@ function renderEquipEdit(c){
   c.innerHTML=`<div class="edit-page">
     <div class="ep-head"><button class="btn btn-default" onclick="showEquipList()">← 返回装备列表</button><h3>${id?'编辑装备':'新增装备'}</h3></div>
     <div class="ep-form">
-    <label class="f"><span>部位：</span><select id="eSlot">${Object.entries(EQUIP_SLOTS).map(([k,v])=>`<option value="${k}" ${e.slot===k?'selected':''}>${v}</option>`).join('')}</select></label>
-    <label class="f"><span>装备名：</span><input id="eName" value="${escTextarea(e.name)}"></label>
-    <label class="f"><span>需要等级：</span><input id="eLvl" type="number" value="${e.lvl||1}"></label>
-    <label class="f"><span>品质：</span><select id="eQuality">${['普通','精良','卓越','史诗','神器'].map(q=>`<option value="${q}" ${eqQual===q?'selected':''}>${q}</option>`).join('')}</select></label>
-    <label class="f"><span>职业：</span><select id="eJob">${EQUIP_JOBS.map(([k,v])=>`<option value="${k}" ${(e.job||'all')===k?'selected':''}>${v}</option>`).join('')}</select></label>
-    <div class="form-group"><div class="fg-title">主属性（3星标准数值，勾选后填写，可多选）</div>
-    ${attrBlockHtml('eMain',mainVals,mainChecked)}</div>
-    <div class="form-group"><div class="fg-title">附加属性（勾选后填写数值，可多选，保存为 sub_stats）</div>
-    ${attrBlockHtml('eSub',subVals,subChecked)}</div>
-    <label class="f"><span>价格(银两)：</span><input id="ePrice" type="number" value="${e.price||100}"></label>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
-    <div class="form-group"><div class="fg-title">产出BOSS（从 BOSS 管理列表多选，写入 source_bosses）</div>
-    <div style="max-height:140px;overflow:auto;border:1px solid #dfe6f2;border-radius:6px;padding:8px;background:#fff" id="epBossBox">加载中...</div></div>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eSourceFlip" ${e.source_flip?'checked':''}> 翻牌奖池替换（加入 FLIP_POOL）</label>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eSourceEgg" ${e.source_egg?'checked':''}> 砸蛋奖池加入（EGG_POOL）</label>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
-    <div class="ep-actions"><button class="btn btn-default" onclick="showEquipList()">取消</button><button class="btn btn-primary" onclick="saveEquip(${id!=null?id:'null'})">保存</button></div>
+      <div class="ep-grid">
+        <div class="ep-card">
+          <div class="ep-card-title">基础信息</div>
+          <label class="f"><span>部位：</span><select id="eSlot">${Object.entries(EQUIP_SLOTS).map(([k,v])=>`<option value="${k}" ${e.slot===k?'selected':''}>${v}</option>`).join('')}</select></label>
+          <label class="f"><span>装备名：</span><input id="eName" value="${escTextarea(e.name)}" placeholder="装备名称"></label>
+          <label class="f"><span>需要等级：</span><input id="eLvl" type="number" value="${e.lvl||1}"></label>
+          <label class="f"><span>职业：</span><select id="eJob">${EQUIP_JOBS.map(([k,v])=>`<option value="${k}" ${(e.job||'all')===k?'selected':''}>${v}</option>`).join('')}</select></label>
+        </div>
+        <div class="ep-card">
+          <div class="ep-card-title">品质与属性</div>
+          <label class="f"><span>品质：</span><select id="eQuality">${['普通','精良','卓越','史诗','神器'].map(q=>`<option value="${q}" ${eqQual===q?'selected':''}>${q}</option>`).join('')}</select></label>
+          <div class="form-group"><div class="fg-title">主属性（3星标准数值，勾选后填写，可多选）</div>
+          ${attrBlockHtml('eMain',mainVals,mainChecked)}</div>
+          <div class="form-group"><div class="fg-title">附加属性（勾选后填写数值，保存为 sub_stats）</div>
+          ${attrBlockHtml('eSub',subVals,subChecked)}</div>
+        </div>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">产出与掉落</div>
+        <div class="form-group"><div class="fg-title">产出BOSS（按 圣兽/灵兽/未分组 二级选择，多选写入 source_bosses）</div>
+          <div class="ep-boss-bar"><select id="eBossGroup" onchange="epBossRenderGroup()"><option value="sheng">圣兽</option><option value="ling">灵兽</option><option value="other">未分组</option><option value="all">全部</option></select><span class="ep-boss-count" id="epBossCount">已选 0</span></div>
+          <div id="epBossBox" class="ep-boss-box">加载中...</div>
+          <div id="epBossTags" class="ep-boss-tags"></div>
+        </div>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eSourceFlip" ${e.source_flip?'checked':''}> 翻牌奖池替换（加入 FLIP_POOL）</label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eSourceEgg" ${e.source_egg?'checked':''}> 砸蛋奖池加入（EGG_POOL）</label>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">其他</div>
+        <label class="f"><span>价格(银两)：</span><input id="ePrice" type="number" value="${e.price||100}"></label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showEquipList()">取消</button><button class="btn btn-primary" onclick="saveEquip(${id!=null?id:'null'})">保存</button></div>
     </div></div>`;
   (async()=>{
     let bossRows=[];
     try{bossRows=await api('admin_bosses',{query:'select=bid,name&order=id.asc',noCache:true});}catch(err){bossRows=[];}
     if(!Array.isArray(bossRows))bossRows=[];
-    const bossSel=new Set((Array.isArray(e.source_bosses)?e.source_bosses:[]).map(bossBidOf));
-    const box=document.getElementById('epBossBox');
-    if(box)box.innerHTML=bossRows.map(b=>`<label style="display:block;font-size:13px;color:#666;margin:2px 0"><input type="checkbox" class="eSrcBoss" value="${escTextarea(b.bid)}" ${bossSel.has(b.bid)?'checked':''}> ${b.name||b.bid}</label>`).join('')||'<span style="color:#999">暂无BOSS，请先在BOSS管理中创建</span>';
+    _epBossList=bossRows.map(b=>({bid:b.bid,name:b.name||b.bid}));
+    _epBossSel=new Set((Array.isArray(e.source_bosses)?e.source_bosses:[]).map(bossBidOf));
+    epBossRenderGroup();
   })();
+}
+function epBossCat(b){
+  const n=b.name||'';
+  if(n.indexOf('圣兽')>=0||n.indexOf('神兽')>=0)return 'sheng';
+  if(n.indexOf('灵兽')>=0)return 'ling';
+  return 'other';
+}
+function epBossRenderGroup(){
+  const g=document.getElementById('eBossGroup').value;
+  const box=document.getElementById('epBossBox');
+  if(!box)return;
+  const list=g==='all'?_epBossList:_epBossList.filter(b=>epBossCat(b)===g);
+  if(!list.length){box.innerHTML='<div class="ep-boss-empty">该分组暂无BOSS，请先在BOSS管理中创建</div>';epBossUpdateTags();return;}
+  box.innerHTML=list.map(b=>{
+    const on=_epBossSel.has(b.bid);
+    return `<label class="ep-boss-item ${on?'selected':''}"><input type="checkbox" class="eSrcBoss" value="${escTextarea(b.bid)}" ${on?'checked':''}> ${escTextarea(b.name||b.bid)}</label>`;
+  }).join('');
+  // 事件委托：统一监听分组容器 change，避免内联 onchange 引号嵌套导致绑定失效
+  box.onchange=function(ev){
+    const el=ev.target;
+    if(!el.classList||!el.classList.contains('eSrcBoss'))return;
+    epBossToggle(el);
+  };
+  epBossUpdateTags();
+}
+function epBossToggle(el){
+  if(el.checked)_epBossSel.add(el.value);else _epBossSel.delete(el.value);
+  const item=el.closest('.ep-boss-item');
+  if(item)item.classList.toggle('selected',el.checked);
+  epBossUpdateTags();
+}
+function epBossUpdateTags(){
+  const count=document.getElementById('epBossCount');
+  if(count)count.innerText='已选 '+_epBossSel.size;
+  const tagBox=document.getElementById('epBossTags');
+  if(!tagBox)return;
+  const names=[];_epBossList.forEach(b=>{if(_epBossSel.has(b.bid))names.push(b.name||b.bid);});
+  tagBox.innerHTML=names.map(n=>`<span class="ep-boss-tag">${escTextarea(n)}</span>`).join('')||'<span style="color:#9aa5b8;font-size:12px">尚未选择产出BOSS</span>';
 }
 function escTextarea(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 async function saveEquip(id){
@@ -689,7 +850,7 @@ async function saveEquip(id){
       if(!isNaN(v)&&v!==0)sub_stats.push({attr:k,val:v});
     }
   });
-  const source_bosses=Array.from(document.querySelectorAll('.eSrcBoss:checked')).map(x=>x.value);
+  const source_bosses=Array.from(_epBossSel);
   const obj={
     slot:document.getElementById('eSlot').value,
     name:document.getElementById('eName').value.trim(),
@@ -736,19 +897,51 @@ function giftRowHtml(r){
     <input class="gr-p" type="number" step="0.01" placeholder="概率%" value="${(r.p!=null?r.p:'')}" style="flex:0 0 80px">
     <button class="btn btn-default" onclick="this.parentNode.remove()">移除</button></div>`;
 }
+let _giftEditId=null,_giftEditData=null;
 function editGift(id){
-  document.getElementById('modalMask').style.display='flex';
-  const box=document.getElementById('modalBox');
   if(id){
-    box.innerHTML=`<h3>编辑礼包</h3><div id="giftEditForm">加载中...</div>`;
     api('admin_gifts',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
       const g=Array.isArray(rows)&&rows.length?rows[0]:{kind:'normal',name:'',desc:'',rewards:[],p:0,enabled:true};
-      document.getElementById('giftEditForm').innerHTML=giftFormHtml(g,id);
+      _giftEditId=id;_giftEditData=Object.assign({},g);
+      showPage('gift_edit',document.querySelector('.menu-item[data-page="gift"]'));
     });
   }else{
-    const g={kind:'normal',name:'',desc:'',rewards:[{}],p:0,enabled:true};
-    box.innerHTML=`<h3>新增礼包</h3>`+giftFormHtml(g,null);
+    _giftEditId=null;
+    _giftEditData={kind:'normal',name:'',desc:'',rewards:[{}],p:0,enabled:true};
+    showPage('gift_edit',document.querySelector('.menu-item[data-page="gift"]'));
   }
+}
+function showGiftList(){
+  const c=document.getElementById('content');
+  renderGift(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="gift"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='礼包管理';
+}
+function renderGiftEdit(c){
+  const g=_giftEditData||{};
+  const id=_giftEditId;
+  const rows=(Array.isArray(g.rewards)&&g.rewards.length?g.rewards:[{}]).map(r=>giftRowHtml(r)).join('');
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showGiftList()">← 返回礼包列表</button><h3>${id?'编辑礼包':'新增礼包'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">礼包信息</div>
+        <label class="f"><span>礼包类型：</span><select id="gKind">${Object.entries(GIFT_KINDS).map(([k,v])=>`<option value="${k}" ${g.kind===k?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>礼包名：</span><input id="gName" placeholder="礼包名" value="${escTextarea(g.name)}"></label>
+        <label class="f"><span>说明：</span><input id="gDesc" placeholder="说明" value="${escTextarea(g.desc)}"></label>
+        <label class="f"><span>触发概率%：</span><input id="gP" type="number" step="0.01" placeholder="如掉落/翻牌概率，0 表示不参与" value="${(g.p!=null?g.p:'')}"></label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="gEnabled" ${g.enabled!==false?'checked':''}> 启用</label>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">奖励列表</div>
+        <div class="fg-note">类型 + 名称 + 数量 + 概率%</div>
+        <div id="giftRewards">${rows}</div>
+        <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showGiftList()">取消</button><button class="btn btn-primary" onclick="saveGift(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
 }
 function giftFormHtml(g,id){
   const rows=(Array.isArray(g.rewards)&&g.rewards.length?g.rewards:[{}]).map(r=>giftRowHtml(r)).join('');
@@ -771,7 +964,7 @@ async function saveGift(id){
   if(!body.name){adminTip('请输入礼包名');return;}
   if(id){await api(`admin_gifts?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
   else{await api('admin_gifts',{method:'POST',body,noCache:true});}
-  closeModal();renderGift(document.getElementById('content'));
+  showGiftList();
 }
 async function delGift(id){if(!confirm('确定删除该礼包配置？'))return;await api(`admin_gifts?id=eq.${id}`,{method:'DELETE',noCache:true});renderGift(document.getElementById('content'));}
 
@@ -842,15 +1035,30 @@ async function loadBosses(){
   document.getElementById('bossList').innerHTML='<table><tr><th>标识</th><th>BOSS名</th><th>等级</th><th>血量</th><th>攻击</th><th>防御</th><th>经验</th><th>银两</th><th>地图</th><th>共享</th><th>复活(秒)</th><th>掉落</th><th>启用</th><th>操作</th></tr>'+
     list.map(b=>`<tr><td>${b.bid}</td><td>${b.name}</td><td>${b.lvl}</td><td>${(b.hp||0).toLocaleString()}</td><td>${b.atk}</td><td>${b.def}</td><td>${b.exp}</td><td>${b.silver}</td><td>${b.map}</td><td>${b.shared?'<span class="tag tag-on">共享</span>':'-'}</td><td>${b.respawn||0}</td><td>${(Array.isArray(b.drop)?b.drop:[]).length+(Array.isArray(b.drop_config)?b.drop_config:[]).length}</td><td>${b.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editBoss(${b.id})">编辑</button><button class="btn btn-danger" onclick="delBoss(${b.id})">删除</button></td></tr>`).join('')+'</table>';
 }
+let _bossEditId=null,_bossEditData=null;
 async function editBoss(id){
   let b={bid:'',name:'',lvl:60,hp:100000,atk:1000,def:500,exp:10000,silver:5000,map:'',respawn:3600,shared:false,drop:[],enabled:true};
   if(id){const rows=await api('admin_bosses',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)b=rows[0];}
-  document.getElementById('modalMask').style.display='flex';
+  _bossEditId=id!=null?id:null;
+  _bossEditData=Object.assign({},b);
   const eqs=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
   const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
   _dcEquips=Array.isArray(eqs)?eqs:[];
   _dcGifts=Array.isArray(gifts)?gifts:[];
   _dropConfig=(Array.isArray(b.drop_config)?b.drop_config:[]).map(d=>({type:d.type==='equip'?'equip':'gift',cat:d.type==='equip'?'equip':(d.cat==='gift'?'gift':'item'),id:d.id,prob:d.prob,name:''}));
+  showPage('boss_edit',document.querySelector('.menu-item[data-page="boss"]'));
+}
+function showBossList(){
+  const c=document.getElementById('content');
+  renderBoss(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="boss"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='BOSS管理';
+}
+function renderBossEdit(c){
+  const b=_bossEditData||{};
+  const id=_bossEditId;
   const curMap=bossMapFind(b.map);
   const selGroup=curMap?curMap.group:ADMIN_MAP_GROUPS[0];
   const cityMap=ADMIN_MAPS[selGroup]||{};
@@ -859,39 +1067,50 @@ async function editBoss(id){
   const areas=(ADMIN_MAPS[selGroup]&&ADMIN_MAPS[selGroup][selCity])?ADMIN_MAPS[selGroup][selCity]:[];
   const selArea=curMap?curMap.area:areas[0];
   const groupOpts=ADMIN_MAP_GROUPS.map(g=>`<option value="${escTextarea(g)}" ${selGroup===g?'selected':''}>${g}</option>`).join('');
-  const cityOpts=cities.map(c=>`<option value="${escTextarea(c)}" ${selCity===c?'selected':''}>${c}</option>`).join('');
+  const cityOpts=cities.map(city=>`<option value="${escTextarea(city)}" ${selCity===city?'selected':''}>${city}</option>`).join('');
   const areaOpts=areas.map(a=>`<option value="${escTextarea(a)}" ${selArea===a?'selected':''}>${a}</option>`).join('');
-  document.getElementById('modalBox').innerHTML=`<h3>${id?'编辑':'新增'}BOSS</h3>
-    <label class="f"><span>BOSS标识：</span><input id="bBid" placeholder="需唯一" value="${escTextarea(b.bid)}"></label>
-    <label class="f"><span>BOSS名称：</span><input id="bName" placeholder="含【圣兽】【灵兽】【兽王】【活】自动分类" value="${escTextarea(b.name)}"></label>
-    <div class="form-group">
-    <label class="f"><span>等级：</span><input id="bLvl" type="number" value="${b.lvl||60}"></label>
-    <label class="f"><span>血量：</span><input id="bHp" type="number" value="${b.hp||100000}"></label>
-    <label class="f"><span>攻击：</span><input id="bAtk" type="number" value="${b.atk||1000}"></label>
-    <label class="f"><span>防御：</span><input id="bDef" type="number" value="${b.def||500}"></label>
-    <label class="f"><span>经验：</span><input id="bExp" type="number" value="${b.exp||10000}"></label>
-    <label class="f"><span>银两：</span><input id="bSilver" type="number" value="${b.silver||5000}"></label>
-    </div>
-    <div class="form-group"><div class="fg-title">地图（与游戏 MAPS 节点对应，三级联动选择地区）</div>
-    <label class="f"><span>地图：</span><select id="bMapGroup" onchange="bossMapFillCities()">${groupOpts}</select></label>
-    <label class="f"><span>城市：</span><select id="bMapCity" onchange="bossMapFillAreas()">${cityOpts}</select></label>
-    <label class="f"><span>地区：</span><select id="bMapArea">${areaOpts}</select></label></div>
-    <label class="f"><span>复活冷却(秒)：</span><input id="bRespawn" type="number" value="${b.respawn||3600}"></label>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="bShared" ${b.shared?'checked':''}> 全服共享BOSS</label>
-    <div class="form-group"><div class="fg-title">掉落配置 drop_config（装备/道具/礼包 多选 + 概率%，jsonb 数组）</div>
-      <div class="fg-title" style="margin-top:8px">装备</div>
-      <div class="dc-add-row"><select id="dcEquipSel"></select><input id="dcEquipProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('equip')">添加</button></div>
-      <div id="dcEquipList"></div>
-      <div class="fg-title" style="margin-top:8px">道具</div>
-      <div class="dc-add-row"><select id="dcItemSel"></select><input id="dcItemProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('item')">添加</button></div>
-      <div id="dcItemList"></div>
-      <div class="fg-title" style="margin-top:8px">礼包</div>
-      <div class="dc-add-row"><select id="dcGiftSel"></select><input id="dcGiftProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('gift')">添加</button></div>
-      <div id="dcGiftList"></div>
-      <div class="fg-note">保存写入 drop_config：[{type:'equip'|'gift', id, prob}]；若表无该列请先执行 ALTER TABLE public.admin_bosses ADD COLUMN IF NOT EXISTS drop_config jsonb NOT NULL DEFAULT '[]'</div>
-    </div>
-    <label style="font-size:14px;color:#44546b"><input type="checkbox" id="bEnabled" ${b.enabled!==false?'checked':''}> 启用</label>
-    <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveBoss(${id!=null?id:'null'})">保存</button></div>`;
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showBossList()">← 返回BOSS列表</button><h3>${id?'编辑BOSS':'新增BOSS'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-grid">
+        <div class="ep-card">
+          <div class="ep-card-title">基础信息</div>
+          <label class="f"><span>BOSS标识：</span><input id="bBid" placeholder="需唯一" value="${escTextarea(b.bid)}"></label>
+          <label class="f"><span>BOSS名称：</span><input id="bName" placeholder="含【圣兽】【灵兽】【兽王】【活】自动分类" value="${escTextarea(b.name)}"></label>
+          <label class="f"><span>等级：</span><input id="bLvl" type="number" value="${b.lvl||60}"></label>
+          <label class="f"><span>血量：</span><input id="bHp" type="number" value="${b.hp||100000}"></label>
+          <label class="f"><span>攻击：</span><input id="bAtk" type="number" value="${b.atk||1000}"></label>
+          <label class="f"><span>防御：</span><input id="bDef" type="number" value="${b.def||500}"></label>
+          <label class="f"><span>经验：</span><input id="bExp" type="number" value="${b.exp||10000}"></label>
+          <label class="f"><span>银两：</span><input id="bSilver" type="number" value="${b.silver||5000}"></label>
+          <label class="f"><span>复活冷却(秒)：</span><input id="bRespawn" type="number" value="${b.respawn||3600}"></label>
+          <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="bShared" ${b.shared?'checked':''}> 全服共享BOSS</label>
+          <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="bEnabled" ${b.enabled!==false?'checked':''}> 启用</label>
+        </div>
+        <div class="ep-card">
+          <div class="ep-card-title">地图配置</div>
+          <div class="fg-note">与游戏 MAPS 节点对应，三级联动选择地区</div>
+          <label class="f"><span>地图：</span><select id="bMapGroup" onchange="bossMapFillCities()">${groupOpts}</select></label>
+          <label class="f"><span>城市：</span><select id="bMapCity" onchange="bossMapFillAreas()">${cityOpts}</select></label>
+          <label class="f"><span>地区：</span><select id="bMapArea">${areaOpts}</select></label>
+        </div>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">掉落配置</div>
+        <div class="fg-note">drop_config（装备/道具/礼包 多选 + 概率%，jsonb 数组）</div>
+        <div class="fg-title" style="margin-top:8px">装备</div>
+        <div class="dc-add-row"><select id="dcEquipSel"></select><input id="dcEquipProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('equip')">添加</button></div>
+        <div id="dcEquipList"></div>
+        <div class="fg-title" style="margin-top:8px">道具</div>
+        <div class="dc-add-row"><select id="dcItemSel"></select><input id="dcItemProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('item')">添加</button></div>
+        <div id="dcItemList"></div>
+        <div class="fg-title" style="margin-top:8px">礼包</div>
+        <div class="dc-add-row"><select id="dcGiftSel"></select><input id="dcGiftProb" type="number" step="0.01" placeholder="概率%"><button class="btn btn-primary" onclick="dcAdd('gift')">添加</button></div>
+        <div id="dcGiftList"></div>
+        <div class="fg-note">保存写入 drop_config：[{type:'equip'|'gift', id, prob}]</div>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showBossList()">取消</button><button class="btn btn-primary" onclick="saveBoss(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
   dcFillOptions();dcRender();
 }
 async function saveBoss(id){
@@ -901,7 +1120,7 @@ async function saveBoss(id){
   if(!body.bid||!body.name){adminTip('请填写BOSS标识与名称');return;}
   if(id){await api(`admin_bosses?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
   else{await api('admin_bosses',{method:'POST',body,noCache:true});}
-  closeModal();loadBosses();
+  showBossList();
 }
 async function delBoss(id){if(!confirm('确定删除该BOSS配置？'))return;await api(`admin_bosses?id=eq.${id}`,{method:'DELETE',noCache:true});loadBosses();}
 
@@ -952,6 +1171,113 @@ function dcRender(){
     list.innerHTML=arr.length?arr.map((d,i)=>`<div class="dc-row"><span class="tag" style="background:#eef3ff;color:${colors[cat]};border:1px solid #d5e2ff">${labels[cat]}</span><span style="flex:1;color:#33445f">${escTextarea(d.name)}</span><b style="color:#fa8c16">${d.prob}%</b><button class="btn btn-danger" onclick="dcRemove('${cat}',${i})">删除</button></div>`).join(''):'<div style="color:#9aa5b8;font-size:13px;padding:4px 0">暂无配置</div>';
   });
 }
+
+/* ===== 商城管理（云端表 admin_shop_items，游戏运行时合并 GOLD_SHOP：同 key 覆盖、封存移除、新增上架） ===== */
+const SHOP_CATS=[['all','全部'],['促销','促销'],['打造材料','打造材料'],['其他','其他'],['辅助','辅助']];
+function shopItemTypes(){
+  const s=new Set();
+  ITEM_CATALOG.forEach(i=>{if(i.type)s.add(i.type);});
+  return Array.from(s);
+}
+function shopItemsByType(type){
+  return ITEM_CATALOG.filter(i=>i.type===type).map(i=>i.name);
+}
+let _shopCat='all';
+async function renderShopAdmin(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="editShopItem()">新增商城道具</button>
+    <button class="btn btn-default" onclick="loadShopItems()">刷新列表</button>
+    <span style="color:#999;font-size:12px">后台配置写入 admin_shop_items；游戏端经 /sbrest 拉取并合并 GOLD_SHOP，新增/编辑/封存下次加载即生效</span></div>
+    <div style="margin-bottom:12px">${SHOP_CATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-shopcat="${k}" onclick="shopSetCat('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="shopList">加载中...</div></div>`;
+  loadShopItems();
+}
+function shopSetCat(k){_shopCat=k;document.querySelectorAll('[data-shopcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-shopcat')===k?'btn-primary':'btn-default'));loadShopItems();}
+async function loadShopItems(){
+  const rows=await api('admin_shop_items',{query:'select=*&order=sort.asc,id.asc',noCache:true});
+  if(!Array.isArray(rows)){
+    document.getElementById('shopList').innerHTML='<div class="err">admin_shop_items 表不存在：请先在 Supabase SQL Editor 执行 init_admin_tables.sql（含建表+43条商城种子同步）</div>';
+    return;
+  }
+  let list=rows;
+  if(_shopCat!=='all')list=list.filter(s=>s.cat===_shopCat);
+  if(!list.length){document.getElementById('shopList').innerHTML='<div class="err">该分类暂无商城道具（可新增）</div>';return;}
+  document.getElementById('shopList').innerHTML='<table><tr><th>道具类型</th><th>名称</th><th>单次购买数量</th><th>价格(金珠)</th><th>元宝价</th><th>分类</th><th>促销</th><th>状态</th><th>操作</th></tr>'+
+    list.map(s=>`<tr><td>${s.item_type}</td><td>${s.name}</td><td>${s.qty||1}</td><td>${s.price||0}</td><td>${(s.price_yb&&s.price_yb>0)?s.price_yb:'同金珠'}</td><td>${s.cat}</td><td>${s.promo?'<span class="tag tag-on">促销</span>':'-'}</td><td>${s.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">封存</span>':'<span class="tag tag-on">上架</span>'}</td><td><button class="btn btn-primary" onclick="editShopItem(${s.id})">编辑</button><button class="btn ${s.enabled===false?'btn-primary':'btn-danger'}" onclick="toggleShopItem(${s.id},${s.enabled===false})">${s.enabled===false?'启用':'封存'}</button><button class="btn btn-danger" onclick="delShopItem(${s.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+let _shopEditId=null,_shopEditData=null;
+async function editShopItem(id){
+  let s={item_key:'',item_type:'其他',cat:'其他',name:'',qty:1,price:0,price_yb:0,promo:false,enabled:true,sort:0};
+  if(id){const rows=await api('admin_shop_items',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)s=rows[0];}
+  _shopEditId=id!=null?id:null;
+  _shopEditData=Object.assign({},s);
+  showPage('shop_edit',document.querySelector('.menu-item[data-page="shop"]'));
+}
+function showShopList(){
+  const c=document.getElementById('content');
+  renderShopAdmin(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="shop"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='商城管理';
+}
+function shopTypeChanged(){
+  const t=document.getElementById('siType').value;
+  const names=shopItemsByType(t);
+  const sel=document.getElementById('siItemSel');
+  sel.innerHTML='<option value="">选择道具（可下方手填名称）</option>'+names.map(n=>`<option value="${escTextarea(n)}">${escTextarea(n)}</option>`).join('');
+  const cur=_shopEditData&&_shopEditData.name?_shopEditData.name:'';
+  if(cur){sel.value=cur;document.getElementById('siName').value=cur;}
+}
+function shopItemPicked(){
+  const sel=document.getElementById('siItemSel');
+  if(sel.value)document.getElementById('siName').value=sel.value;
+}
+function renderShopItemEdit(c){
+  const s=_shopEditData||{};
+  const id=_shopEditId;
+  const types=shopItemTypes();
+  const typeOpts=['其他'].concat(types.filter(t=>t!=='其他')).map(t=>`<option value="${escTextarea(t)}" ${(s.item_type||'')===t?'selected':''}>${t}</option>`).join('');
+  const names=shopItemsByType(s.item_type);
+  const nameOpts='<option value="">选择道具（可下方手填名称）</option>'+names.map(n=>`<option value="${escTextarea(n)}" ${s.name===n?'selected':''}>${escTextarea(n)}</option>`).join('');
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showShopList()">← 返回商城列表</button><h3>${id?'编辑商城道具':'新增商城道具'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">商城道具配置（道具类型/道具取自后台道具列表 ITEM_CATALOG）</div>
+        <label class="f"><span>道具类型：</span><select id="siType" onchange="shopTypeChanged()">${typeOpts}</select></label>
+        <label class="f"><span>道具：</span><select id="siItemSel" onchange="shopItemPicked()">${nameOpts}</select></label>
+        <label class="f"><span>道具名称：</span><input id="siName" value="${escTextarea(s.name)}" placeholder="道具列表中未收录时可手填"></label>
+        <label class="f"><span>商城分类：</span><select id="siCat">${['促销','打造材料','其他','辅助'].map(v=>`<option value="${v}" ${(s.cat||'其他')===v?'selected':''}>${v}</option>`).join('')}</select></label>
+        <label class="f"><span>单次购买数量：</span><input id="siQty" type="number" min="1" value="${s.qty||1}" placeholder="每次购买获得的数量"></label>
+        <label class="f"><span>价格（金珠）：</span><input id="siPrice" type="number" min="0" value="${s.price||0}"></label>
+        <label class="f"><span>元宝购买价格：</span><input id="siPriceYb" type="number" min="0" value="${s.price_yb||0}" placeholder="留0表示与金珠同价"></label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="siPromo" ${s.promo?'checked':''}> 促销商品</label>
+        <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="siEnabled" ${s.enabled!==false?'checked':''}> 上架（取消勾选=封存）</label>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showShopList()">取消</button><button class="btn btn-primary" onclick="saveShopItem(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+}
+async function saveShopItem(id){
+  const name=document.getElementById('siName').value.trim();
+  const qty=parseInt(document.getElementById('siQty').value)||1;
+  const price=parseInt(document.getElementById('siPrice').value)||0;
+  const priceYb=parseInt(document.getElementById('siPriceYb').value)||0;
+  if(!name){adminTip('请填写道具名称');return;}
+  const body={item_type:document.getElementById('siType').value,cat:document.getElementById('siCat').value,name:name,qty:qty,price:price,price_yb:priceYb,promo:document.getElementById('siPromo').checked,enabled:document.getElementById('siEnabled').checked};
+  if(id){await api(`admin_shop_items?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{
+    body.item_key='shop_'+Date.now();
+    body.sort=Math.floor(Date.now()/1000)%100000;
+    await api('admin_shop_items',{method:'POST',body,noCache:true});
+  }
+  showShopList();
+}
+async function toggleShopItem(id,toEnable){
+  await api(`admin_shop_items?id=eq.${id}`,{method:'PATCH',body:{enabled:toEnable},noCache:true});
+  loadShopItems();
+}
+async function delShopItem(id){if(!confirm('确定删除该商城道具配置？'))return;await api(`admin_shop_items?id=eq.${id}`,{method:'DELETE',noCache:true});loadShopItems();}
 
 /* ===== 地图管理（云端表 admin_locations，游戏 MAPS 全量地点 + 野怪/BOSS/NPC 配置） ===== */
 let _locTab='中立城市';
@@ -1187,29 +1513,63 @@ function locDcRender(){
   });
 }
 
-/* ===== 权限管理（admin_accounts + 五模块菜单权限） ===== */
+/* ===== 权限管理（admin_accounts + 动态菜单权限位） ===== */
 async function renderPerm(c){
-  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editPerm()">新增管理员</button> <span style="color:#999;font-size:12px">菜单权限位：装备/礼包/BOSS/地图/权限/活动；无权限账号登录后仅显示有权限的菜单；超管拥有全部权限</span></div><div class="table-wrap" id="permList">加载中...</div></div>`;
+  if(!PERM_SRC.length){const menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true}).catch(()=>[]);ensurePermSrc(Array.isArray(menus)?menus:[]);}
+  const permLabel=k=>{const p=PERM_SRC.find(x=>x.key===k);return p?p.label:k;};
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editPerm()">新增管理员</button> <span style="color:#999;font-size:12px">菜单权限位随 admin_menus 表动态生成（当前 ${PERM_SRC.length} 项：${PERM_SRC.map(p=>p.label).join('/')}）；无权限账号登录后仅显示有权限的菜单；超管拥有全部权限</span></div><div class="table-wrap" id="permList">加载中...</div></div>`;
   const rows=await api('admin_accounts',{query:'select=*&order=id.asc',noCache:true});
   if(!Array.isArray(rows)||!rows.length){document.getElementById('permList').innerHTML='<div class="err">暂无管理员账号</div>';return;}
-  document.getElementById('permList').innerHTML='<table><tr><th>ID</th><th>账号</th><th>密码</th><th>类型</th><th>装备</th><th>礼包</th><th>BOSS</th><th>地图</th><th>权限</th><th>活动</th><th>创建时间</th><th>操作</th></tr>'+
+  document.getElementById('permList').innerHTML='<table><tr><th>ID</th><th>账号</th><th>密码</th><th>类型</th>'+PERM_SRC.map(p=>'<th>'+p.label+'</th>').join('')+'<th>创建时间</th><th>操作</th></tr>'+
     rows.map(a=>{
       const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
       const tag=v=>v?'<span class="tag tag-on">有</span>':'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">无</span>';
-      return `<tr><td>${a.id}</td><td>${a.username}</td><td>******</td><td>${a.is_super?'<span class="tag tag-vip">超管</span>':'<span class="tag">普通</span>'}</td><td>${tag(pm.equip)}</td><td>${tag(pm.gift)}</td><td>${tag(pm.boss)}</td><td>${tag(pm.locations)}</td><td>${tag(pm.perm)}</td><td>${tag(pm.activity)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editPerm(${a.id})">编辑</button><button class="btn btn-danger" onclick="delPerm(${a.id},'${a.username}')">删除</button></td></tr>`;}).join('')+'</table>';
+      return `<tr><td>${a.id}</td><td>${a.username}</td><td>******</td><td>${a.is_super?'<span class="tag tag-vip">超管</span>':'<span class="tag">普通</span>'}</td>${PERM_SRC.map(p=>'<td>'+tag(pm[p.key])+'</td>').join('')}<td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editPerm(${a.id})">编辑</button><button class="btn btn-danger" onclick="delPerm(${a.id},'${a.username}')">删除</button></td></tr>`;}).join('')+'</table>';
 }
+let _permEditId=null,_permEditData=null;
 function editPerm(id){
-  document.getElementById('modalMask').style.display='flex';
-  const box=document.getElementById('modalBox');
   if(id){
-    box.innerHTML=`<h3>编辑管理员</h3><div id="permEditForm">加载中...</div>`;
     api('admin_accounts',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
       const a=Array.isArray(rows)&&rows.length?rows[0]:{username:'',is_super:false,perms:{}};
-      document.getElementById('permEditForm').innerHTML=permFormHtml(a,id);
+      _permEditId=id;_permEditData=Object.assign({},a);
+      showPage('perm_edit',document.querySelector('.menu-item[data-page="perm"]'));
     });
   }else{
-    box.innerHTML=`<h3>新增管理员</h3>`+permFormHtml({username:'',is_super:false,perms:{}},null);
+    _permEditId=null;
+    _permEditData={username:'',is_super:false,perms:{}};
+    showPage('perm_edit',document.querySelector('.menu-item[data-page="perm"]'));
   }
+}
+function showPermList(){
+  const c=document.getElementById('content');
+  renderPerm(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="perm"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='权限管理';
+}
+function renderPermEdit(c){
+  if(!PERM_SRC.length){PERM_SRC=ensurePermSrc(null);}
+  const a=_permEditData||{};
+  const id=_permEditId;
+  const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
+  const cb=(k,label)=>`<label class="ep-chk"><input type="checkbox" id="p${k}" ${pm[k]?'checked':''}> ${label}</label>`;
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showPermList()">← 返回权限列表</button><h3>${id?'编辑管理员':'新增管理员'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">账号信息</div>
+        <label class="f"><span>账号：</span><input id="pUser" placeholder="账号" value="${escTextarea(a.username)}" ${id?'disabled':''}></label>
+        <label class="f"><span>密码：</span><input id="pPass" type="password" placeholder="${id?'新密码（留空则不修改）':'密码'}"></label>
+        <label class="ep-chk"><input type="checkbox" id="pSuper" ${a.is_super?'checked':''}> 超级管理员（拥有全部菜单权限）</label>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">菜单权限（${PERM_SRC.length} 项，随 admin_menus 表动态生成）</div>
+        <div class="fg-note">仅普通管理员可配置；超管自动拥有全部权限</div>
+        <div>${PERM_SRC.map(p=>cb(p.key,p.label)).join('')}</div>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showPermList()">取消</button><button class="btn btn-primary" onclick="savePerm(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
 }
 function permFormHtml(a,id){
   const pm=Object.assign({},DEFAULT_PERMS,parseData(a.perms));
@@ -1217,28 +1577,46 @@ function permFormHtml(a,id){
   return `<label class="f"><span>账号：</span><input id="pUser" placeholder="账号" value="${escTextarea(a.username)}" ${id?'disabled':''}></label>
     <label class="f"><span>密码：</span><input id="pPass" type="password" placeholder="${id?'新密码（留空则不修改）':'密码'}"></label>
     <label style="font-size:14px;color:#44546b"><input type="checkbox" id="pSuper" ${a.is_super?'checked':''}> 超级管理员（拥有全部菜单权限）</label>
-    <div class="form-group"><div class="fg-title">六模块菜单权限</div>
-    <div>${cb('equip','装备')}${cb('gift','礼包')}${cb('boss','BOSS')}${cb('locations','地图')}${cb('perm','权限')}${cb('activity','活动')}</div></div>
+    <div class="form-group"><div class="fg-title">菜单权限（${PERM_SRC.length} 项，随 admin_menus 表动态生成）</div>
+    <div>${PERM_SRC.map(p=>cb(p.key,p.label)).join('')}</div></div>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="savePerm(${id!=null?id:'null'})">保存</button></div>`;
 }
 async function savePerm(id){
   const username=document.getElementById('pUser').value.trim();
   const password=document.getElementById('pPass').value;
   const is_super=document.getElementById('pSuper').checked;
-  const perms={equip:document.getElementById('pequip').checked,gift:document.getElementById('pgift').checked,boss:document.getElementById('pboss').checked,locations:document.getElementById('plocations').checked,perm:document.getElementById('pperm').checked,activity:document.getElementById('pactivity').checked};
+  const perms={};
+  PERM_SRC.forEach(p=>{const el=document.getElementById('p'+p.key);perms[p.key]=el?el.checked:false;});
   if(!username){adminTip('请输入账号');return;}
   const body={username:username,is_super:is_super,perms:perms};
   if(password)body.password=password;
+  const full=fullPerms();
+  let saved=null;
   if(id){
-    if(is_super)body.perms={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
-    await api(`admin_accounts?id=eq.${id}`,{method:'PATCH',body,noCache:true});
+    if(is_super)body.perms=full;
+    const res=await api(`admin_accounts?id=eq.${id}`,{method:'PATCH',body,noCache:true});
+    if(!Array.isArray(res)||!res.length){adminTip('保存失败：服务端未返回更新结果，请重试');return;}
+    saved=res[0];
   }else{
     if(!password){adminTip('请输入初始密码');return;}
     body.password=password;
-    if(is_super)body.perms={equip:true,gift:true,boss:true,locations:true,perm:true,activity:true};
+    if(is_super)body.perms=full;
     await api('admin_accounts',{method:'POST',body,noCache:true});
+    const check=await api(`admin_accounts?username=eq.${encodeURIComponent(username)}`,{query:'select=*',noCache:true});
+    if(!Array.isArray(check)||!check.length){adminTip('保存失败：写入未确认，请重试');return;}
+    saved=check[0];
   }
-  closeModal();renderPerm(document.getElementById('content'));
+  if(username===CURRENT_ADMIN){
+    CURRENT_IS_SUPER=!!saved.is_super;
+    CURRENT_PERMS=CURRENT_IS_SUPER?full:Object.assign({},DEFAULT_PERMS,parseData(saved.perms));
+    const tu=document.getElementById('topUser');if(tu)tu.innerText=CURRENT_ADMIN+(CURRENT_IS_SUPER?'(超管)':'');
+    document.querySelectorAll('.menu-item[data-perm]').forEach(m=>{
+      const pk=m.getAttribute('data-perm');
+      const ok=CURRENT_IS_SUPER||CURRENT_PERMS[pk];
+      m.style.display=ok?'block':'none';
+    });
+  }
+  closeModal();showPermList();
 }
 async function delPerm(id,username){
   if(username===CURRENT_ADMIN){adminTip('不能删除当前登录账号');return;}
@@ -1252,9 +1630,10 @@ async function ensureAdminSeeds(){
   try{
     let menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(menus)&&!menus.length){
-      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['announce','公告管理','',11],['chat','聊天监控','',12]];
+      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['shop','商城管理','shop',13],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['announce','公告管理','',11],['chat','聊天监控','',12]];
       for(const m of defMenus)await api('admin_menus',{method:'POST',body:{menu_key:m[0],name:m[1],perm_key:m[2],sort:m[3]},noCache:true});
     }
+    ensurePermSrc(Array.isArray(menus)?menus:[]);
     let acts=await api('admin_activities',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(acts)&&!acts.length){
       const defActs=[['egg','快乐砸蛋','每次砸蛋消耗10元宝','egg'],['flip','幸运翻牌','翻牌有几率额外获得三国币','flip'],['signin','签到好礼','每日签到领好礼','signin'],['regGift','注册领好礼','新玩家注册好礼','regGift'],['luckyshop','三国币兑换','三国币兑奖商店','luckyshop']];
@@ -1279,7 +1658,26 @@ async function ensureAdminSeeds(){
   }catch(e){console.error('种子初始化失败',e);}
 }
 
-if(localStorage.getItem('tmsg_admin')){enterAdmin();}
+/* 免登录直进已废弃：改为按持久化账号重新拉取最新权限后再进入 */
+(async function initAdminSession(){
+  const saved=localStorage.getItem('tmsg_admin_user');
+  if(!saved||!localStorage.getItem('tmsg_admin')){return;}
+  try{
+    const raw=await fetch(`${SUPABASE_URL}/rest/v1/admin_accounts?select=*&username=eq.${encodeURIComponent(saved)}`,{headers:{apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`}});
+    if(!raw.ok){throw new Error('HTTP '+raw.status);}
+    const rows=await raw.json();
+    const acc=Array.isArray(rows)?rows.find(r=>r.username===saved):null;
+    if(!acc){
+      localStorage.removeItem('tmsg_admin');localStorage.removeItem('tmsg_admin_user');
+      return;
+    }
+    CURRENT_ADMIN=saved;CURRENT_IS_SUPER=!!acc.is_super;CURRENT_PERMS=CURRENT_IS_SUPER?fullPerms():Object.assign({},DEFAULT_PERMS,parseData(acc.perms));
+    enterAdmin();
+  }catch(e){
+    console.error('恢复登录态失败',e);
+    localStorage.removeItem('tmsg_admin');localStorage.removeItem('tmsg_admin_user');
+  }
+})();
 </script>
 </body>
 </html>
