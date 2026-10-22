@@ -287,12 +287,12 @@ function doLogout(){localStorage.removeItem('tmsg_admin');localStorage.removeIte
 
 function showPage(name,el){
   /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
-  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',announce:'',chat:''};
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',vices:'vice',vices_edit:'vice',announce:'',chat:''};
   const pk=permMap[name]||'';
   if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',vices:'副将管理',vices_edit:'副将编辑',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -315,6 +315,8 @@ function showPage(name,el){
   if(name==='activities_edit')renderActEdit(c);
   if(name==='achievements')renderAchievements(c);
   if(name==='achievements_edit')renderAchievementEdit(c);
+  if(name==='vices')renderVices(c);
+  if(name==='vices_edit')renderViceEdit(c);
   if(name==='announce')renderAnnounce(c);
   if(name==='chat')renderChat(c);
 }
@@ -350,7 +352,7 @@ async function loadUsers(){
   const adminSet=new Set(Array.isArray(admins)?admins.map(a=>a.username):[]);
   let list=saves.map(r=>{
     const d=parseData(r.data);const ch=d.char||{};
-    return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,created:r.updated_at||''};
+    return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,phone:d.phone||'-',regIp:d.regIp||'-',lastLogin:d.lastLogin||'',created:r.updated_at||''};
   });
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
@@ -373,8 +375,9 @@ function openGift(uname){
       </div>
     </div>
     <div class="form-group"><div class="fg-title" id="giftPickTitle">请选择装备</div>
-      <select id="giftPick"><option value="">加载中...</option></select>
+      <select id="giftPick" onchange="giftPickChanged()"><option value="">加载中...</option></select>
       <div class="gift-loading" id="giftLoading"></div>
+      <div id="giftDetail" style="display:none;margin-top:10px;padding:10px;border:1px solid #eee;border-radius:6px;background:#fafbfc;"></div>
     </div>
     <label class="f"><span>赠送数量：</span><input type="number" id="giftNum" min="1" value="1"></label>
     <div class="modal-footer">
@@ -385,6 +388,7 @@ function openGift(uname){
 }
 function giftSetType(t){
   _giftData.type=t;_giftData.list=[];
+  const box=document.getElementById('giftDetail');if(box){box.innerHTML='';box.style.display='none';}
   document.querySelectorAll('.gift-type-btn').forEach(b=>b.classList.toggle('active',b.getAttribute('data-t')===t));
   const title=document.getElementById('giftPickTitle');
   const sel=document.getElementById('giftPick');
@@ -422,6 +426,24 @@ async function loadGiftGifts(){
   const sel=document.getElementById('giftPick');
   if(!_giftData.list.length){sel.innerHTML='<option value="">暂无礼包（云端 admin_gifts 为空）</option>';return;}
   sel.innerHTML='<option value="">请选择礼包</option>'+_giftData.list.map(g=>`<option value="${escTextarea(g.id)}">${escTextarea(g.name)}（${(g.rewards||[]).length}项奖励）</option>`).join('');
+  giftPickChanged();
+}
+const GIFT_REWARD_KIND_NAMES={yuanbao:'元宝',equip:'装备',item:'道具',material:'材料',currency:'货币'};
+function giftPickChanged(){
+  const box=document.getElementById('giftDetail');if(!box)return;
+  box.innerHTML='';box.style.display='none';
+  if(_giftData.type!=='gift')return;
+  const sel=document.getElementById('giftPick');
+  const g=_giftData.list.find(x=>String(x.id)===String(sel.value));
+  if(!g||!(g.rewards||[]).filter(r=>r&&r.name).length)return;
+  const rows=(g.rewards||[]).filter(r=>r&&r.name);
+  box.style.display='block';
+  box.innerHTML='<div style="font-weight:bold;margin-bottom:6px;">'+escTextarea(g.name)+' 奖励明细：</div>'+
+    rows.map(r=>{
+      const n=(r.num||1);
+      const kindName=GIFT_REWARD_KIND_NAMES[r.kind]||'道具';
+      return '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #eee;"><span>'+escTextarea(r.name)+'</span><span>'+kindName+' × '+n+'</span></div>';
+    }).join('');
 }
 function giftBuildEquip(e,owner){
   const qIdx=Math.max(0,GIFT_QUALITY_NAMES.indexOf((e.quality&&e.quality[0])||'普通'));
@@ -885,6 +907,121 @@ async function saveAchievement(id){
   showAchievementList();
 }
 async function delAchievement(id){if(!confirm('确定删除该成就？'))return;await api(`achievements?id=eq.${id}`,{method:'DELETE',noCache:true});renderAchievements(document.getElementById('content'));}
+
+/* ===== 副将管理（admin_vices 表，字段对齐游戏端 VICE_DEFS：名将池/头像/基础属性/暴击闪避/等级强化） ===== */
+const VICE_JOBS=['战士','术士','刺客'];
+async function renderVices(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="editVice()">新增副将</button>
+    <button class="btn btn-default" onclick="loadVices()">刷新列表</button>
+    <span style="color:#999;font-size:12px">副将数据存 admin_vices 表（游戏端启动时拉取覆盖名将池；属性公式：每级基础属性×等级+强化×(基础÷20)）</span></div>
+    <div class="table-wrap" id="viceList">加载中...</div></div>`;
+  loadVices();
+}
+async function loadVices(){
+  const rows=await api('admin_vices',{query:'select=*&order=sort.asc,id.asc',noCache:true});
+  if(!Array.isArray(rows)){
+    document.getElementById('viceList').innerHTML='<div class="err">admin_vices 表不存在：请先在 Supabase SQL Editor 执行副将建表 SQL（init_vices_table.sql）</div>';
+    return;
+  }
+  if(!rows.length){document.getElementById('viceList').innerHTML='<div class="err">暂无副将数据（可在 SQL Editor 执行种子或点击"新增副将"录入）</div>';return;}
+  document.getElementById('viceList').innerHTML='<table><tr><th>ID</th><th>标识</th><th>头像</th><th>名称</th><th>称号</th><th>职业</th><th>性别</th><th>基础属性(血/魔/攻/防)</th><th>暴击</th><th>闪避</th><th>等级</th><th>强化</th><th>排序</th><th>启用</th><th>操作</th></tr>'+
+    rows.map(v=>`<tr><td>${v.id}</td><td>${v.v_id||'-'}</td><td>${v.avatar?'<img src="'+v.avatar+'" style="width:34px;height:34px;border-radius:4px;object-fit:cover">':'-'}</td><td>${v.name}</td><td>${v.title||'-'}</td><td>${v.job||'-'}</td><td>${v.gender||'-'}</td><td>${v.base_hp||100}/${v.base_mp||100}/${v.base_atk||100}/${v.base_def||100}</td><td>${(v.crit||0.05)*100}%</td><td>${(v.dodge||0.05)*100}%</td><td>${v.lvl||3}</td><td>+${v.enhance||0}</td><td>${v.sort||0}</td><td>${v.enabled===false?'否':'是'}</td><td><button class="btn btn-primary" onclick="editVice(${v.id})">编辑</button><button class="btn btn-danger" onclick="delVice(${v.id})">删除</button></td></tr>`).join('')+'</table>';
+}
+let _viceEditId=null,_viceEditData=null;
+function editVice(id){
+  if(id){
+    api('admin_vices',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
+      const v=Array.isArray(rows)&&rows.length?rows[0]:{};
+      _viceEditId=id;_viceEditData=Object.assign({},v);
+      showPage('vices_edit',document.querySelector('.menu-item[data-page="vices"]'));
+    });
+  }else{
+    _viceEditId=null;
+    _viceEditData={v_id:'',name:'',title:'',job:'战士',gender:'男',avatar:'',quality:20,wuXing:10,zhongCheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
+    showPage('vices_edit',document.querySelector('.menu-item[data-page="vices"]'));
+  }
+}
+function showViceList(){
+  const c=document.getElementById('content');
+  renderVices(c);
+  document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
+  const el=document.querySelector('.menu-item[data-page="vices"]');
+  if(el)el.classList.add('active');
+  document.getElementById('pageTitle').innerText='副将管理';
+}
+function renderViceEdit(c){
+  const v=_viceEditData||{};
+  const id=_viceEditId;
+  c.innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="showViceList()">← 返回副将列表</button><h3>${id?'编辑副将':'新增副将'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-card">
+        <div class="ep-card-title">副将配置（字段对齐游戏端 VICE_DEFS）</div>
+        <label class="f"><span>标识v_id：</span><input id="vcId" placeholder="如 huangzhong" value="${escTextarea(v.v_id||'')}"></label>
+        <label class="f"><span>名称：</span><input id="vcName" placeholder="如 黄忠" value="${escTextarea(v.name||'')}"></label>
+        <label class="f"><span>称号：</span><input id="vcTitle" placeholder="如 老当益壮" value="${escTextarea(v.title||'')}"></label>
+        <label class="f"><span>职业：</span><select id="vcJob">${VICE_JOBS.map(j=>`<option value="${j}" ${(v.job||'战士')===j?'selected':''}>${j}</option>`).join('')}</select></label>
+        <label class="f"><span>性别：</span><select id="vcGender"><option value="男" ${(v.gender||'男')==='男'?'selected':''}>男</option><option value="女" ${(v.gender||'')==='女'?'selected':''}>女</option></select></label>
+        <label class="f"><span>头像地址：</span><input id="vcAvatar" placeholder="如 static/image/upload/huangzhong.jpg（取武将图片资源）" value="${escTextarea(v.avatar||'')}"></label>
+        <label class="f"><span>品质：</span><input id="vcQuality" type="number" min="0" value="${v.quality||0}"></label>
+        <label class="f"><span>悟性：</span><input id="vcWx" type="number" min="0" value="${v.wuXing||0}"></label>
+        <label class="f"><span>忠诚：</span><input id="vcZc" type="number" min="0" value="${v.zhongCheng||0}"></label>
+        <label class="f"><span>寿命：</span><input id="vcLife" type="number" min="0" value="${v.life||0}"></label>
+        <label class="f"><span>故事：</span><input id="vcStory" placeholder="副将简介" value="${escTextarea(v.story||'')}"></label>
+      </div>
+      <div class="ep-card">
+        <div class="ep-card-title">属性（每级基础属性；当前属性=基础×等级+强化×(基础÷20)）</div>
+        <label class="f"><span>基础生命：</span><input id="vcBh" type="number" min="0" value="${v.base_hp||100}"></label>
+        <label class="f"><span>基础魔法：</span><input id="vcBm" type="number" min="0" value="${v.base_mp||100}"></label>
+        <label class="f"><span>基础攻击：</span><input id="vcBa" type="number" min="0" value="${v.base_atk||100}"></label>
+        <label class="f"><span>基础防御：</span><input id="vcBd" type="number" min="0" value="${v.base_def||100}"></label>
+        <label class="f"><span>暴击(小数)：</span><input id="vcCrit" type="number" step="0.001" value="${v.crit||0.05}"></label>
+        <label class="f"><span>闪避(小数)：</span><input id="vcDodge" type="number" step="0.001" value="${v.dodge||0.05}"></label>
+        <label class="f"><span>初始等级：</span><input id="vcLvl" type="number" min="1" value="${v.lvl||3}"></label>
+        <label class="f"><span>初始强化：</span><input id="vcEn" type="number" min="0" value="${v.enhance||0}"></label>
+        <label class="f"><span>排序：</span><input id="vcSort" type="number" min="0" value="${v.sort||0}"></label>
+        <label class="f"><span>启用：</span><select id="vcEnabled"><option value="1" ${v.enabled!==false?'selected':''}>是</option><option value="0" ${v.enabled===false?'selected':''}>否</option></select></label>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="showViceList()">取消</button><button class="btn btn-primary" onclick="saveVice(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+}
+async function saveVice(id){
+  const name=document.getElementById('vcName').value.trim();
+  if(!name){adminTip('请填写副将名称');return;}
+  const body={
+    v_id:document.getElementById('vcId').value.trim()||null,
+    name:name,
+    title:document.getElementById('vcTitle').value.trim()||null,
+    job:document.getElementById('vcJob').value,
+    gender:document.getElementById('vcGender').value,
+    avatar:document.getElementById('vcAvatar').value.trim()||null,
+    quality:parseInt(document.getElementById('vcQuality').value)||0,
+    wuXing:parseInt(document.getElementById('vcWx').value)||0,
+    zhongCheng:parseInt(document.getElementById('vcZc').value)||0,
+    life:parseInt(document.getElementById('vcLife').value)||0,
+    story:document.getElementById('vcStory').value.trim()||null,
+    base_hp:parseInt(document.getElementById('vcBh').value)||100,
+    base_mp:parseInt(document.getElementById('vcBm').value)||100,
+    base_atk:parseInt(document.getElementById('vcBa').value)||100,
+    base_def:parseInt(document.getElementById('vcBd').value)||100,
+    crit:parseFloat(document.getElementById('vcCrit').value)||0.05,
+    dodge:parseFloat(document.getElementById('vcDodge').value)||0.05,
+    lvl:parseInt(document.getElementById('vcLvl').value)||3,
+    enhance:parseInt(document.getElementById('vcEn').value)||0,
+    sort:parseInt(document.getElementById('vcSort').value)||0,
+    enabled:document.getElementById('vcEnabled').value==='1'
+  };
+  if(id){await api(`admin_vices?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{
+    const rows=await api('admin_vices',{query:'select=id&order=id.desc&limit=1',noCache:true}).catch(()=>[]);
+    const maxId=(Array.isArray(rows)&&rows.length)?rows[0].id:0;
+    body.id=(maxId||0)+1;
+    await api('admin_vices',{method:'POST',body,noCache:true});
+  }
+  showViceList();
+}
+async function delVice(id){if(!confirm('确定删除该副将？'))return;await api(`admin_vices?id=eq.${id}`,{method:'DELETE',noCache:true});renderVices(document.getElementById('content'));}
 
 async function renderAnnounce(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editAnn(0)">新增公告</button></div><div id="annList">加载中...</div></div>`;
@@ -1901,7 +2038,7 @@ async function ensureAdminSeeds(){
   try{
     let menus=await api('admin_menus',{query:'select=*&limit=100',noCache:true});
     if(Array.isArray(menus)&&!menus.length){
-      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['shop','商城管理','shop',13],['locations','地图管理','locations',8],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['achievements','成就管理','achievement',14],['announce','公告管理','',11],['chat','聊天监控','',12]];
+      const defMenus=[['dashboard','仪表盘','',1],['users','用户管理','',2],['sponsor','赞助记录','',3],['items','道具管理','',4],['equip','装备管理','equip',5],['gift','礼包管理','gift',6],['boss','BOSS管理','boss',7],['shop','商城管理','shop',13],['locations','地图管理','locations',8],['vices','副将管理','vice',15],['perm','权限管理','perm',9],['activities','活动管理','activity',10],['achievements','成就管理','achievement',14],['announce','公告管理','',11],['chat','聊天监控','',12]];
       for(const m of defMenus)await api('admin_menus',{method:'POST',body:{menu_key:m[0],name:m[1],perm_key:m[2],sort:m[3]},noCache:true});
     }
     ensurePermSrc(Array.isArray(menus)?menus:[]);
