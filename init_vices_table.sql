@@ -24,6 +24,10 @@ create table if not exists admin_vices (
   enabled boolean default true,
   created_at timestamptz default now()
 );
+-- 权限菜单种子：副将管理（后台 defMenus 表驱动，自动出现在权限页可配置）
+insert into public.admin_menus(menu_key,name,perm_key,sort) values ('vices','副将管理','vice',15)
+on conflict (menu_key) do update set name=excluded.name,perm_key=excluded.perm_key,sort=excluded.sort;
+
 -- 种子：83名副将（对齐腾讯文档「武将头像」分享包 + 截图1名将；头像取游戏 static/image/upload 资源）
 insert into admin_vices (id,v_id,name,title,job,gender,avatar,quality,wuXing,zhongCheng,life,story,base_hp,base_mp,base_atk,base_def,crit,dodge,lvl,enhance,sort,enabled) values
 (1,'huangzhong','黄忠','老当益壮','战士','男','static/image/upload/huangzhong.jpg',20,10,94,3000,'定军山一箭成名',100,100,100,100,0.05,0.05,3,0,1,true),

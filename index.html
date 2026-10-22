@@ -167,6 +167,7 @@ tbody tr:hover{background:#f2f6ff}
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
     <div class="menu-item" onclick="showPage('activities',this)" data-page="activities" data-perm="activity">活动管理</div>
     <div class="menu-item" onclick="showPage('achievements',this)" data-page="achievements" data-perm="achievement">成就管理</div>
+    <div class="menu-item" onclick="showPage('vices',this)" data-page="vices" data-perm="vice">副将管理</div>
     <div class="menu-item" onclick="showPage('announce',this)" data-page="announce">公告管理</div>
     <div class="menu-item" onclick="showPage('chat',this)" data-page="chat">聊天监控</div>
     <div class="menu-item" onclick="doLogout()">退出</div>
@@ -195,7 +196,7 @@ const PERM_KEYS={equip:'装备管理',gift:'礼包管理',boss:'BOSS管理',loca
 /* 权限位动态化：单一数据源=admin_menus 表（perm_key 非空的菜单即权限位）。
  * 后台新增带 perm_key 的管理模块后，权限页自动显示对应列与勾选框，无需改渲染代码。
  * PERM_SHORT 为新模块登记短标签的唯一落点（key=perm_key，label=勾选/列头显示名）。 */
-const PERM_SHORT={'equip':'装备','gift':'礼包','boss':'BOSS','locations':'地图','perm':'权限','activity':'活动','shop':'商城','achievement':'成就'};
+const PERM_SHORT={'equip':'装备','gift':'礼包','boss':'BOSS','locations':'地图','perm':'权限','activity':'活动','shop':'商城','achievement':'成就','vice':'副将'};
 let PERM_SRC=Object.keys(PERM_SHORT).map(k=>({key:k,label:PERM_SHORT[k]}));
 function ensurePermSrc(menus){
   const labelOf=m=>{
