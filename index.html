@@ -1664,7 +1664,7 @@ function giftFormHtml(g,id){
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveGift(${id!=null?id:'null'})">保存</button></div>`;
 }
 async function saveGift(id){
-  const rewards=Array.from(document.querySelectorAll('#giftRewards .gr-row')).map(row=>{
+  let rewards=Array.from(document.querySelectorAll('#giftRewards .gr-row')).map(row=>{
     const kind=row.querySelector('.gr-kind').value;
     const custom=row.querySelector('.gr-name-custom');
     let name=(custom?custom.value:row.querySelector('.gr-name').value||'').trim();
@@ -1672,6 +1672,15 @@ async function saveGift(id){
     const num=parseInt(row.querySelector('.gr-num').value)||1,p=parseFloat(row.querySelector('.gr-p').value)||0;
     return {kind,name,num,p};
   }).filter(r=>r.name);
+  /* 保存时去重：名称+种类+数量+概率完全相同的重复行只保留一条，避免重复行放大概率权重 */
+  {
+    const seen={};
+    rewards=rewards.filter(function(r){
+      const k=(r.kind||'')+'|'+r.name+'|'+(r.num||1)+'|'+(r.p||0);
+      if(seen[k])return false;
+      seen[k]=1;return true;
+    });
+  }
   const body={kind:document.getElementById('gKind').value,name:document.getElementById('gName').value.trim(),desc:document.getElementById('gDesc').value.trim(),rewards:rewards,p:parseFloat(document.getElementById('gP').value)||0,enabled:document.getElementById('gEnabled').checked};
   if(!body.name){adminTip('请输入礼包名');return;}
   if(id){await api(`admin_gifts?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
