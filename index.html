@@ -456,7 +456,7 @@ function giftBuildEquip(e,owner){
   if(e.crit)bonus.crit=Number(e.crit);
   if(e.dodge)bonus.dodge=Number(e.dodge);
   const jb=GIFT_JOB_MAP[e.job]||GIFT_JOB_MAP[String(e.job)]||'全职';
-  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:e.star3?3:1,requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:{},bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null};
+  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:e.star3?3:1,requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:{},bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null,desc:e.desc||'',image:e.image||''};
 }
 function giftUnpackRewards(g,owner,times,d){
   const lines=[];
@@ -847,8 +847,8 @@ async function loadAchievements(){
   let list=rows;
   if(_achCat!=='all')list=list.filter(a=>a.cat===_achCat);
   if(!list.length){document.getElementById('achList').innerHTML='<div class="err">该分类暂无成就（可新增）</div>';return;}
-  document.getElementById('achList').innerHTML='<table><tr><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>操作</th></tr>'+
-    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button></td></tr>`).join('')+'</table>';
+  document.getElementById('achList').innerHTML='<table><tr><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>状态</th><th>操作</th></tr>'+
+    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':'<span class="tag tag-on">生效中</span>'}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button>${a.enabled===false?'<button class="btn btn-default" onclick="sealAchievement(${a.id},true)">解封</button>':'<button class="btn btn-default" onclick="sealAchievement(${a.id},false)">封存</button>'}</td></tr>`).join('')+'</table>';
 }
 let _achEditId=null,_achEditData=null;
 function editAchievement(id){
@@ -911,6 +911,7 @@ async function saveAchievement(id){
   showAchievementList();
 }
 async function delAchievement(id){if(!confirm('确定删除该成就？'))return;await api(`achievements?id=eq.${id}`,{method:'DELETE',noCache:true});renderAchievements(document.getElementById('content'));}
+async function sealAchievement(id,v){if(!confirm('确定要'+(v?'解封':'封存')+'该成就？\n'+(v?'解封后游戏端恢复显示该成就。':'封存后游戏端不再显示、不再达成该成就（已领取加成也停止生效）。')))return;await api(`achievements?id=eq.${id}`,{method:'PATCH',body:{enabled:v},noCache:true});renderAchievements(document.getElementById('content'));}
 
 /* ===== 副将管理（admin_vices 表，字段对齐游戏端 VICE_DEFS：名将池/头像/基础属性/暴击闪避/等级强化） ===== */
 const VICE_JOBS=['战士','术士','刺客'];
@@ -1060,14 +1061,37 @@ const EQUIP_ATTRS=[['atk','攻击'],['def','防御'],['hp','生命'],['mp','魔�
 const ATTR_LABELS={atk:'攻击',def:'防御',hp:'生命',mp:'魔法',crit:'暴击',dodge:'闪避'};
 function toggleAttrInput(id){
   const inp=document.getElementById(id);
-  if(inp)inp.style.display=(inp.style.display==='none')?'':'none';
+  if(!inp)return;
+  const show=inp.style.display!=='none';
+  inp.style.display=show?'':'none';
+  const stEl=document.getElementById(id.replace(/_([^_]+)$/,'_st_$1'));
+  const rEl=document.getElementById(id.replace(/_([^_]+)$/,'_r_$1'));
+  if(stEl)stEl.style.display=inp.style.display;
+  if(rEl)rEl.style.display=inp.style.display;
+  if(show)attrRecalc(id);
+  else if(rEl)rEl.textContent='';
+}
+/* 星级→3星标准值换算：输入某星级下的数值，按倍率(1+星级/10)折算回3星标准
+   例 数值142@4.2星 → 142÷1.42×1.3 ≈ 130；默认3星时倍率1.3，换算值=原值 */
+function star3Value(val,star){
+  const v=Number(val),s=Number(star);
+  if(!isFinite(v))return v;
+  if(!isFinite(s)||s<=0)return Math.round(v*1.3);
+  return Math.round(v/(1+s/10)*1.3);
+}
+function attrRecalc(base){
+  const v=document.getElementById(base).value;
+  const stEl=document.getElementById(base.replace(/_([^_]+)$/,'_st_$1'));
+  const rEl=document.getElementById(base.replace(/_([^_]+)$/,'_r_$1'));
+  if(!rEl)return;
+  rEl.textContent='3星标准: '+star3Value(v,stEl?stEl.value:3);
 }
 function attrBlockHtml(prefix,valsMap,checkedMap){
   return EQUIP_ATTRS.map(([k,label])=>{
     const on=checkedMap&&checkedMap[k];
     const v=valsMap&&valsMap[k]!=null?valsMap[k]:'';
     const step=(k==='crit'||k==='dodge')?'0.01':'1';
-    return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${on?'':'display:none;'}width:140px;margin:0"></div>`;
+    return `<div style="display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${on?'':'display:none;'}width:110px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span style="font-size:12px;color:#888">@</span><input id="${prefix}_st_${k}" type="number" step="0.01" min="0.1" value="3" style="${on?'':'display:none;'}width:70px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span style="font-size:12px;color:#2266cc;white-space:nowrap" id="${prefix}_r_${k}">${on?('3星标准: '+star3Value(v,3)):''}</span></div>`;
   }).join('');
 }
 function bossBidOf(x){return (typeof x==='object'&&x!=null)?(x.bid!=null?x.bid:x.name||''):String(x==null?'':x);}
@@ -1174,9 +1198,9 @@ function renderEquipEdit(c){
         <div class="ep-card">
           <div class="ep-card-title">品质与属性</div>
           <label class="f"><span>品质：</span><select id="eQuality">${['普通','精良','卓越','史诗','神器'].map(q=>`<option value="${q}" ${eqQual===q?'selected':''}>${q}</option>`).join('')}</select></label>
-          <div class="form-group"><div class="fg-title">主属性（3星标准数值，勾选后填写，可多选）</div>
+          <div class="form-group"><div class="fg-title">主属性（输入数值+星级，自动换算为3星标准入库；星级默认3可直接填3星值）</div>
           ${attrBlockHtml('eMain',mainVals,mainChecked)}</div>
-          <div class="form-group"><div class="fg-title">附加属性（勾选后填写数值，保存为 sub_stats）</div>
+          <div class="form-group"><div class="fg-title">附加属性（输入数值+星级，自动换算3星标准后写入 sub_stats；星级默认3）</div>
           ${attrBlockHtml('eSub',subVals,subChecked)}</div>
         </div>
       </div>
@@ -1192,6 +1216,9 @@ function renderEquipEdit(c){
       </div>
       <div class="ep-card">
         <div class="ep-card-title">其他</div>
+        <label class="f"><span>装备说明：</span><input id="eDesc" placeholder="非必填，显示在游戏装备详情" value="${escTextarea(e.desc||'')}"></label>
+        <label class="f"><span>装备图片：</span><input id="eImage" placeholder="非必填，图片URL" value="${escTextarea(e.image||'')}" oninput="var p=document.getElementById('eImagePrev');if(p){p.src=this.value;}"></label>
+        ${e.image?'<img id="eImagePrev" src="'+escTextarea(e.image)+'" style="max-width:120px;max-height:120px;border-radius:6px;margin:4px 0;border:1px solid #e5e9f2">':'<span id="eImagePrev" style="display:none"></span>'}
         <label class="f"><span>价格(银两)：</span><input id="ePrice" type="number" value="${e.price||100}"></label>
         <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eStar3" ${e.star3?'checked':''}> 3星标准标记（游戏生成时至少3星）</label>
         <label style="font-size:14px;color:#44546b;margin:6px 0"><input type="checkbox" id="eEnabled" ${e.enabled!==false?'checked':''}> 启用</label>
@@ -1252,14 +1279,16 @@ async function saveEquip(id){
   EQUIP_ATTRS.forEach(([k])=>{
     if(document.getElementById('eMain_cb_'+k).checked){
       const v=parseFloat(document.getElementById('eMain_'+k).value);
-      if(!isNaN(v))mains[k]=v;
+      const st=parseFloat(document.getElementById('eMain_st_'+k).value);
+      if(!isNaN(v))mains[k]=star3Value(v,isNaN(st)?3:st);
     }
   });
   const sub_stats=[];
   EQUIP_ATTRS.forEach(([k])=>{
     if(document.getElementById('eSub_cb_'+k).checked){
       const v=parseFloat(document.getElementById('eSub_'+k).value);
-      if(!isNaN(v)&&v!==0)sub_stats.push({attr:k,val:v});
+      const st=parseFloat(document.getElementById('eSub_st_'+k).value);
+      if(!isNaN(v)&&v!==0)sub_stats.push({attr:k,val:star3Value(v,isNaN(st)?3:st)});
     }
   });
   const source_bosses=Array.from(_epBossSel);
@@ -1281,6 +1310,8 @@ async function saveEquip(id){
     source_bosses:source_bosses,
     source_flip:document.getElementById('eSourceFlip').checked,
     source_egg:document.getElementById('eSourceEgg').checked,
+    desc:document.getElementById('eDesc').value.trim()||null,
+    image:document.getElementById('eImage').value.trim()||null,
     enabled:document.getElementById('eEnabled').checked,
   };
   if(!obj.name){adminTip('请输入装备名');return;}
