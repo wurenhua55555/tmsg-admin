@@ -552,20 +552,34 @@ async function addPoints(uname){
   const reason=(document.getElementById('pointReason')||{}).value?(document.getElementById('pointReason').value.trim()||'充值'):'充值';
   const enc=encodeURIComponent(uname);
   try{
-    const r=await api('saves',{query:`username=eq.${enc}&select=data`});
-    if(!r||!r.length){adminTip('用户不存在：'+uname);return;}
-    let d=parseData(r[0].data);
-    if(!d.char)d.char={};
-    d.char.jifen=(d.char.jifen||0)+num;
-    // 写回的时候转成JSON字符串，和游戏端保持一致
-    await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
+    // 写后回读验证：玩家客户端旧档并发上传可能覆盖本次发放，最多重试3轮
+    let ok=false;
+    for(let attempt=0;attempt<3&&!ok;attempt++){
+      const r=await api('saves',{query:`username=eq.${enc}&select=data`,noCache:true});
+      if(!r||!r.length){adminTip('用户不存在：'+uname);return;}
+      let d=parseData(r[0].data);
+      if(!d.char)d.char={};
+      const want=(d.char.jifen||0)+num;
+      d.char.jifen=want;
+      // 写回的时候转成JSON字符串，和游戏端保持一致
+      await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)},noCache:true});
+      if(attempt>=2){ok=true;break;}
+      // 延迟后回读验证，若被玩家旧档覆盖则按最新云端值重新累加
+      await new Promise(res=>setTimeout(res,1500));
+      const vr=await api('saves',{query:`username=eq.${enc}&select=data`,noCache:true});
+      if(!vr||!vr.length){ok=true;break;}
+      const vd=parseData(vr[0].data);
+      const jf=(vd&&vd.char&&vd.char.jifen)||0;
+      if(jf===want){ok=true;}
+      // 不等则循环重试（下一轮按最新值重新计算发放）
+    }
     // 写入赞助记录
     await api('sponsor_logs',{method:'POST',body:{username:uname,jifen_delta:num,reason:reason,operator:CURRENT_ADMIN}});
     closeModal();
     // 清除saves相关缓存
     Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
     loadUsers();
-    adminTip('已为 '+uname+' 加 '+num+' 积分，已记录');
+    adminTip('已为 '+uname+' 加 '+num+' 积分，已记录'+(ok?'':'（已重试，请稍后核对）'));
   }catch(e){
     adminTip('加积分失败：'+(e&&e.message?e.message:e));
   }
