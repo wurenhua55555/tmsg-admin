@@ -1086,7 +1086,7 @@ function editVice(id){
     });
   }else{
     _viceEditId=null;
-    _viceEditData={v_id:'',name:'',title:'',tier:'三级',job:'战士',gender:'男',avatar:'',quality:20,wuXing:10,zhongCheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
+    _viceEditData={v_id:'',name:'',title:'',tier:'三级',job:'战士',gender:'男',avatar:'',quality:20,wuxing:10,zhongcheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
     showPage('vices_edit',document.querySelector('.menu-item[data-page="vices"]'));
   }
 }
@@ -1114,8 +1114,8 @@ function renderViceEdit(c){
         <label class="f"><span>性别：</span><select id="vcGender"><option value="男" ${(v.gender||'男')==='男'?'selected':''}>男</option><option value="女" ${(v.gender||'')==='女'?'selected':''}>女</option></select></label>
         <label class="f"><span>头像地址：</span><input id="vcAvatar" placeholder="如 static/image/upload/huangzhong.jpg（取武将图片资源）" value="${escTextarea(v.avatar||'')}"></label>
         <label class="f"><span>品质：</span><input id="vcQuality" type="number" min="0" value="${v.quality||0}"></label>
-        <label class="f"><span>悟性：</span><input id="vcWx" type="number" min="0" value="${v.wuXing||0}"></label>
-        <label class="f"><span>忠诚：</span><input id="vcZc" type="number" min="0" value="${v.zhongCheng||0}"></label>
+        <label class="f"><span>悟性：</span><input id="vcWx" type="number" min="0" value="${v.wuxing||0}"></label>
+        <label class="f"><span>忠诚：</span><input id="vcZc" type="number" min="0" value="${v.zhongcheng||0}"></label>
         <label class="f"><span>寿命：</span><input id="vcLife" type="number" min="0" value="${v.life||0}"></label>
         <label class="f"><span>故事：</span><input id="vcStory" placeholder="副将简介" value="${escTextarea(v.story||'')}"></label>
       </div>
@@ -1146,8 +1146,8 @@ async function saveVice(id){
     gender:document.getElementById('vcGender').value,
     avatar:document.getElementById('vcAvatar').value.trim()||null,
     quality:parseInt(document.getElementById('vcQuality').value)||0,
-    wuXing:parseInt(document.getElementById('vcWx').value)||0,
-    zhongCheng:parseInt(document.getElementById('vcZc').value)||0,
+    wuxing:parseInt(document.getElementById('vcWx').value)||0,
+    zhongcheng:parseInt(document.getElementById('vcZc').value)||0,
     life:parseInt(document.getElementById('vcLife').value)||0,
     story:document.getElementById('vcStory').value.trim()||null,
     tier:document.getElementById('vcTier').value||'三级',
