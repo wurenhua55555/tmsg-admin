@@ -1066,7 +1066,7 @@ function toggleAttrInput(id){
   const cb=row?row.querySelector('input[type=checkbox]'):null;
   const dim=cb&&!cb.checked;
   if(row)row.querySelectorAll('.ep-attr-val,.ep-attr-star,.ep-attr-recalc').forEach(function(el){el.style.opacity=dim?'0.45':'1';});
-  if(cb&&cb.checked&&!document.getElementById('eAttrType_fixed').checked)attrRecalc(id);
+  if(cb&&cb.checked&&row&&row.classList.contains('ep-star-row')&&!document.getElementById('eAttrType_fixed').checked)attrRecalc(id);
 }
 /* 星级→3星标准值换算：输入某星级下的数值，按倍率(1+星级/10)折算回3星标准
    例 数值142@4.2星 → 142÷1.42×1.3 ≈ 130；默认3星时倍率1.3，换算值=原值 */
@@ -1083,12 +1083,12 @@ function attrRecalc(base){
   if(!rEl)return;
   rEl.textContent='3星标准: '+star3Value(v,stEl?stEl.value:3);
 }
-/* 整个装备属性类型二选一：star=星级计算（属性按星级浮动、可强化）；fixed=固定属性（定值、无法强化） */
+/* 属性类型二选一（仅影响附加属性）：star=星级计算（附加属性按星级浮动、可强化）；fixed=固定属性（附加属性定值、无法强化）。主属性始终为定值 */
 function attrTypeToggle(){
   const fixed=document.getElementById('eAttrType_fixed').checked;
   const note=document.getElementById('eAttrTypeNote');
-  if(note)note.textContent=fixed?'固定属性：主属性与附加属性均按定值保存，游戏中该装备无法强化':'星级计算：输入数值+星级自动换算3星标准入库，游戏内按星级浮动，可强化';
-  document.querySelectorAll('.ep-attr-row').forEach(function(row){
+  if(note)note.textContent=fixed?'固定属性：附加属性按定值保存，游戏中该装备无法强化':'星级计算：附加属性输入数值+星级自动换算3星标准入库，游戏内按星级浮动，可强化；主属性均为定值';
+  document.querySelectorAll('.ep-star-row').forEach(function(row){
     const stars=row.querySelectorAll('.ep-attr-star');const rs=row.querySelectorAll('.ep-attr-recalc');
     stars.forEach(function(el){el.style.display=fixed?'none':'';});
     rs.forEach(function(el){el.style.display=fixed?'none':'';});
@@ -1096,13 +1096,18 @@ function attrTypeToggle(){
     if(vEl)vEl.placeholder=fixed?'固定值':'数值';
   });
 }
-function attrBlockHtml(prefix,valsMap,checkedMap){
+/* starMode=false（主属性）：只有数值框，定值无星级；starMode=true（附加属性）：数值@星级→3星标准，星级部分受属性类型控制 */
+function attrBlockHtml(prefix,valsMap,checkedMap,starMode){
   return EQUIP_ATTRS.map(([k,label])=>{
     const on=checkedMap&&checkedMap[k];
     const v=valsMap&&valsMap[k]!=null?valsMap[k]:'';
     const step=(k==='crit'||k==='dodge')?'0.01':'1';
     const dim=on?'':'opacity:0.45;';
-    return `<div class="ep-attr-row" style="display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" class="ep-attr-val" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${dim}width:110px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span class="ep-attr-star" id="${prefix}_at_${k}" style="font-size:12px;color:#888;${dim}">@</span><input id="${prefix}_st_${k}" class="ep-attr-star" type="number" step="0.01" min="0.1" value="3" style="${dim}width:70px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span class="ep-attr-recalc" style="font-size:12px;color:#2266cc;white-space:nowrap;${dim}" id="${prefix}_r_${k}">${on?('3星标准: '+star3Value(v,3)):''}</span></div>`;
+    const rowCls=starMode?'ep-attr-row ep-star-row':'ep-attr-row ep-plain-row';
+    if(starMode){
+      return `<div class="${rowCls}" style="display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" class="ep-attr-val" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${dim}width:110px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span class="ep-attr-star" id="${prefix}_at_${k}" style="font-size:12px;color:#888;${dim}">@</span><input id="${prefix}_st_${k}" class="ep-attr-star" type="number" step="0.01" min="0.1" value="3" style="${dim}width:70px;margin:0" oninput="attrRecalc('${prefix}_${k}')"><span class="ep-attr-recalc" style="font-size:12px;color:#2266cc;white-space:nowrap;${dim}" id="${prefix}_r_${k}">${on?('3星标准: '+star3Value(v,3)):''}</span></div>`;
+    }
+    return `<div class="${rowCls}" style="display:flex;align-items:center;gap:6px;margin:4px 0;flex-wrap:wrap"><label style="font-size:13px;color:#666;white-space:nowrap"><input type="checkbox" id="${prefix}_cb_${k}" onchange="toggleAttrInput('${prefix}_${k}')" ${on?'checked':''}> ${label}</label><input id="${prefix}_${k}" class="ep-attr-val" type="number" step="${step}" placeholder="${(k==='crit'||k==='dodge')?'如 0.05':'数值'}" value="${v}" style="${dim}width:110px;margin:0"></div>`;
   }).join('');
 }
 function bossBidOf(x){return (typeof x==='object'&&x!=null)?(x.bid!=null?x.bid:x.name||''):String(x==null?'':x);}
@@ -1210,14 +1215,14 @@ function renderEquipEdit(c){
         <div class="ep-card">
           <div class="ep-card-title">品质与属性</div>
           <label class="f"><span>品质：</span><select id="eQuality">${['普通','精良','卓越','史诗','神器'].map(q=>`<option value="${q}" ${eqQual===q?'selected':''}>${q}</option>`).join('')}</select></label>
-          <div class="form-group"><div class="fg-title">属性类型（整个装备二选一）</div>
-          <label style="font-size:13px;color:#666;white-space:nowrap"><input type="radio" name="eAttrType" id="eAttrType_star" onchange="attrTypeToggle()" ${eqAttrType!=='fixed'?'checked':''}> 星级计算（属性按星级浮动，可强化）</label>
+          <div class="form-group"><div class="fg-title">附加属性类型（整个装备二选一）</div>
+          <label style="font-size:13px;color:#666;white-space:nowrap"><input type="radio" name="eAttrType" id="eAttrType_star" onchange="attrTypeToggle()" ${eqAttrType!=='fixed'?'checked':''}> 星级计算（附加属性按星级浮动，可强化）</label>
           <label style="font-size:13px;color:#666;white-space:nowrap;margin-left:12px"><input type="radio" name="eAttrType" id="eAttrType_fixed" onchange="attrTypeToggle()" ${eqAttrType==='fixed'?'checked':''}> 固定属性（定值，无法强化）</label>
-          <div id="eAttrTypeNote" style="font-size:12px;color:#ff8c1a;margin-top:4px">${eqAttrType==='fixed'?'固定属性：主属性与附加属性均按定值保存，游戏中该装备无法强化':'星级计算：输入数值+星级自动换算3星标准入库，游戏内按星级浮动，可强化'}</div></div>
-          <div class="form-group"><div class="fg-title">主属性（星级计算：数值@星级→3星标准；固定属性：直接填定值）</div>
-          ${attrBlockHtml('eMain',mainVals,mainChecked)}</div>
-          <div class="form-group"><div class="fg-title">附加属性（星级计算：换算后写入 sub_stats；固定属性：直接填定值）</div>
-          ${attrBlockHtml('eSub',subVals,subChecked)}</div>
+          <div id="eAttrTypeNote" style="font-size:12px;color:#ff8c1a;margin-top:4px">${eqAttrType==='fixed'?'固定属性：附加属性按定值保存，游戏中该装备无法强化':'星级计算：附加属性输入数值+星级自动换算3星标准入库，游戏内按星级浮动，可强化；主属性均为定值'}</div></div>
+          <div class="form-group"><div class="fg-title">主属性（定值：填多少掉落就是多少，无星级、不浮动）</div>
+          ${attrBlockHtml('eMain',mainVals,mainChecked,false)}</div>
+          <div class="form-group"><div class="fg-title">附加属性（星级计算：数值@星级→3星标准；固定属性：直接填定值）</div>
+          ${attrBlockHtml('eSub',subVals,subChecked,true)}</div>
         </div>
       </div>
       <div class="ep-card">
@@ -1297,7 +1302,7 @@ async function saveEquip(id){
   EQUIP_ATTRS.forEach(([k])=>{
     if(document.getElementById('eMain_cb_'+k).checked){
       const v=parseFloat(document.getElementById('eMain_'+k).value);
-      if(!isNaN(v))mains[k]=attrType==='fixed'?v:star3Value(v,parseFloat(document.getElementById('eMain_st_'+k).value));
+      if(!isNaN(v))mains[k]=v; /* 主属性=定值，无星级换算 */
     }
   });
   const sub_stats=[];
