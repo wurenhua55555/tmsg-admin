@@ -394,12 +394,67 @@ async function loadUsers(){
   const adminSet=new Set(Array.isArray(admins)?admins.map(a=>a.username):[]);
   let list=saves.map(r=>{
     const d=parseData(r.data);const ch=d.char||{};
-    return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,phone:d.phone||'-',regIp:d.regIp||'-',lastLogin:d.lastLogin||'',created:r.updated_at||''};
+    return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,banned:!!(d.banned),phone:d.phone||'-',regIp:d.regIp||'-',lastLogin:d.lastLogin||'',created:r.updated_at||''};
   });
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
-  document.getElementById('userList').innerHTML='<table><tr><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册手机号</th><th>注册IP</th><th>最近登录</th><th>注册时间</th><th>赞助积分</th><th>账号状态</th><th>操作</th></tr>'+
-    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${u.phone}</td><td>${u.regIp}</td><td>${lt}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag">普通玩家</span>'}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger">封存</button></td></tr>`;}).join('')+'</table>';
+  document.getElementById('userList').innerHTML='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap"><label><input type="checkbox" id="userAllCk" onclick="toggleAllSel(\'user\',this.checked)"> 全选</label><span id="userSelCnt" style="color:#666">已选 0 个</span><button class="btn btn-danger" onclick="batchDelUsers()">删除选中</button><button class="btn btn-default" onclick="batchSealUsers(false)">封存选中</button><button class="btn btn-default" onclick="batchSealUsers(true)">解封选中</button></div><table><tr><th>选择</th><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册手机号</th><th>注册IP</th><th>最近登录</th><th>注册时间</th><th>积分余额</th><th>账号状态</th><th>操作</th></tr>'+
+    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td><input type="checkbox" class="urowck" data-u="${u.username}" onchange="toggleSelUser(this)"></td><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${u.phone}</td><td>${u.regIp}</td><td>${lt}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${u.banned?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':(isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag tag-on">正常</span>')}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger" onclick="delUser('${u.username}')">删除</button><button class="btn ${u.banned?'btn-default':'btn-danger'}" onclick="sealUser('${u.username}',${u.banned?'true':'false'})">${u.banned?'解封':'封存'}</button></td></tr>`;}).join('')+'</table>';
+}
+/* ===== 用户多选操作（删除/封存/解封） ===== */
+let _selUsers=new Set(),_selAch=new Set();
+function toggleSelUser(cb){const u=cb&&cb.dataset&&cb.dataset.u;if(!u)return;if(cb.checked)_selUsers.add(u);else _selUsers.delete(u);refreshUserSel();}
+function refreshUserSel(){const n=_selUsers.size;const e=document.getElementById('userSelCnt');if(e)e.textContent='已选 '+n+' 个';const all=document.getElementById('userAllCk');const boxes=document.querySelectorAll('.urowck');if(all)all.checked=n>0&&n===boxes.length;}
+function toggleAllSel(scope,ck){
+  const cls=scope==='user'?'.urowck':'.arowck';
+  document.querySelectorAll(cls).forEach(cb=>{cb.checked=ck;if(scope==='user')toggleSelUser(cb);else toggleSelAch(cb);});
+}
+async function delUser(u){
+  if(!confirm('确定删除账号 '+u+'？删除后不可恢复！'))return;
+  await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'DELETE'});
+  loadUsers();adminTip('已删除账号 '+u);
+}
+async function sealUser(u,v){
+  if(!confirm('确定'+(v?'解封':'封存')+'账号 '+u+'？'+(v?'解封后该账号可正常进入游戏。':'封存后该账号无法进入游戏，数据保留。')))return;
+  const rows=await api('saves',{query:'username=eq.'+encodeURIComponent(u)});
+  const r=Array.isArray(rows)?rows[0]:null;if(!r){adminTip('未找到账号 '+u);return;}
+  const d=parseData(r.data)||{};
+  if(v)delete d.banned;else d.banned=true;
+  await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'PATCH',body:{data:JSON.stringify(d)}});
+  loadUsers();adminTip('已'+(v?'解封':'封存')+'账号 '+u);
+}
+async function batchDelUsers(){
+  const list=[..._selUsers];if(!list.length){adminTip('请先勾选要删除的账号');return;}
+  if(!confirm('确定删除选中的 '+list.length+' 个账号？删除后不可恢复！'))return;
+  for(const u of list){await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'DELETE'}).catch(()=>{});}
+  _selUsers.clear();loadUsers();adminTip('已删除 '+list.length+' 个账号');
+}
+async function batchSealUsers(v){
+  const list=[..._selUsers];if(!list.length){adminTip('请先勾选要'+(v?'解封':'封存')+'的账号');return;}
+  if(!confirm('确定'+(v?'解封':'封存')+'选中的 '+list.length+' 个账号？'+(v?'':'封存后这些账号无法进入游戏，数据保留。')))return;
+  for(const u of list){
+    const rows=await api('saves',{query:'username=eq.'+encodeURIComponent(u)}).catch(()=>[]);
+    const r=Array.isArray(rows)?rows[0]:null;if(!r)continue;
+    const d=parseData(r.data)||{};
+    if(v)delete d.banned;else d.banned=true;
+    await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'PATCH',body:{data:JSON.stringify(d)}}).catch(()=>{});
+  }
+  _selUsers.clear();loadUsers();adminTip('已'+(v?'解封':'封存')+' '+list.length+' 个账号');
+}
+/* ===== 成就多选操作（删除/封存/解封） ===== */
+function toggleSelAch(cb){const id=cb&&cb.dataset&&cb.dataset.a;if(!id)return;if(cb.checked)_selAch.add(id);else _selAch.delete(id);refreshAchSel();}
+function refreshAchSel(){const n=_selAch.size;const e=document.getElementById('achSelCnt');if(e)e.textContent='已选 '+n+' 个';const all=document.getElementById('achAllCk');const boxes=document.querySelectorAll('.arowck');if(all)all.checked=n>0&&n===boxes.length;}
+async function batchDelAch(){
+  const list=[..._selAch];if(!list.length){adminTip('请先勾选要删除的成就');return;}
+  if(!confirm('确定删除选中的 '+list.length+' 条成就？游戏端将不再显示，删除不可恢复！'))return;
+  for(const id of list){await api('achievements',{query:'id=eq.'+id,method:'DELETE'}).catch(()=>{});}
+  _selAch.clear();loadAchievements();adminTip('已删除 '+list.length+' 条成就');
+}
+async function batchSealAch(v){
+  const list=[..._selAch];if(!list.length){adminTip('请先勾选要'+(v?'解封':'封存')+'的成就');return;}
+  if(!confirm('确定'+(v?'解封':'封存')+'选中的 '+list.length+' 条成就？'))return;
+  for(const id of list){await api('achievements',{query:'id=eq.'+id,method:'PATCH',body:{enabled:v},noCache:true}).catch(()=>{});}
+  _selAch.clear();loadAchievements();adminTip('已'+(v?'解封':'封存')+' '+list.length+' 条成就');
 }
 /* ===== 用户赠送（装备/道具/礼包） ===== */
 const GIFT_QUALITY_NAMES=['普通','精良','卓越','史诗','神器'];
@@ -924,8 +979,8 @@ async function loadAchievements(){
   let list=rows;
   if(_achCat!=='all')list=list.filter(a=>a.cat===_achCat);
   if(!list.length){document.getElementById('achList').innerHTML='<div class="err">该分类暂无成就（可新增）</div>';return;}
-  document.getElementById('achList').innerHTML='<table><tr><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>状态</th><th>操作</th></tr>'+
-    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':'<span class="tag tag-on">生效中</span>'}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button>${a.enabled===false?'<button class="btn btn-default" onclick="sealAchievement('+a.id+',true)">解封</button>':'<button class="btn btn-default" onclick="sealAchievement('+a.id+',false)">封存</button>'}</td></tr>`).join('')+'</table>';
+  document.getElementById('achList').innerHTML='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap"><label><input type="checkbox" id="achAllCk" onclick="toggleAllSel(\'ach\',this.checked)"> 全选</label><span id="achSelCnt" style="color:#666">已选 0 个</span><button class="btn btn-danger" onclick="batchDelAch()">删除选中</button><button class="btn btn-default" onclick="batchSealAch(false)">封存选中</button><button class="btn btn-default" onclick="batchSealAch(true)">解封选中</button></div><table><tr><th>选择</th><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>状态</th><th>操作</th></tr>'+
+    list.map(a=>`<tr><td><input type="checkbox" class="arowck" data-a="${a.id}" onchange="toggleSelAch(this)"></td><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':'<span class="tag tag-on">生效中</span>'}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button>${a.enabled===false?'<button class="btn btn-default" onclick="sealAchievement('+a.id+',true)">解封</button>':'<button class="btn btn-default" onclick="sealAchievement('+a.id+',false)">封存</button>'}</td></tr>`).join('')+'</table>';
 }
 let _achEditId=null,_achEditData=null;
 function editAchievement(id){
