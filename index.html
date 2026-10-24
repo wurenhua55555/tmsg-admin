@@ -136,6 +136,8 @@ tbody tr:hover{background:#f2f6ff}
 .ep-boss-box .ep-boss-item:hover{background:#f2f6ff}
 .ep-boss-box .ep-boss-item.selected{background:#eef3ff}
 .ep-boss-box .ep-boss-item input{flex:none}
+.ep-boss-box .ep-boss-item input[type="number"]{width:56px;padding:2px 6px;border:1px solid #c9d4e4;border-radius:6px;font-size:13px;text-align:center}
+.ep-boss-box .ep-boss-item input[type="number"]:disabled{opacity:.45;cursor:not-allowed}
 .ep-boss-tags{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
 .ep-boss-tags .ep-boss-tag{display:inline-flex;align-items:center;gap:4px;background:#eef3ff;color:#2266cc;border:1px solid #d5e2ff;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:500}
 .ep-boss-empty{color:#9aa5b8;font-size:13px;padding:8px 4px}
@@ -1223,7 +1225,7 @@ async function loadEquips(){
       return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
 }
 let _equipEditId=null,_equipEditData=null;
-let _epBossList=[],_epBossSel=new Set();
+let _epBossList=[],_epBossSel=new Set(),_epBossRates={};
 async function editEquip(id){
   let e={slot:'weapon',name:'',lvl:1,quality:['普通'],atk:0,def:0,hp:0,mp:0,crit:0,dodge:0,sub_stats:[],star3:false,price:100,source_bosses:[],source_flip:false,source_egg:false,enabled:true};
   if(id){const rows=await api('admin_equips',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)e=rows[0];}
@@ -1274,7 +1276,7 @@ function renderEquipEdit(c){
       </div>
       <div class="ep-card">
         <div class="ep-card-title">产出与掉落</div>
-        <div class="form-group"><div class="fg-title">产出BOSS（按 圣兽/灵兽/未分组 二级选择，多选写入 source_bosses）</div>
+        <div class="form-group"><div class="fg-title">产出BOSS（按 圣兽/灵兽/未分组 二级选择，多选写入 source_bosses；每个BOSS可填掉落几率%，击杀该BOSS时按几率掉落此装备）</div>
           <div class="ep-boss-bar"><select id="eBossGroup" onchange="epBossRenderGroup()"><option value="sheng">圣兽</option><option value="ling">灵兽</option><option value="other">未分组</option><option value="all">全部</option></select><span class="ep-boss-count" id="epBossCount">已选 0</span></div>
           <div id="epBossBox" class="ep-boss-box">加载中...</div>
           <div id="epBossTags" class="ep-boss-tags"></div>
@@ -1299,6 +1301,12 @@ function renderEquipEdit(c){
     if(!Array.isArray(bossRows))bossRows=[];
     _epBossList=bossRows.map(b=>({bid:b.bid,name:b.name||b.bid}));
     _epBossSel=new Set((Array.isArray(e.source_bosses)?e.source_bosses:[]).map(bossBidOf));
+    _epBossRates={};(Array.isArray(e.source_bosses)?e.source_bosses:[]).forEach(function(s){
+      const bid=bossBidOf(s);
+      if(bid==null||bid==='')return;
+      const r=(s&&typeof s==='object'&&s.rate!=null)?Number(s.rate):5;
+      _epBossRates[bid]=(r>=1&&r<=100)?r:5;
+    });
     epBossRenderGroup();
     attrTypeToggle();
   })();
@@ -1317,7 +1325,8 @@ function epBossRenderGroup(){
   if(!list.length){box.innerHTML='<div class="ep-boss-empty">该分组暂无BOSS，请先在BOSS管理中创建</div>';epBossUpdateTags();return;}
   box.innerHTML=list.map(b=>{
     const on=_epBossSel.has(b.bid);
-    return `<label class="ep-boss-item ${on?'selected':''}"><input type="checkbox" class="eSrcBoss" value="${escTextarea(b.bid)}" ${on?'checked':''}> ${escTextarea(b.name||b.bid)}</label>`;
+    const rate=(_epBossRates[b.bid]!=null)?_epBossRates[b.bid]:5;
+    return `<label class="ep-boss-item ${on?'selected':''}"><input type="checkbox" class="eSrcBoss" value="${escTextarea(b.bid)}" ${on?'checked':''}> ${escTextarea(b.name||b.bid)}<input type="number" class="eSrcBossRate" data-bid="${escTextarea(b.bid)}" min="1" max="100" value="${rate}" ${on?'':'disabled'} title="掉率(%)">%</label>`;
   }).join('');
   // 事件委托：统一监听分组容器 change，避免内联 onchange 引号嵌套导致绑定失效
   box.onchange=function(ev){
@@ -1325,12 +1334,21 @@ function epBossRenderGroup(){
     if(!el.classList||!el.classList.contains('eSrcBoss'))return;
     epBossToggle(el);
   };
+  box.oninput=function(ev){
+    const el=ev.target;
+    if(!el.classList||!el.classList.contains('eSrcBossRate'))return;
+    const bid=el.getAttribute('data-bid');
+    const v=parseInt(el.value,10);
+    _epBossRates[bid]=(v>=1&&v<=100)?v:5;
+  };
   epBossUpdateTags();
 }
 function epBossToggle(el){
   if(el.checked)_epBossSel.add(el.value);else _epBossSel.delete(el.value);
   const item=el.closest('.ep-boss-item');
   if(item)item.classList.toggle('selected',el.checked);
+  const rateInp=item?item.querySelector('.eSrcBossRate'):null;
+  if(rateInp){rateInp.disabled=!el.checked;if(!el.checked){rateInp.value=5;_epBossRates[el.value]=5;}}
   epBossUpdateTags();
 }
 function epBossUpdateTags(){
@@ -1338,8 +1356,8 @@ function epBossUpdateTags(){
   if(count)count.innerText='已选 '+_epBossSel.size;
   const tagBox=document.getElementById('epBossTags');
   if(!tagBox)return;
-  const names=[];_epBossList.forEach(b=>{if(_epBossSel.has(b.bid))names.push(b.name||b.bid);});
-  tagBox.innerHTML=names.map(n=>`<span class="ep-boss-tag">${escTextarea(n)}</span>`).join('')||'<span style="color:#9aa5b8;font-size:12px">尚未选择产出BOSS</span>';
+  const parts=[];_epBossList.forEach(b=>{if(_epBossSel.has(b.bid))parts.push(`${b.name||b.bid} ${(_epBossRates[b.bid]!=null?_epBossRates[b.bid]:5)}%`);});
+  tagBox.innerHTML=parts.map(n=>`<span class="ep-boss-tag">${escTextarea(n)}</span>`).join('')||'<span style="color:#9aa5b8;font-size:12px">尚未选择产出BOSS</span>';
 }
 function escTextarea(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 async function saveEquip(id){
@@ -1359,7 +1377,10 @@ async function saveEquip(id){
       if(!isNaN(v)&&v!==0)sub_stats.push({attr:k,val:attrType==='fixed'?v:star3Value(v,parseFloat(document.getElementById('eSub_st_'+k).value))});
     }
   });
-  const source_bosses=Array.from(_epBossSel);
+  const source_bosses=Array.from(_epBossSel).map(function(bid){
+    const r=_epBossRates[bid];
+    return {bid:bid,rate:(r>=1&&r<=100)?r:5};
+  });
   const obj={
     slot:document.getElementById('eSlot').value,
     name:document.getElementById('eName').value.trim(),
