@@ -1255,6 +1255,7 @@ async function loadEquips(){
       const mains=[];if(e.atk)mains.push('攻'+e.atk);if(e.def)mains.push('防'+e.def);if(e.hp)mains.push('生'+e.hp);if(e.mp)mains.push('魔'+e.mp);if(e.crit)mains.push('暴'+e.crit);if(e.dodge)mains.push('闪'+e.dodge);
       const subs=(Array.isArray(e.sub_stats)?e.sub_stats:[]).map(s=>{const lb=ATTR_LABELS[s.attr]||s.attr;return lb+' +'+(s.val!=null?s.val:'');}).join('、');
       const srcs=[];if(Array.isArray(e.source_bosses)&&e.source_bosses.length)srcs.push('BOSS');if(e.source_flip)srcs.push('翻牌');if(e.source_egg)srcs.push('砸蛋');
+      if(!srcs.length)srcs.push('待配置');
       const descTxt=String(e.desc||'');const descShow=descTxt.length>24?descTxt.slice(0,24)+'…':descTxt;
       return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td title="${escTextarea(descTxt)}">${descShow||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
 }
@@ -1447,7 +1448,60 @@ async function delEquip(id){if(!confirm('确定删除该装备配置？'))return
 
 /* ===== 礼包管理（云端表 admin_gifts，游戏运行时合并礼包） ===== */
 const GIFT_KINDS={vip_daily:'每日贵宾礼包',flip:'翻牌礼包',egg:'砸蛋礼包',normal:'普通礼包'};
-const GIFT_REWARD_KINDS=[['yuanbao','元宝'],['item','道具'],['material','装备材料'],['equip','装备'],['title','称号']];
+const GIFT_REWARD_KINDS=[['yuanbao','元宝'],['item','道具'],['material','装备材料'],['equip','装备'],['title','称号'],['gift','礼包']];
+let _giftOpts={equips:[],items:[],materials:[],gifts:[],titles:[]};
+async function loadGiftOpts(){
+  const qualOrder={'普通':0,'精良':1,'卓越':2,'史诗':3,'神器':4};
+  const [eqs,gifts,titles]=await Promise.all([
+    api('admin_equips',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]),
+    api('admin_gifts',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]),
+    api('admin_titles',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[])
+  ]);
+  const eqs2=(Array.isArray(eqs)?eqs:[]).slice().sort((a,b)=>{
+    const qa=(Array.isArray(a.quality)&&a.quality.length)?a.quality[0]:'普通';
+    const qb=(Array.isArray(b.quality)&&b.quality.length)?b.quality[0]:'普通';
+    return (qualOrder[qa]||0)-(qualOrder[qb]||0)||String(a.name||'').localeCompare(String(b.name||''),'zh');
+  });
+  _giftOpts={
+    equips:eqs2,
+    gifts:Array.isArray(gifts)?gifts:[],
+    titles:Array.isArray(titles)?titles:[],
+    items:ITEM_CATALOG.filter(i=>i&&i.type!=='材料').map(i=>i.name),
+    materials:ITEM_CATALOG.filter(i=>i&&i.type==='材料').map(i=>i.name)
+  };
+}
+function giftKindOpts(kind){
+  if(kind==='equip')return _giftOpts.equips.map(e=>[e.name,(e.name||'')+((Array.isArray(e.quality)&&e.quality.length)?'（'+e.quality[0]+'）':'')]);
+  if(kind==='item')return _giftOpts.items.map(n=>[n,n]);
+  if(kind==='material')return _giftOpts.materials.map(n=>[n,n]);
+  if(kind==='title')return _giftOpts.titles.map(t=>[t.name||'',t.name||'']);
+  if(kind==='gift')return _giftOpts.gifts.map(g=>[g.name||'',g.name||'']);
+  return [];
+}
+function giftNameHtml(r){
+  const kind=r.kind||'item';
+  if(kind==='yuanbao')return '<input class="gr-name" placeholder="元宝" value="元宝" style="flex:1;min-width:120px" readonly>';
+  const opts=giftKindOpts(kind);
+  const inList=opts.find(o=>o[0]===r.name);
+  const customInput=r.name&&!inList?'<input class="gr-name-custom" placeholder="自定义名称" value="'+escTextarea(r.name)+'" style="flex:1;min-width:120px">':'';
+  const customOpt=!inList&&r.name?'<option value="__custom__" selected>✎ 自定义：'+escTextarea(r.name)+'</option>':'<option value="__custom__">✎ 自定义输入</option>';
+  return '<select class="gr-name" onchange="giftNameSwitch(this)" style="flex:1;min-width:120px"><option value="">选择'+String.fromCharCode(8230)+'</option>'+opts.map(o=>'<option value="'+escTextarea(o[0])+'"'+(inList&&inList[0]===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+customOpt+'</select>'+customInput;
+}
+function giftKindSwitch(sel){
+  const row=sel.closest('.gr-row');
+  const r={kind:sel.value,name:'',num:row.querySelector('.gr-num').value||1,p:row.querySelector('.gr-p').value||''};
+  row.innerHTML=giftRowHtml(r);
+}
+function giftNameSwitch(sel){
+  const row=sel.closest('.gr-row');
+  let custom=row.querySelector('.gr-name-custom');
+  if(sel.value==='__custom__'){
+    if(!custom){
+      custom=document.createElement('input');custom.className='gr-name-custom';custom.placeholder='自定义名称';custom.style.cssText='flex:1;min-width:120px';
+      sel.insertAdjacentElement('afterend',custom);custom.focus();
+    }
+  }else if(custom){custom.remove();}
+}
 async function renderGift(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editGift()">新增礼包</button> <span style="color:#999;font-size:12px">礼包经游戏端背包道具打开发放；每日贵宾礼包（vip_daily）会覆盖游戏内默认发放内容</span></div><div class="table-wrap" id="giftList">加载中...</div></div>`;
   const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true});
@@ -1458,14 +1512,15 @@ async function renderGift(c){
 function giftRowHtml(r){
   r=r||{kind:'yuanbao',name:'',num:1,p:0};
   return `<div class="gr-row" style="display:flex;gap:6px;margin:6px 0;align-items:center;flex-wrap:wrap">
-    <select class="gr-kind" style="flex:0 0 90px">${GIFT_REWARD_KINDS.map(([k,v])=>`<option value="${k}" ${r.kind===k?'selected':''}>${v}</option>`).join('')}</select>
-    <input class="gr-name" placeholder="名称" value="${escTextarea(r.name)}" style="flex:1;min-width:120px">
+    <select class="gr-kind" style="flex:0 0 90px" onchange="giftKindSwitch(this)">${GIFT_REWARD_KINDS.map(([k,v])=>`<option value="${k}" ${r.kind===k?'selected':''}>${v}</option>`).join('')}</select>
+    ${giftNameHtml(r)}
     <input class="gr-num" type="number" placeholder="数量" value="${r.num||1}" style="flex:0 0 70px">
     <input class="gr-p" type="number" step="0.01" placeholder="概率%" value="${(r.p!=null?r.p:'')}" style="flex:0 0 80px">
     <button class="btn btn-default" onclick="this.parentNode.remove()">移除</button></div>`;
 }
 let _giftEditId=null,_giftEditData=null;
-function editGift(id){
+async function editGift(id){
+  await loadGiftOpts();
   if(id){
     api('admin_gifts',{query:`id=eq.${id}&select=*`,noCache:true}).then(rows=>{
       const g=Array.isArray(rows)&&rows.length?rows[0]:{kind:'normal',name:'',desc:'',rewards:[],p:0,enabled:true};
@@ -1524,7 +1579,11 @@ function giftFormHtml(g,id){
 }
 async function saveGift(id){
   const rewards=Array.from(document.querySelectorAll('#giftRewards .gr-row')).map(row=>{
-    const kind=row.querySelector('.gr-kind').value,name=row.querySelector('.gr-name').value.trim(),num=parseInt(row.querySelector('.gr-num').value)||1,p=parseFloat(row.querySelector('.gr-p').value)||0;
+    const kind=row.querySelector('.gr-kind').value;
+    const custom=row.querySelector('.gr-name-custom');
+    let name=(custom?custom.value:row.querySelector('.gr-name').value||'').trim();
+    if(kind==='yuanbao'&&!name)name='元宝';
+    const num=parseInt(row.querySelector('.gr-num').value)||1,p=parseFloat(row.querySelector('.gr-p').value)||0;
     return {kind,name,num,p};
   }).filter(r=>r.name);
   const body={kind:document.getElementById('gKind').value,name:document.getElementById('gName').value.trim(),desc:document.getElementById('gDesc').value.trim(),rewards:rewards,p:parseFloat(document.getElementById('gP').value)||0,enabled:document.getElementById('gEnabled').checked};
