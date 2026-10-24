@@ -218,6 +218,8 @@ const DEFAULT_PERMS={equip:false,gift:false,boss:false,locations:false,perm:fals
 async function api(table,opts={}){
   const cacheKey=table+'?'+(opts.query||'');
   if(opts.method==='GET'&&!opts.noCache&&_cache[cacheKey]&&Date.now()-_cache[cacheKey].t<30000)return _cache[cacheKey].data;
+  const isWrite=opts.method&&opts.method!=='GET';
+  if(isWrite)busyStart();
   try{
     const url=new URL(`${SUPABASE_URL}/rest/v1/${table}`);
     if(opts.query)new URLSearchParams(opts.query).forEach((v,k)=>url.searchParams.set(k,v));
@@ -237,6 +239,33 @@ async function api(table,opts={}){
     if(opts.method==='GET'&&Array.isArray(data)&&!opts.noCache)_cache[cacheKey]={t:Date.now(),data};
     return data;
   }catch(e){console.error('API错误:',table,e);alert('接口错误:'+e.message+' 表:'+table);return [];}
+  finally{if(isWrite)busyEnd();}
+}
+/* ---- 全局提交loading：所有写操作请求期间全屏遮罩+提交按钮变"提交中..." ----
+ * 连续写请求（如加积分=查+改+写日志）之间用延迟归零衔接，防止遮罩闪断导致重复点击 */
+let _busyCount=0,_busyTimer=null;
+function busyMask(show){
+  let m=document.getElementById('busyMask');
+  if(!m){
+    m=document.createElement('div');
+    m.id='busyMask';
+    m.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.5);z-index:9000;display:none;align-items:center;justify-content:center';
+    m.innerHTML='<div style="background:#fff;padding:14px 28px;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.18);font-size:15px;color:#333">处理中...</div>';
+    document.body.appendChild(m);
+  }
+  m.style.display=show?'flex':'none';
+}
+function busyButtons(on){
+  const sel='#modalBox .btn-primary,#content .ep-actions .btn-primary';
+  document.querySelectorAll(sel).forEach(b=>{
+    if(on){if(!b.dataset.origTxt)b.dataset.origTxt=b.textContent;b.disabled=true;b.textContent='提交中...';}
+    else{b.disabled=false;b.textContent=b.dataset.origTxt||b.textContent;}
+  });
+}
+function busyStart(){_busyCount++;clearTimeout(_busyTimer);busyMask(true);busyButtons(true);}
+function busyEnd(){
+  if(_busyCount>0)_busyCount--;
+  if(_busyCount===0){clearTimeout(_busyTimer);_busyTimer=setTimeout(function(){busyMask(false);busyButtons(false);},350);}
 }
 function parseData(d){if(typeof d==='string'){try{return JSON.parse(d)}catch(e){return {}}}return d||{};}
 
@@ -522,8 +551,6 @@ async function addPoints(uname){
   if(num<=0){adminTip('请输入正数积分');return;}
   const reason=(document.getElementById('pointReason')||{}).value?(document.getElementById('pointReason').value.trim()||'充值'):'充值';
   const enc=encodeURIComponent(uname);
-  const btn=document.querySelector('#modalBox .btn-primary');
-  if(btn){btn.disabled=true;btn.textContent='提交中...';}
   try{
     const r=await api('saves',{query:`username=eq.${enc}&select=data`});
     if(!r||!r.length){adminTip('用户不存在：'+uname);return;}
@@ -541,8 +568,6 @@ async function addPoints(uname){
     adminTip('已为 '+uname+' 加 '+num+' 积分，已记录');
   }catch(e){
     adminTip('加积分失败：'+(e&&e.message?e.message:e));
-  }finally{
-    if(document.getElementById('modalMask').style.display==='flex'&&btn){btn.disabled=false;btn.textContent='提交';}
   }
 }
 async function resetUserPwd(uname){
