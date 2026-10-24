@@ -1700,35 +1700,37 @@ async function loadTitles(){
     return true;
   });
   if(!filtered.length){el.innerHTML='<div class="err">该筛选下暂无称号</div>';return;}
-  el.innerHTML='<table><tr><th>ID</th><th>称号名称</th><th>星数</th><th>前缀名称</th><th>后缀名称</th><th>称号属性</th><th>获取来源</th><th>创建时间</th><th>更新时间</th><th>状态</th><th>操作</th></tr>'+
+  el.innerHTML='<table><tr><th>ID</th><th>称号名称</th><th>星数</th><th>前缀名称</th><th>后缀名称</th><th>称号属性</th><th>创建时间</th><th>更新时间</th><th>状态</th><th>操作</th></tr>'+
     filtered.map(t=>{
       const b=t.bonus||{};
       const parts=[];
       if(b.hp)parts.push('生+'+b.hp);if(b.mp)parts.push('魔+'+b.mp);if(b.atk)parts.push('攻+'+b.atk);if(b.def)parts.push('防+'+b.def);if(b.crit)parts.push('暴+'+(Number(b.crit)*100).toFixed(2)+'%');if(b.dodge)parts.push('闪+'+(Number(b.dodge)*100).toFixed(2)+'%');
-      const src=t.source||'';
-      return `<tr><td>${t.id}</td><td>${escTextarea(t.name)}</td><td>${t.star}星</td><td>${escTextarea(t.prefix_name||'')}</td><td>${escTextarea(t.suffix_name||'')}</td><td>${parts.join('、')||'-'}</td><td title="${escTextarea(src)}">${src.length>8?escTextarea(src.slice(0,8))+'…':(escTextarea(src)||'-')}</td><td>${tFmt(t.created_at)}</td><td>${tFmt(t.updated_at)}</td><td>${t.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editTitle(${t.id})">编辑</button><button class="btn btn-danger" onclick="delTitle(${t.id})">删除</button><button class="btn ${t.enabled===false?'btn-default':'btn-danger'}" onclick="toggleTitle(${t.id})">${t.enabled===false?'启用':'封存'}</button></td></tr>`;
+      return `<tr><td>${t.id}</td><td>${escTextarea(t.name)}</td><td>${t.star}星</td><td>${escTextarea(t.prefix_name||'')}</td><td>${escTextarea(t.suffix_name||'')}</td><td>${parts.join('、')||'-'}</td><td>${tFmt(t.created_at)}</td><td>${tFmt(t.updated_at)}</td><td>${t.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editTitle(${t.id})">编辑</button><button class="btn btn-danger" onclick="delTitle(${t.id})">删除</button><button class="btn ${t.enabled===false?'btn-default':'btn-danger'}" onclick="toggleTitle(${t.id})">${t.enabled===false?'启用':'封存'}</button></td></tr>`;
     }).join('')+'</table>';
 }
 async function editTitle(id){
   let t={name:'',star:1,prefix_name:'',suffix_name:'',bonus:{},source:'',enabled:true};
   if(id){const rows=await api('admin_titles',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)t=rows[0];}
   const b=t.bonus||{};
+  const attrRow=function(k,label,pct){
+    const v=b[k]!=null?b[k]:null;
+    const chk=v!=null&&Number(v)!==0?'checked':'';
+    const disp=v!=null&&Number(v)!==0?(pct?(Number(v)*100):v):'';
+    return `<label class="f" style="display:flex;align-items:center;gap:6px"><input type="checkbox" id="t_ck_${k}" ${chk} onchange="document.getElementById('t_${k}').disabled=!this.checked"><span style="width:60px">${label}：</span><input id="t_${k}" type="number" step="0.01" placeholder="${pct?'填%':''}" value="${disp}" ${chk?'':'disabled'}></label>`;
+  };
   document.getElementById('content').innerHTML=`<div class="card"><div class="ep-page"><div class="ep-form">
     <div class="ep-card"><div class="ep-card-title">称号信息</div>
       <label class="f"><span>称号名称：</span><input id="tName" value="${escTextarea(t.name)}" placeholder="如：被厚待的VIP用户"></label>
-      <label class="f"><span>称号星数：</span><input id="tStar" type="number" min="1" max="5" value="${t.star||1}"></label>
-      <label class="f"><span>前缀名称：</span><input id="tPrefix" value="${escTextarea(t.prefix_name||'')}" placeholder="如：被厚待的"></label>
-      <label class="f"><span>后缀名称：</span><input id="tSuffix" value="${escTextarea(t.suffix_name||'')}" placeholder="如：VIP用户"></label>
-      <label class="f"><span>获取来源：</span><input id="tSource" value="${escTextarea(t.source||'')}" placeholder="如：活动/成就/商城/副本"></label>
+      <label class="f"><span>称号星级：</span><select id="tStar"><option value="1" ${(t.star||1)===1?'selected':''}>1星</option><option value="2" ${(t.star||1)===2?'selected':''}>2星</option><option value="3" ${(t.star||1)===3?'selected':''}>3星</option><option value="4" ${(t.star||1)===4?'selected':''}>4星</option><option value="5" ${(t.star||1)===5?'selected':''}>5星</option></select></label>
+      <label class="f"><span>称号前缀：</span><input id="tPrefix" value="${escTextarea(t.prefix_name||'')}" placeholder="如：被厚待的"></label>
+      <label class="f"><span>称号后缀：</span><input id="tSuffix" value="${escTextarea(t.suffix_name||'')}" placeholder="如：VIP用户"></label>
     </div>
-    <div class="ep-card"><div class="ep-card-title">称号属性（bonus；暴击/闪避填%，如填 3 存 0.03）</div>
-      <label class="f"><span>生命：</span><input id="t_hp" type="number" step="0.01" value="${b.hp!=null?b.hp:''}"></label>
-      <label class="f"><span>魔法：</span><input id="t_mp" type="number" step="0.01" value="${b.mp!=null?b.mp:''}"></label>
-      <label class="f"><span>攻击：</span><input id="t_atk" type="number" step="0.01" value="${b.atk!=null?b.atk:''}"></label>
-      <label class="f"><span>防御：</span><input id="t_def" type="number" step="0.01" value="${b.def!=null?b.def:''}"></label>
-      <label class="f"><span>暴击率%：</span><input id="t_crit" type="number" step="0.01" value="${b.crit!=null?(Number(b.crit)*100):''}"></label>
-      <label class="f"><span>闪避率%：</span><input id="t_dodge" type="number" step="0.01" value="${b.dodge!=null?(Number(b.dodge)*100):''}"></label>
-      <label class="f"><span>启用：</span><input type="checkbox" id="tEnabled" ${t.enabled===false?'':'checked'}></label>
+    <div class="ep-card"><div class="ep-card-title">称号属性（勾选多选项，暴击/闪避填%，如填 3 存 0.03）</div>
+      ${attrRow('hp','生命')}
+      ${attrRow('mp','魔法')}
+      ${attrRow('atk','攻击')}
+      ${attrRow('crit','暴击',1)}
+      ${attrRow('dodge','闪避',1)}
     </div>
     <div class="ep-actions"><button class="btn btn-default" onclick="goTitles()">取消</button><button class="btn btn-primary" onclick="saveTitle(${id!=null?id:'null'})">保存</button></div>
   </div></div></div>`;
@@ -1738,13 +1740,13 @@ async function saveTitle(id){
   if(!name){adminTip('请输入称号名称');return;}
   const num=function(k){const v=parseFloat(document.getElementById('t_'+k).value);return isNaN(v)?0:v;};
   const bonus={};
-  const hp=num('hp'),mp=num('mp'),atk=num('atk'),def=num('def'),crit=num('crit'),dodge=num('dodge');
-  if(hp)bonus.hp=hp;if(mp)bonus.mp=mp;if(atk)bonus.atk=atk;if(def)bonus.def=def;
+  ['hp','mp','atk'].forEach(function(k){const v=num(k);if(v)bonus[k]=v;});
+  const crit=num('crit'),dodge=num('dodge');
   if(crit)bonus.crit=crit/100;if(dodge)bonus.dodge=dodge/100;
   const now=new Date().toISOString();
-  const body={name:name,star:parseInt(document.getElementById('tStar').value)||1,prefix_name:document.getElementById('tPrefix').value.trim(),suffix_name:document.getElementById('tSuffix').value.trim(),bonus:bonus,source:document.getElementById('tSource').value.trim(),enabled:document.getElementById('tEnabled').checked};
+  const body={name:name,star:parseInt(document.getElementById('tStar').value)||1,prefix_name:document.getElementById('tPrefix').value.trim(),suffix_name:document.getElementById('tSuffix').value.trim(),bonus:bonus};
   if(id){body.updated_at=now;await api(`admin_titles?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
-  else{body.created_at=now;body.updated_at=now;await api('admin_titles',{method:'POST',body,noCache:true});}
+  else{body.enabled=true;body.created_at=now;body.updated_at=now;await api('admin_titles',{method:'POST',body,noCache:true});}
   goTitles();
 }
 async function delTitle(id){if(!confirm('确定删除该称号？'))return;await api(`admin_titles?id=eq.${id}`,{method:'DELETE',noCache:true});loadTitles();}
