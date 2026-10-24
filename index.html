@@ -1222,13 +1222,14 @@ async function loadEquips(){
   if(!_equipList.length){document.getElementById('equipList').innerHTML='<div class="err">暂无装备（云端 admin_equips 为空，首次登录将自动写入基础装备种子）</div>';return;}
   const filtered=_equipCat==='all'?_equipList:_equipList.filter(function(e){return ((Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通')===_equipCat;});
   if(!filtered.length){document.getElementById('equipList').innerHTML='<div class="err">该品质暂无装备</div>';return;}
-  document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>职业</th><th>等级</th><th>品质</th><th>主属性</th><th>附加属性</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>启用</th><th>操作</th></tr>'+
+  document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>职业</th><th>等级</th><th>品质</th><th>主属性</th><th>附加属性</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>描述</th><th>启用</th><th>操作</th></tr>'+
     filtered.map(e=>{
       const qs2=(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通';
       const mains=[];if(e.atk)mains.push('攻'+e.atk);if(e.def)mains.push('防'+e.def);if(e.hp)mains.push('生'+e.hp);if(e.mp)mains.push('魔'+e.mp);if(e.crit)mains.push('暴'+e.crit);if(e.dodge)mains.push('闪'+e.dodge);
       const subs=(Array.isArray(e.sub_stats)?e.sub_stats:[]).map(s=>{const lb=ATTR_LABELS[s.attr]||s.attr;return lb+' +'+(s.val!=null?s.val:'');}).join('、');
       const srcs=[];if(Array.isArray(e.source_bosses)&&e.source_bosses.length)srcs.push('BOSS');if(e.source_flip)srcs.push('翻牌');if(e.source_egg)srcs.push('砸蛋');
-      return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
+      const descTxt=String(e.desc||'');const descShow=descTxt.length>24?descTxt.slice(0,24)+'…':descTxt;
+      return `<tr><td>${EQUIP_SLOTS[e.slot]||e.slot}</td><td>${e.name}</td><td>${EQUIP_JOB_LABELS[e.job]||'全职'}</td><td>${e.lvl}</td><td>${qs2}</td><td>${mains.join('、')||'-'}</td><td>${subs||'-'}</td><td>${e.atk}</td><td>${e.def}</td><td>${e.hp}</td><td>${e.star3?'<span class="tag tag-on">3星标准</span>':'-'}</td><td>${e.price}</td><td>${srcs.join('、')||'-'}</td><td title="${escTextarea(descTxt)}">${descShow||'-'}</td><td>${e.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editEquip(${e.id})">编辑</button><button class="btn btn-danger" onclick="delEquip(${e.id})">删除</button></td></tr>`;}).join('')+'</table>';
 }
 let _equipEditId=null,_equipEditData=null;
 let _epBossList=[],_epBossSel=new Set(),_epBossRates={};
