@@ -166,6 +166,7 @@ tbody tr:hover{background:#f2f6ff}
     <div class="menu-item" onclick="showPage('gift',this)" data-page="gift" data-perm="gift">礼包管理</div>
     <div class="menu-item" onclick="showPage('boss',this)" data-page="boss" data-perm="boss">BOSS管理</div>
     <div class="menu-item" onclick="showPage('titles',this)" data-page="titles">称号管理</div>
+    <div class="menu-item" onclick="showPage('pools',this)" data-page="pools">翻牌砸蛋</div>
     <div class="menu-item" onclick="showPage('shop',this)" data-page="shop" data-perm="shop">商城管理</div>
     <div class="menu-item" onclick="showPage('locations',this)" data-page="locations" data-perm="locations">地图管理</div>
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
@@ -321,12 +322,12 @@ function doLogout(){localStorage.removeItem('tmsg_admin');localStorage.removeIte
 
 function showPage(name,el){
   /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
-  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',titles:'',titles_edit:'',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',vices:'vice',vices_edit:'vice',announce:'',chat:''};
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',titles:'',titles_edit:'',pools:'',pools_edit:'',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',vices:'vice',vices_edit:'vice',announce:'',chat:''};
   const pk=permMap[name]||'';
   if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',titles:'称号管理',titles_edit:'称号编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',vices:'副将管理',vices_edit:'副将编辑',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',titles:'称号管理',titles_edit:'称号编辑',pools:'翻牌砸蛋',pools_edit:'奖池编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',vices:'副将管理',vices_edit:'副将编辑',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -343,6 +344,8 @@ function showPage(name,el){
   if(name==='title_parts_edit')renderTitlePartEdit(c);
   if(name==='titles')renderTitles(c);
   if(name==='titles_edit')renderTitleEdit(c);
+  if(name==='pools')renderPools(c);
+  if(name==='pools_edit')renderPoolEdit(c);
   if(name==='shop')renderShopAdmin(c);
   if(name==='shop_edit')renderShopItemEdit(c);
   if(name==='locations')renderLocations(c);
@@ -410,6 +413,7 @@ function openGift(uname){
         <button class="gift-type-btn active" data-t="equip" onclick="giftSetType('equip')">装备</button>
         <button class="gift-type-btn" data-t="item" onclick="giftSetType('item')">道具</button>
         <button class="gift-type-btn" data-t="gift" onclick="giftSetType('gift')">礼包</button>
+        <button class="gift-type-btn" data-t="title" onclick="giftSetType('title')">称号</button>
       </div>
     </div>
     <div class="form-group"><div class="fg-title" id="giftPickTitle">请选择装备</div>
@@ -433,7 +437,15 @@ function giftSetType(t){
   sel.innerHTML='<option value="">加载中...</option>';
   if(t==='equip'){title.textContent='请选择装备';loadGiftEquips();}
   else if(t==='item'){title.textContent='请选择道具';loadGiftItems();}
+  else if(t==='title'){title.textContent='请选择称号';loadGiftTitles();}
   else{title.textContent='请选择礼包';loadGiftGifts();}
+}
+async function loadGiftTitles(){
+  const rows=await api('admin_titles',{query:'select=*&order=id.asc',noCache:true});
+  _giftData.list=Array.isArray(rows)?rows.filter(r=>r&&r.name&&r.enabled!==false):[];
+  const sel=document.getElementById('giftPick');
+  if(!_giftData.list.length){sel.innerHTML='<option value="">暂无称号（云端 admin_titles 为空）</option>';return;}
+  sel.innerHTML='<option value="">请选择称号</option>'+_giftData.list.map(g=>`<option value="${escTextarea(g.id)}">${escTextarea(g.name)}（${g.star||1}星）</option>`).join('');
 }
 async function loadGiftEquips(){
   const rows=await api('admin_equips',{query:'select=*&order=id.asc',noCache:true});
@@ -534,6 +546,9 @@ async function doGift(){
   }else if(_giftData.type==='item'){
     for(let i=0;i<num;i++){d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:item.item_type||'item',name:item.name,type:'item',count:1});}
     lines.push('道具 '+item.name+' x'+num);
+  }else if(_giftData.type==='title'){
+    d.char.title=item.name;
+    lines.push('称号 '+item.name);
   }else{
     const glines=giftUnpackRewards(item,uname,num,d);
     if(!glines.length){adminTip('该礼包无可发放奖励，请检查礼包配置');return;}
@@ -1759,6 +1774,104 @@ async function saveTitle(id){
 }
 async function delTitle(id){if(!confirm('确定删除该称号？'))return;await api(`admin_titles?id=eq.${id}`,{method:'DELETE',noCache:true});loadTitles();}
 async function toggleTitle(id){const t=_tList.find(x=>x.id===id);if(!t)return;const now=new Date().toISOString();await api(`admin_titles?id=eq.${id}`,{method:'PATCH',body:{enabled:t.enabled===false,updated_at:now},noCache:true});loadTitles();}
+
+/* ===== 翻牌砸蛋奖池管理（admin_pools；游戏端后台池替换内置 FLIP_POOL/EGG_POOL） ===== */
+let _pCat='all',_pList=[];
+const P_CATS=[['all','全部'],['flip','幸运翻牌'],['egg','快乐砸蛋']];
+const P_KINDS=[['item','道具'],['material','材料'],['horn','喇叭'],['equip','装备'],['gift','礼包'],['title','称号']];
+function goPools(){showPage('pools',document.querySelector('.menu-item[data-page="pools"]'));}
+function pKindLabel(k){const m=P_KINDS.find(x=>x[0]===k);return m?m[1]:k;}
+function renderPools(c){
+  c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
+    <button class="btn btn-primary" onclick="editPool()">新增奖品</button>
+    <button class="btn btn-default" onclick="loadPools()">刷新列表</button>
+    <span style="color:#999;font-size:12px">后台奖池非空时整池替换游戏内置翻牌/砸蛋奖池；概率填%（按权重抽1件）</span></div>
+    <div style="margin-bottom:12px">${P_CATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-pcat="${k}" onclick="pSetCat('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="pList">加载中...</div></div>`;
+  loadPools();
+}
+function pSetCat(k){_pCat=k;document.querySelectorAll('[data-pcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-pcat')===k?'btn-primary':'btn-default'));loadPools();}
+async function loadPools(){
+  const rows=await api('admin_pools',{query:'select=*&order=id.asc',noCache:true});
+  _pList=Array.isArray(rows)?rows:[];
+  const el=document.getElementById('pList');
+  if(!_pList.length){el.innerHTML='<div class="err">暂无奖池配置，点击「新增奖品」录入（可整池替换内置翻牌/砸蛋）</div>';return;}
+  const filtered=_pList.filter(x=>_pCat==='all'||x.pool_type===_pCat);
+  if(!filtered.length){el.innerHTML='<div class="err">该奖池暂无奖品</div>';return;}
+  el.innerHTML='<table><tr><th>ID</th><th>奖池</th><th>奖品名称</th><th>类型</th><th>数量</th><th>概率%</th><th>状态</th><th>更新时间</th><th>操作</th></tr>'+
+    filtered.map(x=>{
+      return `<tr><td>${x.id}</td><td>${x.pool_type==='flip'?'<span class="tag" style="background:#eef7ff;color:#2266cc;border:1px solid #c5ddf5">幸运翻牌</span>':'<span class="tag" style="background:#fff7ec;color:#fa8c16;border:1px solid #fadfc2">快乐砸蛋</span>'}</td><td>${escTextarea(x.name)}</td><td>${pKindLabel(x.kind)}</td><td>${x.num}</td><td>${Number(x.p)}</td><td>${x.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td>${tFmt(x.updated_at)}</td><td><button class="btn btn-primary" onclick="editPool(${x.id})">编辑</button><button class="btn btn-danger" onclick="delPool(${x.id})">删除</button><button class="btn ${x.enabled===false?'btn-default':'btn-danger'}" onclick="togglePool(${x.id})">${x.enabled===false?'启用':'封存'}</button></td></tr>`;
+    }).join('')+'</table>';
+}
+let _pEditKind='item';
+function poolNameControl(){
+  if(_pEditKind==='item'||_pEditKind==='material'||_pEditKind==='horn'){
+    return `<input id="pName" style="flex:1;min-width:0" placeholder="输入道具/材料名称"></input>`;
+  }
+  const table=_pEditKind==='equip'?'admin_equips':(_pEditKind==='gift'?'admin_gifts':'admin_titles');
+  const fld=_pEditKind==='equip'?'name':(_pEditKind==='gift'?'name':'name');
+  return `<select id="pName" style="flex:1;min-width:0"><option value="">加载中...</option></select>`;
+}
+async function poolNameLoad(sel){
+  const table=_pEditKind==='equip'?'admin_equips':(_pEditKind==='gift'?'admin_gifts':'admin_titles');
+  const rows=await api(table,{query:'select=*&enabled=not.is.false&order=id.asc',noCache:true});
+  const names=[...(Array.isArray(rows)?rows:[]).map(x=>x.name).filter(Boolean)];
+  sel.innerHTML='<option value="">— 选择'+pKindLabel(_pEditKind)+' —</option>'+[...new Set(names)].map(n=>`<option value="${escTextarea(n)}">${escTextarea(n)}</option>`).join('')+'<option value="__custom__">自定义...</option>';
+}
+function poolKindChange(kind){
+  _pEditKind=kind;
+  document.getElementById('pNameBox').innerHTML=poolNameControl();
+  const el=document.getElementById('pName');
+  if(el&&el.tagName==='SELECT'){
+    const v=_pEditData&&_pEditData.name?escTextarea(_pEditData.name):'';
+    poolNameLoad(el).then(function(){if(v&&!el.querySelector('option[value="'+v+'"]')){el.innerHTML+='<option value="'+v+'" selected>'+v+'</option>';}el.value=v;});
+  }
+}
+let _pEditData=null;
+async function editPool(id){
+  let x={pool_type:'flip',name:'',num:1,p:0,kind:'item',enabled:true};
+  if(id){const rows=await api('admin_pools',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)x=rows[0];}
+  _pEditData=Object.assign({},x);
+  _pEditKind=x.kind||'item';
+  document.getElementById('content').innerHTML=`<div class="edit-page">
+    <div class="ep-head"><button class="btn btn-default" onclick="goPools()">← 返回奖池列表</button><h3>${id?'编辑奖品':'新增奖品'}</h3></div>
+    <div class="ep-form">
+      <div class="ep-grid">
+        <div class="ep-card">
+          <div class="ep-card-title">奖池与奖品</div>
+          <label class="f"><span>所属奖池：</span><select id="pPool"><option value="flip" ${x.pool_type!=='egg'?'selected':''}>幸运翻牌</option><option value="egg" ${x.pool_type==='egg'?'selected':''}>快乐砸蛋</option></select></label>
+          <label class="f"><span>奖品类型：</span><select id="pKind" onchange="poolKindChange(this.value)">${P_KINDS.map(([k,v])=>`<option value="${k}" ${(x.kind||'item')===k?'selected':''}>${v}</option>`).join('')}</select></label>
+          <label class="f"><span>奖品名称：</span><span id="pNameBox" style="flex:1;display:flex;min-width:0">${poolNameControl()}</span></label>
+          <label class="f"><span>数量：</span><input id="pNum" type="number" min="1" value="${x.num||1}"></label>
+          <label class="f"><span>概率%：</span><input id="pP" type="number" step="0.001" min="0" value="${x.p!=null?x.p:0}"></label>
+          <label class="f"><span>启用：</span><input type="checkbox" id="pEnabled" ${x.enabled===false?'':'checked'} style="width:18px;height:18px;flex:none"></label>
+        </div>
+      </div>
+      <div class="ep-actions"><button class="btn btn-default" onclick="goPools()">取消</button><button class="btn btn-primary" onclick="savePool(${id!=null?id:'null'})">保存</button></div>
+    </div></div>`;
+  if(_pEditKind!=='item'&&_pEditKind!=='material'&&_pEditKind!=='horn'){
+    const sel=document.getElementById('pName');
+    if(sel){const cur=_pEditData.name||'';poolNameLoad(sel).then(function(){if(cur){if(!sel.querySelector('option[value="'+cur+'"]'))sel.innerHTML+='<option value="'+cur+'" selected>'+cur+'</option>';sel.value=cur;}});}
+  }else{
+    const el=document.getElementById('pName');
+    if(el)el.value=_pEditData.name||'';
+  }
+}
+async function savePool(id){
+  const nameEl=document.getElementById('pName');
+  let name='';
+  if(nameEl&&nameEl.tagName==='SELECT'){const v=nameEl.value;name=(v==='__custom__')?'':v;}
+  else{name=(nameEl&&nameEl.value||'').trim();}
+  if(name==='__custom__'){name='';}
+  if(!name){const custom=prompt('请输入自定义奖品名称：');if(!custom){adminTip('请填写奖品名称');return;}name=custom.trim();if(!name){adminTip('请填写奖品名称');return;}}
+  const now=new Date().toISOString();
+  const body={pool_type:document.getElementById('pPool').value,name:name,kind:document.getElementById('pKind').value,num:parseInt(document.getElementById('pNum').value)||1,p:parseFloat(document.getElementById('pP').value)||0,enabled:document.getElementById('pEnabled').checked};
+  if(id){body.updated_at=now;await api(`admin_pools?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{body.created_at=now;body.updated_at=now;await api('admin_pools',{method:'POST',body,noCache:true});}
+  goPools();
+}
+async function delPool(id){if(!confirm('确定删除该奖品？'))return;await api(`admin_pools?id=eq.${id}`,{method:'DELETE',noCache:true});loadPools();}
+async function togglePool(id){const x=_pList.find(v=>v.id===id);if(!x)return;const now=new Date().toISOString();await api(`admin_pools?id=eq.${id}`,{method:'PATCH',body:{enabled:x.enabled===false,updated_at:now},noCache:true});loadPools();}
 
 /* ===== BOSS 掉落配置（drop_config jsonb：装备/道具/礼包 多选+概率%） ===== */
 let _dropConfig=[],_dcEquips=[],_dcGifts=[];
