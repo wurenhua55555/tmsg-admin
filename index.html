@@ -925,7 +925,7 @@ async function loadAchievements(){
   if(_achCat!=='all')list=list.filter(a=>a.cat===_achCat);
   if(!list.length){document.getElementById('achList').innerHTML='<div class="err">该分类暂无成就（可新增）</div>';return;}
   document.getElementById('achList').innerHTML='<table><tr><th>ID</th><th>分类</th><th>成就名称</th><th>触发key</th><th>目标值</th><th>积分</th><th>难度</th><th>属性加成</th><th>条件</th><th>状态</th><th>操作</th></tr>'+
-    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':'<span class="tag tag-on">生效中</span>'}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button>${a.enabled===false?'<button class="btn btn-default" onclick="sealAchievement(${a.id},true)">解封</button>':'<button class="btn btn-default" onclick="sealAchievement(${a.id},false)">封存</button>'}</td></tr>`).join('')+'</table>';
+    list.map(a=>`<tr><td>${a.id}</td><td>${a.cat}</td><td>${a.name}</td><td>${a.key||'-'}</td><td>${a.target||0}</td><td>${a.pts||0}</td><td>${a.diff||'-'}</td><td>${achBonusTxt(a.bonus)}</td><td>${(a.cond||'').substring(0,30)}</td><td>${a.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':'<span class="tag tag-on">生效中</span>'}</td><td><button class="btn btn-primary" onclick="editAchievement(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAchievement(${a.id})">删除</button>${a.enabled===false?'<button class="btn btn-default" onclick="sealAchievement('+a.id+',true)">解封</button>':'<button class="btn btn-default" onclick="sealAchievement('+a.id+',false)">封存</button>'}</td></tr>`).join('')+'</table>';
 }
 let _achEditId=null,_achEditData=null;
 function editAchievement(id){
@@ -1586,7 +1586,7 @@ function renderGiftEdit(c){
       </div>
       <div class="ep-card">
         <div class="ep-card-title">奖励列表</div>
-        <div class="fg-note">类型 + 名称 + 数量 + 概率%</div>
+        <div class="fg-note">类型 + 名称 + 数量 + 概率%（任一奖励配了概率：打开时按概率加权只开出其中一项；全部不配概率：全部发放）</div>
         <div id="giftRewards">${rows}</div>
         <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button>
       </div>
@@ -1599,7 +1599,7 @@ function giftFormHtml(g,id){
     <label class="f"><span>礼包名：</span><input id="gName" placeholder="礼包名" value="${escTextarea(g.name)}"></label>
     <label class="f"><span>说明：</span><input id="gDesc" placeholder="说明" value="${escTextarea(g.desc)}"></label>
     <label class="f"><span>触发概率%：</span><input id="gP" type="number" step="0.01" placeholder="如掉落/翻牌概率，0 表示不参与" value="${(g.p!=null?g.p:'')}"></label>
-    <div class="form-group"><div class="fg-title">奖励列表（类型+名称+数量+概率%）</div>
+    <div class="form-group"><div class="fg-title">奖励列表（类型+名称+数量+概率%；任一奖励配了概率：打开时按概率加权只开出其中一项；全部不配概率：全部发放）</div>
     <div id="giftRewards">${rows}</div>
     <button class="btn btn-default" onclick="document.getElementById('giftRewards').insertAdjacentHTML('beforeend',giftRowHtml())">+ 添加奖励</button></div>
     <label style="font-size:14px;color:#44546b;display:block;margin-top:6px"><input type="checkbox" id="gEnabled" ${g.enabled!==false?'checked':''}> 启用</label>
