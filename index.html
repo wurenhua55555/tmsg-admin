@@ -1578,7 +1578,12 @@ async function editBoss(id){
   const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true}).catch(()=>[]);
   _dcEquips=Array.isArray(eqs)?eqs:[];
   _dcGifts=Array.isArray(gifts)?gifts:[];
-  _dropConfig=(Array.isArray(b.drop_config)?b.drop_config:[]).map(d=>({type:d.type==='equip'?'equip':'gift',cat:d.type==='equip'?'equip':(d.cat==='gift'?'gift':'item'),id:d.id,prob:d.prob,name:''}));
+  _dropConfig=(Array.isArray(b.drop_config)?b.drop_config:[]).map(d=>{
+    const cat=d.type==='equip'?'equip':(d.cat==='gift'?'gift':'item');
+    const pool=cat==='equip'?_dcEquips:_dcGifts;
+    const obj=pool.find(x=>x.id===d.id);
+    return {type:d.type==='equip'?'equip':'gift',cat:cat,id:d.id,prob:d.prob,name:obj?obj.name:('#'+d.id)};
+  });
   showPage('boss_edit',document.querySelector('.menu-item[data-page="boss"]'));
 }
 function showBossList(){
