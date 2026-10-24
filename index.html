@@ -1057,6 +1057,7 @@ async function sealAchievement(id,v){if(!confirm('确定要'+(v?'解封':'封存
 
 /* ===== 副将管理（admin_vices 表，字段对齐游戏端 VICE_DEFS：名将池/头像/基础属性/暴击闪避/等级强化） ===== */
 const VICE_JOBS=['战士','术士','刺客'];
+const VICE_GRADES=['三级','二级','一级','特级','神级'];
 async function renderVices(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
     <button class="btn btn-primary" onclick="editVice()">新增副将</button>
@@ -1072,8 +1073,8 @@ async function loadVices(){
     return;
   }
   if(!rows.length){document.getElementById('viceList').innerHTML='<div class="err">暂无副将数据（可在 SQL Editor 执行种子或点击"新增副将"录入）</div>';return;}
-  document.getElementById('viceList').innerHTML='<table><tr><th>ID</th><th>标识</th><th>头像</th><th>名称</th><th>称号</th><th>职业</th><th>性别</th><th>基础属性(血/魔/攻/防)</th><th>暴击</th><th>闪避</th><th>等级</th><th>强化</th><th>排序</th><th>启用</th><th>操作</th></tr>'+
-    rows.map(v=>`<tr><td>${v.id}</td><td>${v.v_id||'-'}</td><td>${v.avatar?'<img src="'+v.avatar+'" style="width:34px;height:34px;border-radius:4px;object-fit:cover">':'-'}</td><td>${v.name}</td><td>${v.title||'-'}</td><td>${v.job||'-'}</td><td>${v.gender||'-'}</td><td>${v.base_hp||100}/${v.base_mp||100}/${v.base_atk||100}/${v.base_def||100}</td><td>${(v.crit||0.05)*100}%</td><td>${(v.dodge||0.05)*100}%</td><td>${v.lvl||3}</td><td>+${v.enhance||0}</td><td>${v.sort||0}</td><td>${v.enabled===false?'否':'是'}</td><td><button class="btn btn-primary" onclick="editVice(${v.id})">编辑</button><button class="btn btn-danger" onclick="delVice(${v.id})">删除</button></td></tr>`).join('')+'</table>';
+  document.getElementById('viceList').innerHTML='<table><tr><th>ID</th><th>标识</th><th>头像</th><th>名称</th><th>称号</th><th>职业</th><th>性别</th><th>级别</th><th>基础属性(血/魔/攻/防)</th><th>暴击</th><th>闪避</th><th>等级</th><th>强化</th><th>排序</th><th>启用</th><th>操作</th></tr>'+
+    rows.map(v=>`<tr><td>${v.id}</td><td>${v.v_id||'-'}</td><td>${v.avatar?'<img src="'+v.avatar+'" style="width:34px;height:34px;border-radius:4px;object-fit:cover">':'-'}</td><td>${v.name}</td><td>${v.title||'-'}</td><td>${v.job||'-'}</td><td>${v.gender||'-'}</td><td><span class="tag tag-vip">${v.tier||'三级'}</span></td><td>${v.base_hp||100}/${v.base_mp||100}/${v.base_atk||100}/${v.base_def||100}</td><td>${(v.crit||0.05)*100}%</td><td>${(v.dodge||0.05)*100}%</td><td>${v.lvl||3}</td><td>+${v.enhance||0}</td><td>${v.sort||0}</td><td>${v.enabled===false?'否':'是'}</td><td><button class="btn btn-primary" onclick="editVice(${v.id})">编辑</button><button class="btn btn-danger" onclick="delVice(${v.id})">删除</button></td></tr>`).join('')+'</table>';
 }
 let _viceEditId=null,_viceEditData=null;
 function editVice(id){
@@ -1085,7 +1086,7 @@ function editVice(id){
     });
   }else{
     _viceEditId=null;
-    _viceEditData={v_id:'',name:'',title:'',job:'战士',gender:'男',avatar:'',quality:20,wuXing:10,zhongCheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
+    _viceEditData={v_id:'',name:'',title:'',tier:'三级',job:'战士',gender:'男',avatar:'',quality:20,wuXing:10,zhongCheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
     showPage('vices_edit',document.querySelector('.menu-item[data-page="vices"]'));
   }
 }
@@ -1108,6 +1109,7 @@ function renderViceEdit(c){
         <label class="f"><span>标识v_id：</span><input id="vcId" placeholder="如 huangzhong" value="${escTextarea(v.v_id||'')}"></label>
         <label class="f"><span>名称：</span><input id="vcName" placeholder="如 黄忠" value="${escTextarea(v.name||'')}"></label>
         <label class="f"><span>称号：</span><input id="vcTitle" placeholder="如 老当益壮" value="${escTextarea(v.title||'')}"></label>
+        <label class="f"><span>级别：</span><select id="vcTier">${VICE_GRADES.map(g=>`<option value="${g}" ${(v.tier||'三级')===g?'selected':''}>${g}</option>`).join('')}</select></label>
         <label class="f"><span>职业：</span><select id="vcJob">${VICE_JOBS.map(j=>`<option value="${j}" ${(v.job||'战士')===j?'selected':''}>${j}</option>`).join('')}</select></label>
         <label class="f"><span>性别：</span><select id="vcGender"><option value="男" ${(v.gender||'男')==='男'?'selected':''}>男</option><option value="女" ${(v.gender||'')==='女'?'selected':''}>女</option></select></label>
         <label class="f"><span>头像地址：</span><input id="vcAvatar" placeholder="如 static/image/upload/huangzhong.jpg（取武将图片资源）" value="${escTextarea(v.avatar||'')}"></label>
@@ -1148,6 +1150,7 @@ async function saveVice(id){
     zhongCheng:parseInt(document.getElementById('vcZc').value)||0,
     life:parseInt(document.getElementById('vcLife').value)||0,
     story:document.getElementById('vcStory').value.trim()||null,
+    tier:document.getElementById('vcTier').value||'三级',
     base_hp:parseInt(document.getElementById('vcBh').value)||100,
     base_mp:parseInt(document.getElementById('vcBm').value)||100,
     base_atk:parseInt(document.getElementById('vcBa').value)||100,
