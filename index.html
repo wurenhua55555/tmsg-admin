@@ -98,17 +98,17 @@ tbody tr:hover{background:#f2f6ff}
 /* BOSS掉落配置 */
 .dc-add-row{display:flex;gap:8px;align-items:center;margin:6px 0}
 .dc-add-row select{flex:1;min-width:0}
-.dc-add-row input{width:110px}
+.dc-add-row input{flex:1;min-width:0;width:auto}
 .dc-add-row .btn{flex:none}
 .dc-row{display:flex;align-items:center;gap:8px;padding:7px 10px;margin:6px 0;background:#fff;border:1px solid #e3eaf5;border-radius:6px;font-size:13px}
 .dc-row .tag{flex:none}
 .dc-row b{flex:none;min-width:56px;text-align:right}
 .dc-row .btn{padding:3px 10px;font-size:12px;flex:none}
 /* ===== 后台统一专业化控件（二级页） ===== */
-.edit-page .ep-form input[type="text"],.edit-page .ep-form input[type="number"],.edit-page .ep-form input[type="password"],.edit-page .ep-form select,.edit-page .ep-form textarea{
+.edit-page .ep-form input:not([type="checkbox"]):not([type="radio"]),.edit-page .ep-form select,.edit-page .ep-form textarea{
   width:100%;padding:9px 12px;margin:4px 0;border:1px solid #c9d4e4;border-radius:8px;font-size:14px;color:#33445f;background:#fff;transition:border-color .15s,box-shadow .15s,background .15s}
-.edit-page .ep-form input:hover,.edit-page .ep-form select:hover,.edit-page .ep-form textarea:hover{border-color:#9db8e8}
-.edit-page .ep-form input:focus,.edit-page .ep-form select:focus,.edit-page .ep-form textarea:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.14)}
+.edit-page .ep-form input:not([type="checkbox"]):not([type="radio"]):hover,.edit-page .ep-form select:hover,.edit-page .ep-form textarea:hover{border-color:#9db8e8}
+.edit-page .ep-form input:not([type="checkbox"]):not([type="radio"]):focus,.edit-page .ep-form select:focus,.edit-page .ep-form textarea:focus{outline:none;border-color:#2266cc;box-shadow:0 0 0 3px rgba(34,102,204,.14)}
 .edit-page .ep-form select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%238a94a6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:30px;cursor:pointer}
 .edit-page .ep-form textarea{resize:vertical;min-height:72px}
 .edit-page input[type="checkbox"]{-webkit-appearance:none;appearance:none;width:20px;height:20px;margin:0 6px 0 0;vertical-align:-4px;border:2px solid #b9c4d6;border-radius:5px;background:#fff;cursor:pointer;position:relative;transition:border-color .15s,background .15s;flex:none}
