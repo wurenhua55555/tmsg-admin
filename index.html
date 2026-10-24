@@ -547,8 +547,14 @@ async function doGift(){
     for(let i=0;i<num;i++){d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:item.item_type||'item',name:item.name,type:'item',count:1});}
     lines.push('道具 '+item.name+' x'+num);
   }else if(_giftData.type==='title'){
-    d.char.title=item.name;
-    lines.push('称号 '+item.name);
+    /* 称号按卷轴发放：前缀/后缀部件各一张，玩家在背包点击使用解锁 */
+    const tPre=item.prefix_name||'',tSuf=item.suffix_name||'';
+    if(!tPre&&!tSuf){adminTip('该称号缺少前后缀配置');return;}
+    for(let i=0;i<num;i++){
+      if(tPre)d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:'titleScroll',name:'称号卷轴-'+tPre,type:'item',count:1});
+      if(tSuf)d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:'titleScroll',name:'称号卷轴-'+tSuf,type:'item',count:1});
+    }
+    lines.push('称号卷轴-'+tPre+(tSuf?'、称号卷轴-'+tSuf:'')+' x'+num);
   }else{
     const glines=giftUnpackRewards(item,uname,num,d);
     if(!glines.length){adminTip('该礼包无可发放奖励，请检查礼包配置');return;}
@@ -1441,7 +1447,7 @@ async function delEquip(id){if(!confirm('确定删除该装备配置？'))return
 
 /* ===== 礼包管理（云端表 admin_gifts，游戏运行时合并礼包） ===== */
 const GIFT_KINDS={vip_daily:'每日贵宾礼包',flip:'翻牌礼包',egg:'砸蛋礼包',normal:'普通礼包'};
-const GIFT_REWARD_KINDS=[['yuanbao','元宝'],['item','道具'],['material','装备材料'],['equip','装备']];
+const GIFT_REWARD_KINDS=[['yuanbao','元宝'],['item','道具'],['material','装备材料'],['equip','装备'],['title','称号']];
 async function renderGift(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px"><button class="btn btn-primary" onclick="editGift()">新增礼包</button> <span style="color:#999;font-size:12px">礼包经游戏端背包道具打开发放；每日贵宾礼包（vip_daily）会覆盖游戏内默认发放内容</span></div><div class="table-wrap" id="giftList">加载中...</div></div>`;
   const gifts=await api('admin_gifts',{query:'select=*&order=id.asc',noCache:true});
@@ -1749,6 +1755,7 @@ async function editTitle(id){
           ${attrRow('hp','生命')}
           ${attrRow('mp','魔法')}
           ${attrRow('atk','攻击')}
+          ${attrRow('def','防御')}
           ${attrRow('crit','暴击')}
           ${attrRow('dodge','闪避')}
         </div>
@@ -1763,7 +1770,7 @@ async function saveTitle(id){
   if(!name){adminTip('请填写称号前缀或后缀');return;}
   const num=function(k){const v=parseFloat(document.getElementById('t_'+k).value);return isNaN(v)?0:v;};
   const bonus={};
-  ['hp','mp','atk'].forEach(function(k){const v=num(k);if(v)bonus[k]=v;});
+  ['hp','mp','atk','def'].forEach(function(k){const v=num(k);if(v)bonus[k]=v;});
   const crit=num('crit'),dodge=num('dodge');
   if(crit)bonus.crit=crit/100;if(dodge)bonus.dodge=dodge/100;
   const now=new Date().toISOString();
