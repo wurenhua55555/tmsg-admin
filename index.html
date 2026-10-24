@@ -180,6 +180,7 @@ tbody tr:hover{background:#f2f6ff}
   <div style="flex:1;min-width:0">
     <div class="topbar">
       <span id="pageTitle">仪表盘</span>
+      <button class="btn btn-primary" onclick="pushConfigNow()" style="margin-left:12px;padding:3px 12px;font-size:13px">推送配置刷新</button>
       <span style="color:#666;font-size:13px" id="topUser">admin</span>
     </div>
     <div style="padding:16px" id="content"></div>
@@ -951,7 +952,10 @@ function showAchievementList(){
 function renderAchievementEdit(c){
   const a=_achEditData||{};
   const id=_achEditId;
-  const bonusStr=(typeof a.bonus==='object'&&a.bonus)?JSON.stringify(a.bonus):(a.bonus||'');
+  let bonusObj={};
+  try{bonusObj=typeof a.bonus==='object'&&a.bonus?a.bonus:(a.bonus?JSON.parse(a.bonus):{});}catch(e){bonusObj={};}
+  const bonusVals={},bonusChecked={};
+  EQUIP_ATTRS.forEach(([k])=>{if(bonusObj[k]!=null){bonusVals[k]=bonusObj[k];bonusChecked[k]=1;}});
   c.innerHTML=`<div class="edit-page">
     <div class="ep-head"><button class="btn btn-default" onclick="showAchievementList()">← 返回成就列表</button><h3>${id?'编辑成就':'新增成就'}</h3></div>
     <div class="ep-form">
@@ -963,7 +967,8 @@ function renderAchievementEdit(c){
         <label class="f"><span>目标值：</span><input id="acTarget" type="number" min="0" value="${a.target||0}"></label>
         <label class="f"><span>积分：</span><input id="acPts" type="number" min="0" value="${a.pts||0}"></label>
         <label class="f"><span>难度：</span><select id="acDiff">${ACH_DIFFS.map(v=>`<option value="${v}" ${(a.diff||'简单')===v?'selected':''}>${v}</option>`).join('')}</select></label>
-        <label class="f"><span>属性加成(bonus)：</span><input id="acBonus" placeholder='JSON 如 {"hp":10,"mp":5,"atk":3} 或 {"crit":0.001}' value="${escTextarea(bonusStr)}"></label>
+        <label class="f"><span>属性加成(bonus)：</span><span class="fg-note">勾选属性并填数值（暴击/闪避填小数，如 0.01=1%，与装备一致）</span></label>
+        <div style="margin:4px 0 12px;padding:10px;border:1px solid #e5e9f0;border-radius:6px">${attrBlockHtml('acb',bonusVals,bonusChecked,false)}</div>
         <label class="f"><span>完成条件：</span><input id="acCond" placeholder="完成条件说明" value="${escTextarea(a.cond||'')}"></label>
       </div>
       <div class="ep-actions"><button class="btn btn-default" onclick="showAchievementList()">取消</button><button class="btn btn-primary" onclick="saveAchievement(${id!=null?id:'null'})">保存</button></div>
@@ -972,9 +977,15 @@ function renderAchievementEdit(c){
 async function saveAchievement(id){
   const name=document.getElementById('acName').value.trim();
   if(!name){adminTip('请填写成就名称');return;}
-  const bonusRaw=document.getElementById('acBonus').value.trim();
-  let bonus={};
-  if(bonusRaw){try{bonus=JSON.parse(bonusRaw);}catch(e){adminTip('属性加成(bonus) 不是合法 JSON：'+bonusRaw);return;}}
+  const bonus={};
+  EQUIP_ATTRS.forEach(([k])=>{
+    const cb=document.getElementById('acb_cb_'+k);
+    const inp=document.getElementById('acb_'+k);
+    if(cb&&cb.checked&&inp&&inp.value!==''){
+      const v=parseFloat(inp.value);
+      if(!isNaN(v))bonus[k]=v;
+    }
+  });
   const body={cat:document.getElementById('acCat').value,key:document.getElementById('acKey').value.trim()||null,target:parseInt(document.getElementById('acTarget').value)||0,pts:parseInt(document.getElementById('acPts').value)||0,diff:document.getElementById('acDiff').value,cond:document.getElementById('acCond').value.trim(),name:name,bonus:bonus};
   if(id){await api(`achievements?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
   else{
@@ -1109,8 +1120,25 @@ async function renderAnnounce(c){
   loadAnns();
 }
 async function loadAnns(){
-  const anns=await api('announcements?select=*&order=created_at.desc').catch(()=>[]);
+  const anns=(await api('announcements?select=*&order=created_at.desc').catch(()=>[])).filter(a=>!String(a.title||'').startsWith('__'));
   document.getElementById('annList').innerHTML='<table><tr><th>ID</th><th>标题</th><th>内容</th><th>时间</th><th>操作</th></tr>'+anns.map(a=>`<tr><td>${a.id}</td><td>${a.title}</td><td>${(a.content||'').substring(0,50)}</td><td>${(a.created_at||'').substring(0,16)}</td><td><button class="btn btn-primary" onclick="editAnn(${a.id})">编辑</button><button class="btn btn-danger" onclick="delAnn(${a.id})">删除</button></td></tr>`).join('')||'<tr><td colspan="5">暂无公告</td></tr></table>';
+}
+async function pushConfigNow(){
+  if(_cache.pushing)return;
+  _cache.pushing=1;
+  const btn=document.querySelector('.topbar .btn-primary');
+  const old=btn?btn.textContent:'';
+  if(btn)btn.textContent='推送中...';
+  try{
+    await api('announcements',{method:'POST',body:{title:'__CFG_PUSH__',content:String(Date.now())}});
+    /* 只保留最新一条推送标记，避免堆积 */
+    const list=await api('announcements?select=id,title&order=created_at.desc&limit=20').catch(()=>[]);
+    const marks=(Array.isArray(list)?list:[]).filter(a=>a.title==='__CFG_PUSH__');
+    for(let i=1;i<marks.length;i++){api(`announcements?id=eq.${marks[i].id}`,{method:'DELETE'});}
+    adminTip('已推送！游戏端将在1分钟内自动加载最新配置（无需刷新游戏页面）');
+  }catch(e){adminTip('推送失败：'+(e&&e.message||e));}
+  _cache.pushing=0;
+  if(btn)btn.textContent=old;
 }
 function editAnn(id){
   document.getElementById('modalMask').style.display='flex';
