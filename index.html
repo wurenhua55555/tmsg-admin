@@ -373,10 +373,10 @@ async function renderDashboard(c){
   const saves=await api('saves?select=username,data');
   let ts=0,ty=0,tg=0;
   saves.forEach(r=>{const d=parseData(r.data);const ch=d.char||{};ts+=ch.silver||0;ty+=ch.yuanbao||0;tg+=ch.gold||0;});
-  document.getElementById('st1').innerText=saves.length;
-  document.getElementById('st2').innerText=ts.toLocaleString();
-  document.getElementById('st3').innerText=ty.toLocaleString();
-  document.getElementById('st4').innerText=tg.toLocaleString();
+  (function(){const el1=document.getElementById('st1');if(el1)el1.innerText=saves.length;})();
+  (function(){const el2=document.getElementById('st2');if(el2)el2.innerText=ts.toLocaleString();})();
+  (function(){const el3=document.getElementById('st3');if(el3)el3.innerText=ty.toLocaleString();})();
+  (function(){const el4=document.getElementById('st4');if(el4)el4.innerText=tg.toLocaleString();})();
   const anns=await api('announcements?select=*&order=created_at.desc&limit=5').catch(()=>[]);
   document.getElementById('recentAnnounce').innerHTML=anns.map(a=>`<div style="padding:8px;border-bottom:1px solid #eee"><b>${a.title}</b> <span style="color:#999;font-size:12px">${(a.created_at||'').substring(0,16)}</span></div>`).join('')||'暂无公告';
 }
