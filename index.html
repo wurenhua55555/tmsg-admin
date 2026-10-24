@@ -1204,11 +1204,15 @@ const DEFAULT_EQUIPS=[
   {slot:'accessory',name:'护身符',lvl:40,atk:250,def:250,hp:5000,price:40000},
   {slot:'accessory',name:'龙纹玉璧',lvl:50,atk:600,def:600,hp:12000,price:120000},
 ];
-let _equipList=[];
+let _equipList=[],_equipCat='all';
+const EQUIP_QCATS=[['all','全部'],['普通','普通'],['精良','精良'],['卓越','卓越'],['史诗','史诗'],['神器','神器']];
 async function renderEquip(c){
-  c.innerHTML=`<div class="card"><div class="search-bar"><input id="eqSearch" placeholder="搜索装备名"><button onclick="loadEquips()">搜索</button><button class="btn btn-primary" style="margin-left:auto" onclick="editEquip()">新增装备</button></div><div class="table-wrap" id="equipList">加载中...</div></div>`;
+  c.innerHTML=`<div class="card"><div class="search-bar"><input id="eqSearch" placeholder="搜索装备名"><button onclick="loadEquips()">搜索</button><button class="btn btn-primary" style="margin-left:auto" onclick="editEquip()">新增装备</button></div>
+    <div style="margin-bottom:12px">${EQUIP_QCATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-qcat="${k}" onclick="equipSetCat('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="equipList">加载中...</div></div>`;
   loadEquips();
 }
+function equipSetCat(k){_equipCat=k;document.querySelectorAll('[data-qcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-qcat')===k?'btn-primary':'btn-default'));loadEquips();}
 async function loadEquips(){
   const eqEl=document.getElementById('eqSearch');const q=eqEl&&eqEl.value?eqEl.value.trim():'';
   let qs='select=*&order=id.asc';
@@ -1216,8 +1220,10 @@ async function loadEquips(){
   const rows=await api('admin_equips',{query:qs,noCache:true});
   _equipList=Array.isArray(rows)?rows:[];
   if(!_equipList.length){document.getElementById('equipList').innerHTML='<div class="err">暂无装备（云端 admin_equips 为空，首次登录将自动写入基础装备种子）</div>';return;}
+  const filtered=_equipCat==='all'?_equipList:_equipList.filter(function(e){return ((Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通')===_equipCat;});
+  if(!filtered.length){document.getElementById('equipList').innerHTML='<div class="err">该品质暂无装备</div>';return;}
   document.getElementById('equipList').innerHTML='<table><tr><th>部位</th><th>装备名</th><th>职业</th><th>等级</th><th>品质</th><th>主属性</th><th>附加属性</th><th>攻击</th><th>防御</th><th>生命</th><th>3星标准</th><th>价格</th><th>产出</th><th>启用</th><th>操作</th></tr>'+
-    _equipList.map(e=>{
+    filtered.map(e=>{
       const qs2=(Array.isArray(e.quality)&&e.quality.length)?e.quality[0]:'普通';
       const mains=[];if(e.atk)mains.push('攻'+e.atk);if(e.def)mains.push('防'+e.def);if(e.hp)mains.push('生'+e.hp);if(e.mp)mains.push('魔'+e.mp);if(e.crit)mains.push('暴'+e.crit);if(e.dodge)mains.push('闪'+e.dodge);
       const subs=(Array.isArray(e.sub_stats)?e.sub_stats:[]).map(s=>{const lb=ATTR_LABELS[s.attr]||s.attr;return lb+' +'+(s.val!=null?s.val:'');}).join('、');
