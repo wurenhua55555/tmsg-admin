@@ -164,7 +164,7 @@ tbody tr:hover{background:#f2f6ff}
     <div class="menu-item" onclick="showPage('equip',this)" data-page="equip" data-perm="equip">装备管理</div>
     <div class="menu-item" onclick="showPage('gift',this)" data-page="gift" data-perm="gift">礼包管理</div>
     <div class="menu-item" onclick="showPage('boss',this)" data-page="boss" data-perm="boss">BOSS管理</div>
-    <div class="menu-item" onclick="showPage('title_parts',this)" data-page="title_parts">称号管理</div>
+    <div class="menu-item" onclick="showPage('titles',this)" data-page="titles">称号管理</div>
     <div class="menu-item" onclick="showPage('shop',this)" data-page="shop" data-perm="shop">商城管理</div>
     <div class="menu-item" onclick="showPage('locations',this)" data-page="locations" data-perm="locations">地图管理</div>
     <div class="menu-item" onclick="showPage('perm',this)" data-page="perm" data-perm="perm">权限管理</div>
@@ -320,12 +320,12 @@ function doLogout(){localStorage.removeItem('tmsg_admin');localStorage.removeIte
 
 function showPage(name,el){
   /* 权限拦截：非超管账号访问无权限模块（菜单隐藏之外的兜底） */
-  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',title_parts:'',title_parts_edit:'',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',vices:'vice',vices_edit:'vice',announce:'',chat:''};
+  const permMap={dashboard:'',users:'',sponsor:'',items:'',equip:'equip',equip_edit:'equip',gift:'gift',gift_edit:'gift',boss:'boss',boss_edit:'boss',titles:'',titles_edit:'',locations:'locations',locations_edit:'locations',perm:'perm',perm_edit:'perm',activities:'activity',activities_edit:'activity',achievements:'achievement',achievements_edit:'achievement',vices:'vice',vices_edit:'vice',announce:'',chat:''};
   const pk=permMap[name]||'';
   if(pk&&!CURRENT_IS_SUPER&&!CURRENT_PERMS[pk]){adminTip('无权限访问该模块');return;}
   document.querySelectorAll('.menu-item').forEach(m=>m.classList.remove('active'));
   el.classList.add('active');
-  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',title_parts:'称号管理',title_parts_edit:'称号编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',vices:'副将管理',vices_edit:'副将编辑',announce:'公告管理',chat:'聊天监控'};
+  const titles={dashboard:'仪表盘',users:'用户管理',sponsor:'赞助记录',items:'道具管理',equip:'装备管理',equip_edit:'装备编辑',gift:'礼包管理',gift_edit:'礼包编辑',boss:'BOSS管理',boss_edit:'BOSS编辑',titles:'称号管理',titles_edit:'称号编辑',shop:'商城管理',shop_edit:'商城编辑',locations:'地图管理',locations_edit:'地点编辑',perm:'权限管理',perm_edit:'权限编辑',activities:'活动管理',activities_edit:'活动编辑',achievements:'成就管理',achievements_edit:'成就编辑',vices:'副将管理',vices_edit:'副将编辑',announce:'公告管理',chat:'聊天监控'};
   document.getElementById('pageTitle').innerText=titles[name];
   const c=document.getElementById('content');
   if(name==='dashboard')renderDashboard(c);
@@ -340,6 +340,8 @@ function showPage(name,el){
   if(name==='boss_edit')renderBossEdit(c);
   if(name==='title_parts')renderTitleParts(c);
   if(name==='title_parts_edit')renderTitlePartEdit(c);
+  if(name==='titles')renderTitles(c);
+  if(name==='titles_edit')renderTitleEdit(c);
   if(name==='shop')renderShopAdmin(c);
   if(name==='shop_edit')renderShopItemEdit(c);
   if(name==='locations')renderLocations(c);
@@ -1672,74 +1674,81 @@ async function saveBoss(id){
 }
 async function delBoss(id){if(!confirm('确定删除该BOSS配置？'))return;await api(`admin_bosses?id=eq.${id}`,{method:'DELETE',noCache:true});loadBosses();}
 
-/* ===== 称号管理（前缀/后缀称号，表 admin_title_parts；游戏端 角色→称号 页点击使用，bonus 合并） ===== */
-let _tpCat='all',_tpList=[];
-const TP_CATS=[['all','全部'],['prefix','前缀称号'],['suffix','后缀称号']];
-function goTitleParts(){showPage('title_parts',document.querySelector('.menu-item[data-page="title_parts"]'));}
-function renderTitleParts(c){
+/* ===== 称号管理（完整称号，表 admin_titles；游戏端 角色→称号 页点击使用） ===== */
+let _tCat='all',_tList=[];
+const T_CATS=[['all','全部'],['on','启用'],['off','停用']];
+function goTitles(){showPage('titles',document.querySelector('.menu-item[data-page="titles"]'));}
+function tFmt(s){if(!s)return '-';try{const d=new Date(s);const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;}catch(e){return String(s).slice(0,16);}}
+function renderTitles(c){
   c.innerHTML=`<div class="card"><div style="margin-bottom:12px">
-    <button class="btn btn-primary" onclick="editTitlePart()">新增称号</button>
-    <button class="btn btn-default" onclick="loadTitleParts()">刷新列表</button>
-    <span style="color:#999;font-size:12px">称号=前缀+后缀组合；游戏端 角色→称号 页点击即使用，属性取已选前后缀 bonus 合并</span></div>
-    <div style="margin-bottom:12px">${TP_CATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-tpcat="${k}" onclick="tpSetCat('${k}')">${v}</button>`).join('')}</div>
-    <div class="table-wrap" id="tpList">加载中...</div></div>`;
-  loadTitleParts();
+    <button class="btn btn-primary" onclick="editTitle()">新增称号</button>
+    <button class="btn btn-default" onclick="loadTitles()">刷新列表</button>
+    <span style="color:#999;font-size:12px">称号=前缀名称+后缀名称组合；游戏端 角色→称号 页点击即使用，属性取该条 bonus</span></div>
+    <div style="margin-bottom:12px">${T_CATS.map(([k,v])=>`<button class="btn ${k==='all'?'btn-primary':'btn-default'}" data-tcat="${k}" onclick="tSetCat('${k}')">${v}</button>`).join('')}</div>
+    <div class="table-wrap" id="tList">加载中...</div></div>`;
+  loadTitles();
 }
-function tpSetCat(k){_tpCat=k;document.querySelectorAll('[data-tpcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-tpcat')===k?'btn-primary':'btn-default'));loadTitleParts();}
-async function loadTitleParts(){
-  const rows=await api('admin_title_parts',{query:'select=*&order=id.asc',noCache:true});
-  _tpList=Array.isArray(rows)?rows:[];
-  const el=document.getElementById('tpList');
-  if(!_tpList.length){el.innerHTML='<div class="err">暂无称号配置</div>';return;}
-  const filtered=_tpCat==='all'?_tpList:_tpList.filter(t=>t.type===_tpCat);
-  if(!filtered.length){el.innerHTML='<div class="err">该分类暂无称号</div>';return;}
-  el.innerHTML='<table><tr><th>ID</th><th>类型</th><th>名称</th><th>星级</th><th>属性加成</th><th>启用</th><th>操作</th></tr>'+
+function tSetCat(k){_tCat=k;document.querySelectorAll('[data-tcat]').forEach(b=>b.className='btn '+(b.getAttribute('data-tcat')===k?'btn-primary':'btn-default'));loadTitles();}
+async function loadTitles(){
+  const rows=await api('admin_titles',{query:'select=*&order=id.asc',noCache:true});
+  _tList=Array.isArray(rows)?rows:[];
+  const el=document.getElementById('tList');
+  if(!_tList.length){el.innerHTML='<div class="err">暂无称号，点击「新增称号」录入</div>';return;}
+  const filtered=_tList.filter(t=>{
+    if(_tCat==='on')return t.enabled!==false;
+    if(_tCat==='off')return t.enabled===false;
+    return true;
+  });
+  if(!filtered.length){el.innerHTML='<div class="err">该筛选下暂无称号</div>';return;}
+  el.innerHTML='<table><tr><th>ID</th><th>称号名称</th><th>星数</th><th>前缀名称</th><th>后缀名称</th><th>称号属性</th><th>获取来源</th><th>创建时间</th><th>更新时间</th><th>状态</th><th>操作</th></tr>'+
     filtered.map(t=>{
       const b=t.bonus||{};
       const parts=[];
       if(b.hp)parts.push('生+'+b.hp);if(b.mp)parts.push('魔+'+b.mp);if(b.atk)parts.push('攻+'+b.atk);if(b.def)parts.push('防+'+b.def);if(b.crit)parts.push('暴+'+(Number(b.crit)*100).toFixed(2)+'%');if(b.dodge)parts.push('闪+'+(Number(b.dodge)*100).toFixed(2)+'%');
-      return `<tr><td>${t.id}</td><td>${t.type==='prefix'?'<span class="tag" style="background:#eef7ff;color:#2266cc;border:1px solid #c5ddf5">前缀</span>':'<span class="tag" style="background:#fff7ec;color:#fa8c16;border:1px solid #fadfc2">后缀</span>'}</td><td>${escTextarea(t.name)}</td><td>${t.star}星</td><td>${parts.join('、')||'-'}</td><td>${t.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editTitlePart(${t.id})">编辑</button><button class="btn btn-danger" onclick="delTitlePart(${t.id})">删除</button></td></tr>`;
+      const src=t.source||'';
+      return `<tr><td>${t.id}</td><td>${escTextarea(t.name)}</td><td>${t.star}星</td><td>${escTextarea(t.prefix_name||'')}</td><td>${escTextarea(t.suffix_name||'')}</td><td>${parts.join('、')||'-'}</td><td title="${escTextarea(src)}">${src.length>8?escTextarea(src.slice(0,8))+'…':(escTextarea(src)||'-')}</td><td>${tFmt(t.created_at)}</td><td>${tFmt(t.updated_at)}</td><td>${t.enabled===false?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">停用</span>':'<span class="tag tag-on">启用</span>'}</td><td><button class="btn btn-primary" onclick="editTitle(${t.id})">编辑</button><button class="btn btn-danger" onclick="delTitle(${t.id})">删除</button><button class="btn ${t.enabled===false?'btn-default':'btn-danger'}" onclick="toggleTitle(${t.id})">${t.enabled===false?'启用':'封存'}</button></td></tr>`;
     }).join('')+'</table>';
 }
-let _tpEditId=null,_tpEditData=null;
-async function editTitlePart(id){
-  let t={type:'prefix',name:'',star:1,bonus:{},enabled:true};
-  if(id){const rows=await api('admin_title_parts',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)t=rows[0];}
-  _tpEditId=id!=null?id:null;
-  _tpEditData=Object.assign({},t);
+async function editTitle(id){
+  let t={name:'',star:1,prefix_name:'',suffix_name:'',bonus:{},source:'',enabled:true};
+  if(id){const rows=await api('admin_titles',{query:`id=eq.${id}&select=*`,noCache:true});if(Array.isArray(rows)&&rows.length)t=rows[0];}
   const b=t.bonus||{};
   document.getElementById('content').innerHTML=`<div class="card"><div class="ep-page"><div class="ep-form">
     <div class="ep-card"><div class="ep-card-title">称号信息</div>
-      <label class="f"><span>类型：</span><select id="tpType"><option value="prefix" ${t.type!=='suffix'?'selected':''}>前缀称号</option><option value="suffix" ${t.type==='suffix'?'selected':''}>后缀称号</option></select></label>
-      <label class="f"><span>名称：</span><input id="tpName" value="${escTextarea(t.name)}" placeholder="如：单纯的 / 正太"></label>
-      <label class="f"><span>星级：</span><input id="tpStar" type="number" min="1" max="5" value="${t.star||1}"></label>
+      <label class="f"><span>称号名称：</span><input id="tName" value="${escTextarea(t.name)}" placeholder="如：被厚待的VIP用户"></label>
+      <label class="f"><span>称号星数：</span><input id="tStar" type="number" min="1" max="5" value="${t.star||1}"></label>
+      <label class="f"><span>前缀名称：</span><input id="tPrefix" value="${escTextarea(t.prefix_name||'')}" placeholder="如：被厚待的"></label>
+      <label class="f"><span>后缀名称：</span><input id="tSuffix" value="${escTextarea(t.suffix_name||'')}" placeholder="如：VIP用户"></label>
+      <label class="f"><span>获取来源：</span><input id="tSource" value="${escTextarea(t.source||'')}" placeholder="如：活动/成就/商城/副本"></label>
     </div>
-    <div class="ep-card"><div class="ep-card-title">属性加成（bonus；暴击/闪避填%，如填 3 存 0.03）</div>
-      <label class="f"><span>生命：</span><input id="tp_hp" type="number" step="0.01" value="${b.hp!=null?b.hp:''}"></label>
-      <label class="f"><span>魔法：</span><input id="tp_mp" type="number" step="0.01" value="${b.mp!=null?b.mp:''}"></label>
-      <label class="f"><span>攻击：</span><input id="tp_atk" type="number" step="0.01" value="${b.atk!=null?b.atk:''}"></label>
-      <label class="f"><span>防御：</span><input id="tp_def" type="number" step="0.01" value="${b.def!=null?b.def:''}"></label>
-      <label class="f"><span>暴击率%：</span><input id="tp_crit" type="number" step="0.01" value="${b.crit!=null?(Number(b.crit)*100):''}"></label>
-      <label class="f"><span>闪避率%：</span><input id="tp_dodge" type="number" step="0.01" value="${b.dodge!=null?(Number(b.dodge)*100):''}"></label>
-      <label class="f"><span>启用：</span><input type="checkbox" id="tpEnabled" ${t.enabled===false?'':'checked'}></label>
+    <div class="ep-card"><div class="ep-card-title">称号属性（bonus；暴击/闪避填%，如填 3 存 0.03）</div>
+      <label class="f"><span>生命：</span><input id="t_hp" type="number" step="0.01" value="${b.hp!=null?b.hp:''}"></label>
+      <label class="f"><span>魔法：</span><input id="t_mp" type="number" step="0.01" value="${b.mp!=null?b.mp:''}"></label>
+      <label class="f"><span>攻击：</span><input id="t_atk" type="number" step="0.01" value="${b.atk!=null?b.atk:''}"></label>
+      <label class="f"><span>防御：</span><input id="t_def" type="number" step="0.01" value="${b.def!=null?b.def:''}"></label>
+      <label class="f"><span>暴击率%：</span><input id="t_crit" type="number" step="0.01" value="${b.crit!=null?(Number(b.crit)*100):''}"></label>
+      <label class="f"><span>闪避率%：</span><input id="t_dodge" type="number" step="0.01" value="${b.dodge!=null?(Number(b.dodge)*100):''}"></label>
+      <label class="f"><span>启用：</span><input type="checkbox" id="tEnabled" ${t.enabled===false?'':'checked'}></label>
     </div>
-    <div class="ep-actions"><button class="btn btn-default" onclick="goTitleParts()">取消</button><button class="btn btn-primary" onclick="saveTitlePart(${id!=null?id:'null'})">保存</button></div>
+    <div class="ep-actions"><button class="btn btn-default" onclick="goTitles()">取消</button><button class="btn btn-primary" onclick="saveTitle(${id!=null?id:'null'})">保存</button></div>
   </div></div></div>`;
 }
-async function saveTitlePart(id){
-  const name=document.getElementById('tpName').value.trim();
+async function saveTitle(id){
+  const name=document.getElementById('tName').value.trim();
   if(!name){adminTip('请输入称号名称');return;}
-  const num=function(k){const v=parseFloat(document.getElementById('tp_'+k).value);return isNaN(v)?0:v;};
+  const num=function(k){const v=parseFloat(document.getElementById('t_'+k).value);return isNaN(v)?0:v;};
   const bonus={};
   const hp=num('hp'),mp=num('mp'),atk=num('atk'),def=num('def'),crit=num('crit'),dodge=num('dodge');
   if(hp)bonus.hp=hp;if(mp)bonus.mp=mp;if(atk)bonus.atk=atk;if(def)bonus.def=def;
   if(crit)bonus.crit=crit/100;if(dodge)bonus.dodge=dodge/100;
-  const body={type:document.getElementById('tpType').value,name:name,star:parseInt(document.getElementById('tpStar').value)||1,bonus:bonus,enabled:document.getElementById('tpEnabled').checked};
-  if(id){await api(`admin_title_parts?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
-  else{await api('admin_title_parts',{method:'POST',body,noCache:true});}
-  goTitleParts();
+  const now=new Date().toISOString();
+  const body={name:name,star:parseInt(document.getElementById('tStar').value)||1,prefix_name:document.getElementById('tPrefix').value.trim(),suffix_name:document.getElementById('tSuffix').value.trim(),bonus:bonus,source:document.getElementById('tSource').value.trim(),enabled:document.getElementById('tEnabled').checked};
+  if(id){body.updated_at=now;await api(`admin_titles?id=eq.${id}`,{method:'PATCH',body,noCache:true});}
+  else{body.created_at=now;body.updated_at=now;await api('admin_titles',{method:'POST',body,noCache:true});}
+  goTitles();
 }
-async function delTitlePart(id){if(!confirm('确定删除该称号配置？'))return;await api(`admin_title_parts?id=eq.${id}`,{method:'DELETE',noCache:true});loadTitleParts();}
+async function delTitle(id){if(!confirm('确定删除该称号？'))return;await api(`admin_titles?id=eq.${id}`,{method:'DELETE',noCache:true});loadTitles();}
+async function toggleTitle(id){const t=_tList.find(x=>x.id===id);if(!t)return;const now=new Date().toISOString();await api(`admin_titles?id=eq.${id}`,{method:'PATCH',body:{enabled:t.enabled===false,updated_at:now},noCache:true});loadTitles();}
 
 /* ===== BOSS 掉落配置（drop_config jsonb：装备/道具/礼包 多选+概率%） ===== */
 let _dropConfig=[],_dcEquips=[],_dcGifts=[];
