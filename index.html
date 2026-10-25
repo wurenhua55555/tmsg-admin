@@ -385,6 +385,8 @@ async function renderUsers(c){
   c.innerHTML=`<div class="card"><div class="search-bar"><input id="searchUser" placeholder="搜索用户名/角色名"><button onclick="loadUsers()">搜索</button></div><div class="table-wrap" id="userList">加载中...</div></div>`;
   loadUsers();
 }
+let _userList=[];
+function userNameOf(u){const r=(_userList||[]).find(x=>x.username===u);return r&&r.name?r.name:u;}
 async function loadUsers(){
   const kw=document.getElementById('searchUser').value;
   document.getElementById('userList').innerHTML='加载中...';
@@ -397,6 +399,7 @@ async function loadUsers(){
     return {username:r.username,charId:ch.charId||'-',name:ch.name||r.username,level:ch.level||1,vip:ch.vip||0,gold:ch.gold||0,yuanbao:ch.yuanbao||0,jifen:ch.jifen||0,banned:!!(d.banned),phone:d.phone||'-',regIp:d.regIp||'-',lastLogin:d.lastLogin||'',created:r.updated_at||''};
   });
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
+  _userList=list;
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
   document.getElementById('userList').innerHTML='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap"><label><input type="checkbox" id="userAllCk" onclick="toggleAllSel(\'user\',this.checked)"> 全选</label><span id="userSelCnt" style="color:#666">已选 0 个</span><button class="btn btn-danger" onclick="batchDelUsers()">删除选中</button><button class="btn btn-default" onclick="batchSealUsers(false)">封存选中</button><button class="btn btn-default" onclick="batchSealUsers(true)">解封选中</button></div><table><tr><th>选择</th><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册手机号</th><th>注册IP</th><th>最近登录</th><th>注册时间</th><th>积分余额</th><th>账号状态</th><th>操作</th></tr>'+
     list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td><input type="checkbox" class="urowck" data-u="${u.username}" onchange="toggleSelUser(this)"></td><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${u.phone}</td><td>${u.regIp}</td><td>${lt}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${u.banned?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':(isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag tag-on">正常</span>')}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger" onclick="delUser('${u.username}')">删除</button><button class="btn ${u.banned?'btn-default':'btn-danger'}" onclick="sealUser('${u.username}',${u.banned?'true':'false'})">${u.banned?'解封':'封存'}</button></td></tr>`;}).join('')+'</table>';
@@ -410,18 +413,18 @@ function toggleAllSel(scope,ck){
   document.querySelectorAll(cls).forEach(cb=>{cb.checked=ck;if(scope==='user')toggleSelUser(cb);else toggleSelAch(cb);});
 }
 async function delUser(u){
-  if(!confirm('确定删除账号 '+u+'？删除后不可恢复！'))return;
+  if(!confirm('确定删除用户「'+userNameOf(u)+'」('+u+')？删除后不可恢复！'))return;
   await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'DELETE'});
-  loadUsers();adminTip('已删除账号 '+u);
+  loadUsers();adminTip('已删除用户 '+userNameOf(u)+'('+u+')');
 }
 async function sealUser(u,v){
-  if(!confirm('确定'+(v?'解封':'封存')+'账号 '+u+'？'+(v?'解封后该账号可正常进入游戏。':'封存后该账号无法进入游戏，数据保留。')))return;
+  if(!confirm('确定'+(v?'解封':'封存')+'用户「'+userNameOf(u)+'」('+u+')？'+(v?'解封后该账号可正常进入游戏。':'封存后该账号无法进入游戏，数据保留。')))return;
   const rows=await api('saves',{query:'username=eq.'+encodeURIComponent(u)});
   const r=Array.isArray(rows)?rows[0]:null;if(!r){adminTip('未找到账号 '+u);return;}
   const d=parseData(r.data)||{};
   if(v)delete d.banned;else d.banned=true;
   await api('saves',{query:'username=eq.'+encodeURIComponent(u),method:'PATCH',body:{data:JSON.stringify(d)}});
-  loadUsers();adminTip('已'+(v?'解封':'封存')+'账号 '+u);
+  loadUsers();adminTip('已'+(v?'解封':'封存')+'用户 '+userNameOf(u)+'('+u+')');
 }
 async function batchDelUsers(){
   const list=[..._selUsers];if(!list.length){adminTip('请先勾选要删除的账号');return;}
@@ -463,7 +466,7 @@ let _giftData={uname:'',type:'equip',list:[],pool:[]};
 function openGift(uname){
   _giftData={uname:uname,type:'equip',list:[],pool:[]};
   document.getElementById('modalMask').style.display='flex';
-  document.getElementById('modalBox').innerHTML=`<h3>向玩家 ${escTextarea(uname)} 赠送</h3>
+  document.getElementById('modalBox').innerHTML=`<h3>向玩家 ${escTextarea(userNameOf(uname))}(${escTextarea(uname)}) 赠送</h3>
     <div class="form-group"><div class="fg-title">赠送类型</div>
       <div class="gift-type-bar">
         <button class="gift-type-btn active" data-t="equip" onclick="giftSetType('equip')">装备</button>
@@ -671,14 +674,14 @@ async function doGift(){
     Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
     closeModal();
     loadUsers();
-    adminTip('已向 '+uname+' 赠送：'+lines.join('、')+(ok?'':'（已重试，请稍后核对）'));
+    adminTip('已向 '+userNameOf(uname)+' 赠送：'+lines.join('、')+(ok?'':'（已重试，请稍后核对）'));
   }catch(e){
-    adminTip('赠送失败：'+(e&&e.message?e.message:e));
+    adminTip('给 '+userNameOf(_giftData&&_giftData.uname||'')+' 赠送失败：'+(e&&e.message?e.message:e));
   }
 }
 function openPoints(uname){
   document.getElementById('modalMask').style.display='flex';
-  document.getElementById('modalBox').innerHTML=`<h3>给 ${uname} 加赞助积分</h3>
+  document.getElementById('modalBox').innerHTML=`<h3>给 ${userNameOf(uname)}(${uname}) 加赞助积分</h3>
     <label class="f"><span>积分数：</span><input type="number" id="pointNum" placeholder="输入积分数" value="100"></label>
     <label class="f"><span>原因备注：</span><input type="text" id="pointReason" placeholder="如：充值100元" value="充值"></label>
     <div class="modal-footer"><button class="btn btn-default" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="addPoints('${uname}')">提交</button></div>`;
@@ -717,13 +720,13 @@ async function addPoints(uname){
     // 清除saves相关缓存
     Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
     loadUsers();
-    adminTip('已为 '+uname+' 加 '+num+' 积分，已记录'+(ok?'':'（已重试，请稍后核对）'));
+    adminTip('已为 '+userNameOf(uname)+' 加 '+num+' 积分，已记录'+(ok?'':'（已重试，请稍后核对）'));
   }catch(e){
     adminTip('加积分失败：'+(e&&e.message?e.message:e));
   }
 }
 async function resetUserPwd(uname){
-  if(!confirm('确定将玩家账号「'+uname+'」的密码重置为 123456 ？'))return;
+  if(!confirm('确定将玩家「'+userNameOf(uname)+'」('+uname+')的密码重置为 123456 ？'))return;
   const enc=encodeURIComponent(uname);
   const r=await api('saves',{query:`username=eq.${enc}&select=data`});
   if(!r||!r.length){adminTip('玩家不存在：'+uname);return;}
@@ -734,7 +737,7 @@ async function resetUserPwd(uname){
   await api('saves',{query:`username=eq.${enc}`,method:'PATCH',body:{data:JSON.stringify(d)}});
   Object.keys(_cache).forEach(k=>{if(k.indexOf('saves')===0)delete _cache[k];});
   loadUsers();
-  adminTip('已重置 '+uname+' 的密码为初始密码 123456');
+  adminTip('已重置 '+userNameOf(uname)+' 的密码为初始密码 123456');
 }
 
 // 顶部白底黑字提示（不用原生alert）
@@ -761,6 +764,12 @@ function renderSponsor(c){
   loadSponsorLogs();
 }
 async function loadSponsorLogs(){
+  if(!_userList||!_userList.length){
+    try{
+      const sv=await api('saves',{query:'select=username,data'});
+      _userList=(Array.isArray(sv)?sv:[]).map(function(r){const d=parseData(r.data);const ch=(d&&d.char)||{};return {username:r.username,name:ch.name||r.username};});
+    }catch(e){}
+  }
   const input=document.getElementById('sponsorSearch');
   const kw=input&&input.value?input.value.trim():'';
   const box=document.getElementById('sponsorList');
@@ -780,7 +789,7 @@ async function loadSponsorLogs(){
       const delta=l.jifen_delta||0;
       const color=delta>0?'#52c41a':(delta<0?'#ff4d4f':'#666');
       const sign=delta>0?'+':'';
-      return `<tr><td>${fmtTime(l.created_at)}</td><td>${l.username}</td><td style="color:${color};font-weight:bold">${sign}${delta}</td><td>${l.reason||'-'}</td><td>${l.operator||'-'}</td></tr>`;
+      return `<tr><td>${fmtTime(l.created_at)}</td><td>${userNameOf(l.username)}</td><td style="color:${color};font-weight:bold">${sign}${delta}</td><td>${l.reason||'-'}</td><td>${l.operator||'-'}</td></tr>`;
     }).join('')+'</table>';
 }
 
