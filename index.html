@@ -1088,7 +1088,7 @@ function editVice(id){
     });
   }else{
     _viceEditId=null;
-    _viceEditData={v_id:'',name:'',title:'',tier:3,job:'战士',gender:'男',avatar:'',quality:20,wuxing:10,zhongcheng:94,life:3000,story:'',base_hp:100,base_mp:100,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:3,enhance:0,sort:0,enabled:true};
+    _viceEditData={v_id:'',name:'',title:'',tier:3,job:'战士',gender:'男',avatar:'',quality:1,wuxing:1,zhongcheng:94,life:3000,story:'',base_hp:100,base_mp:8,base_atk:100,base_def:100,crit:0.05,dodge:0.05,lvl:1,enhance:0,sort:0,enabled:true};
     showPage('vices_edit',document.querySelector('.menu-item[data-page="vices"]'));
   }
 }
@@ -1116,7 +1116,7 @@ function renderViceEdit(c){
         <label class="f"><span>性别：</span><select id="vcGender"><option value="男" ${(v.gender||'男')==='男'?'selected':''}>男</option><option value="女" ${(v.gender||'')==='女'?'selected':''}>女</option></select></label>
         <label class="f"><span>头像地址：</span><input id="vcAvatar" placeholder="如 static/image/upload/huangzhong.jpg（取武将图片资源）" value="${escTextarea(v.avatar||'')}"></label>
         <label class="f"><span>初始品质(1~20)：</span><input id="vcQuality" type="number" min="1" max="20" value="${v.quality||1}"></label>
-        <label class="f"><span>悟性：</span><input id="vcWx" type="number" min="0" value="${v.wuxing||0}"></label>
+        <label class="f"><span>悟性：</span><input id="vcWx" type="number" min="0" value="${v.wuxing||1}"></label>
         <label class="f"><span>忠诚：</span><input id="vcZc" type="number" min="0" value="${v.zhongcheng||0}"></label>
         <label class="f"><span>寿命：</span><input id="vcLife" type="number" min="0" value="${v.life||0}"></label>
         <label class="f"><span>故事：</span><input id="vcStory" placeholder="副将简介" value="${escTextarea(v.story||'')}"></label>
@@ -1124,12 +1124,11 @@ function renderViceEdit(c){
       <div class="ep-card">
         <div class="ep-card-title">属性（1级基础值；当前属性=基础×(1+2×(等级-1)+2×品质+2×强化)，暴击闪避同倍率×0.5）</div>
         <label class="f"><span>基础生命：</span><input id="vcBh" type="number" min="0" value="${v.base_hp||100}"></label>
-        <label class="f"><span>基础魔法：</span><input id="vcBm" type="number" min="0" value="${v.base_mp||100}"></label>
         <label class="f"><span>基础攻击：</span><input id="vcBa" type="number" min="0" value="${v.base_atk||100}"></label>
         <label class="f"><span>基础防御：</span><input id="vcBd" type="number" min="0" value="${v.base_def||100}"></label>
         <label class="f"><span>暴击(小数)：</span><input id="vcCrit" type="number" step="0.001" value="${v.crit||0.05}"></label>
         <label class="f"><span>闪避(小数)：</span><input id="vcDodge" type="number" step="0.001" value="${v.dodge||0.05}"></label>
-        <label class="f"><span>初始等级：</span><input id="vcLvl" type="number" min="1" value="${v.lvl||3}"></label>
+        <label class="f"><span>初始等级：</span><input id="vcLvl" type="number" min="1" value="${v.lvl||1}"></label>
         <label class="f"><span>初始强化：</span><input id="vcEn" type="number" min="0" value="${v.enhance||0}"></label>
         <label class="f"><span>排序：</span><input id="vcSort" type="number" min="0" value="${v.sort||0}"></label>
         <label class="f"><span>启用：</span><select id="vcEnabled"><option value="1" ${v.enabled!==false?'selected':''}>是</option><option value="0" ${v.enabled===false?'selected':''}>否</option></select></label>
@@ -1148,18 +1147,18 @@ async function saveVice(id){
     gender:document.getElementById('vcGender').value,
     avatar:document.getElementById('vcAvatar').value.trim()||null,
     quality:parseInt(document.getElementById('vcQuality').value)||0,
-    wuxing:parseInt(document.getElementById('vcWx').value)||0,
+    wuxing:parseInt(document.getElementById('vcWx').value)||1,
     zhongcheng:parseInt(document.getElementById('vcZc').value)||0,
     life:parseInt(document.getElementById('vcLife').value)||0,
     story:document.getElementById('vcStory').value.trim()||null,
     tier:VICE_GRADE_NUM[document.getElementById('vcTier').value]||3,
     base_hp:parseInt(document.getElementById('vcBh').value)||100,
-    base_mp:parseInt(document.getElementById('vcBm').value)||100,
+    base_mp:{'三级':6,'二级':7,'一级':8,'特级':9,'神级':10}[document.getElementById('vcTier').value]||8,
     base_atk:parseInt(document.getElementById('vcBa').value)||100,
     base_def:parseInt(document.getElementById('vcBd').value)||100,
     crit:parseFloat(document.getElementById('vcCrit').value)||0.05,
     dodge:parseFloat(document.getElementById('vcDodge').value)||0.05,
-    lvl:parseInt(document.getElementById('vcLvl').value)||3,
+    lvl:parseInt(document.getElementById('vcLvl').value)||1,
     enhance:parseInt(document.getElementById('vcEn').value)||0,
     sort:parseInt(document.getElementById('vcSort').value)||0,
     enabled:document.getElementById('vcEnabled').value==='1'
