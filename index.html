@@ -560,8 +560,16 @@ function giftBuildEquip(e,owner){
   if(e.mp)bonus.mp=Number(e.mp);
   if(e.crit)bonus.crit=Number(e.crit);
   if(e.dodge)bonus.dodge=Number(e.dodge);
+  /* 附加属性：后台 sub_stats 为3星标准值，赠送按3星标准发放 */
+  const sub={};
+  if(Array.isArray(e.sub_stats)){
+    for(const ss of e.sub_stats){
+      if(ss&&ss.attr&&ss.val!==undefined)sub[ss.attr]={v:Number(ss.val),s:3};
+    }
+  }
+  const hasSub=Object.keys(sub).length>0;
   const jb=GIFT_JOB_MAP[e.job]||GIFT_JOB_MAP[String(e.job)]||'全职';
-  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:e.star3?3:1,requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:{},bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null,desc:e.desc||'',image:e.image||'',attrType:e.attr_type||'star'};
+  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:hasSub?3:(e.star3?3:1),requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:sub,bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null,desc:e.desc||'',image:e.image||'',attrType:e.attr_type||'star'};
 }
 function giftUnpackRewards(g,owner,times,d){
   const lines=[];
