@@ -2089,13 +2089,16 @@ function dcRender(){
 }
 
 /* ===== 商城管理（云端表 admin_shop_items，游戏运行时合并 GOLD_SHOP：同 key 覆盖、封存移除、新增上架） ===== */
-const SHOP_CATS=[['all','全部'],['促销','促销'],['打造材料','打造材料'],['其他','其他'],['辅助','辅助']];
+const SHOP_CATS=[['all','全部'],['促销','促销'],['打造材料','打造材料'],['其他','其他'],['辅助','辅助'],['副将','副将']];
+const VICE_SHOP_ITEMS=['聚魂幡','聚魂幡碎片','副将强化丹','副将资质丹','副将悟性丹','副将忠诚丹','副将增寿丹','副将高级经验丹','副将中级经验丹','副将低级经验丹','副将双倍经验卡','副将扩技符','副将招募令','副将魂魄'];
 function shopItemTypes(){
   const s=new Set();
   ITEM_CATALOG.forEach(i=>{if(i.type)s.add(i.type);});
+  s.add('副将');
   return Array.from(s);
 }
 function shopItemsByType(type){
+  if(type==='副将')return VICE_SHOP_ITEMS.slice();
   return ITEM_CATALOG.filter(i=>i.type===type).map(i=>i.name);
 }
 let _shopCat='all';
@@ -2144,6 +2147,7 @@ function shopTypeChanged(){
   sel.innerHTML='<option value="">选择道具（可下方手填名称）</option>'+names.map(n=>`<option value="${escTextarea(n)}">${escTextarea(n)}</option>`).join('');
   const cur=_shopEditData&&_shopEditData.name?_shopEditData.name:'';
   if(cur){sel.value=cur;document.getElementById('siName').value=cur;}
+  if(t==='副将'){const cat=document.getElementById('siCat');if(cat)cat.value='副将';}
 }
 function shopItemPicked(){
   const sel=document.getElementById('siItemSel');
