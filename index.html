@@ -84,6 +84,12 @@ tbody tr:hover{background:#f2f6ff}
   .card{padding:10px}
   .modal{width:96vw;padding:16px}
 }
+/* 窄屏(手机/小屏)表格适配：次要列自动隐藏，关键列(昵称/等级/操作)保持可见 */
+@media(max-width:900px){
+  .table-wrap table{font-size:11px;min-width:420px}
+  .hide-s{display:none}
+  .table-wrap th,.table-wrap td{padding:6px 4px;white-space:nowrap}
+}
 .err{color:#ff4d4f;padding:20px;text-align:center}
 /* 装备编辑二级页 */
 .edit-page{animation:fadeIn .2s ease}
@@ -388,6 +394,7 @@ async function renderUsers(c){
 let _userList=[];
 function userNameOf(u){const r=(_userList||[]).find(x=>x.username===u);return r&&r.name?r.name:u;}
 async function loadUsers(){
+  try{
   const kw=document.getElementById('searchUser').value;
   document.getElementById('userList').innerHTML='加载中...';
   const saves=await api('saves',{query:'select=username,data,updated_at'});
@@ -401,8 +408,12 @@ async function loadUsers(){
   list.sort((a,b)=>new Date(b.created)-new Date(a.created));
   _userList=list;
   if(kw)list=list.filter(u=>u.username.includes(kw)||u.name.includes(kw));
-  document.getElementById('userList').innerHTML='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap"><label><input type="checkbox" id="userAllCk" onclick="toggleAllSel(\'user\',this.checked)"> 全选</label><span id="userSelCnt" style="color:#666">已选 0 个</span><button class="btn btn-danger" onclick="batchDelUsers()">删除选中</button><button class="btn btn-default" onclick="batchSealUsers(false)">封存选中</button><button class="btn btn-default" onclick="batchSealUsers(true)">解封选中</button></div><table><tr><th>选择</th><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th>注册手机号</th><th>注册IP</th><th>最近登录</th><th>注册时间</th><th>积分余额</th><th>账号状态</th><th>操作</th></tr>'+
-    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td><input type="checkbox" class="urowck" data-u="${u.username}" onchange="toggleSelUser(this)"></td><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td>${u.phone}</td><td>${u.regIp}</td><td>${lt}</td><td>${dtStr}</td><td><b>${u.jifen}</b></td><td>${u.banned?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':(isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag tag-on">正常</span>')}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger" onclick="delUser('${u.username}')">删除</button><button class="btn ${u.banned?'btn-default':'btn-danger'}" onclick="sealUser('${u.username}',${u.banned?'true':'false'})">${u.banned?'解封':'封存'}</button></td></tr>`;}).join('')+'</table>';
+  document.getElementById('userList').innerHTML='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;flex-wrap:wrap"><label><input type="checkbox" id="userAllCk" onclick="toggleAllSel(\'user\',this.checked)"> 全选</label><span id="userSelCnt" style="color:#666">已选 0 个</span><button class="btn btn-danger" onclick="batchDelUsers()">删除选中</button><button class="btn btn-default" onclick="batchSealUsers(false)">封存选中</button><button class="btn btn-default" onclick="batchSealUsers(true)">解封选中</button></div><table><tr><th>选择</th><th>用户ID</th><th>用户昵称</th><th>等级</th><th>特权等级</th><th>贵宾</th><th>金珠</th><th>元宝</th><th class="hide-s">注册手机号</th><th class="hide-s">注册IP</th><th class="hide-s">最近登录</th><th class="hide-s">注册时间</th><th>积分余额</th><th>账号状态</th><th>操作</th></tr>'+
+    list.map(u=>{const dt=new Date(u.created);const dtStr=isNaN(dt)?u.created.substring(0,16):dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0')+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');const lt=String(u.lastLogin||'').replace('T',' ').substring(0,16)||'-';const isAdmin=adminSet.has(u.username);return `<tr><td><input type="checkbox" class="urowck" data-u="${u.username}" onchange="toggleSelUser(this)"></td><td>${u.charId}</td><td>${u.name}</td><td>${u.level}</td><td><span class="tag ${u.vip>0?'tag-vip':''}">${u.vip}级</span></td><td>${u.vip>0?'<span class="tag tag-vip">贵宾</span>':'-'}</td><td>${u.gold}</td><td>${u.yuanbao}</td><td class="hide-s">${u.phone}</td><td class="hide-s">${u.regIp}</td><td class="hide-s">${lt}</td><td class="hide-s">${dtStr}</td><td><b>${u.jifen}</b></td><td>${u.banned?'<span class="tag" style="background:#fff1f0;color:#ff4d4f;border:1px solid #ffa39e">已封存</span>':(isAdmin?'<span class="tag tag-vip">管理员</span>':'<span class="tag tag-on">正常</span>')}</td><td><button class="btn btn-primary" onclick="openPoints('${u.username}')">加积分</button><button class="btn btn-primary" onclick="openGift('${u.username}')">赠送</button><button class="btn btn-default" onclick="resetUserPwd('${u.username}')">重置密码</button><button class="btn btn-danger" onclick="delUser('${u.username}')">删除</button><button class="btn ${u.banned?'btn-default':'btn-danger'}" onclick="sealUser('${u.username}',${u.banned?'true':'false'})">${u.banned?'解封':'封存'}</button></td></tr>`;}).join('')+'</table>';
+  }catch(e){
+    document.getElementById('userList').innerHTML='<div class="err">加载失败：'+e.message+'</div><button class="btn btn-primary" onclick="loadUsers()">重试</button>';
+    console.error('loadUsers错误',e);
+  }
 }
 /* ===== 用户多选操作（删除/封存/解封） ===== */
 let _selUsers=new Set(),_selAch=new Set();
