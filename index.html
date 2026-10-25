@@ -560,16 +560,28 @@ function giftBuildEquip(e,owner){
   if(e.mp)bonus.mp=Number(e.mp);
   if(e.crit)bonus.crit=Number(e.crit);
   if(e.dodge)bonus.dodge=Number(e.dodge);
-  /* 附加属性：后台 sub_stats 为3星标准值，赠送按3星标准发放 */
-  const sub={};
+  /* 附加属性：与游戏端掉落/打造同款随机星级规则——attrType=star 每条附加独立随机星级(star3→3~5星,否则1~5星)，数值=3星标准×(星级倍率/1.3)，装备星级=附加星级均值取整(无附加=1)；fixed 定值不浮动 */
+  const MULT=[0,1.1,1.2,1.3,1.4,1.5];
+  const sub={};let starSum=0,starCnt=0;
   if(Array.isArray(e.sub_stats)){
+    const fixed=(e.attr_type==='fixed');
     for(const ss of e.sub_stats){
-      if(ss&&ss.attr&&ss.val!==undefined)sub[ss.attr]={v:Number(ss.val),s:3};
+      if(ss&&ss.attr&&ss.val!==undefined){
+        let v=Number(ss.val),st=1;
+        if(!fixed){
+          st=e.star3?(3+Math.floor(Math.random()*3)):(1+Math.floor(Math.random()*5));
+          const raw=Number(ss.val)*(MULT[st]/1.3);
+          v=(ss.attr==='crit'||ss.attr==='dodge')?Math.round(raw*1000)/1000:Math.round(raw*100)/100;
+          starSum+=st;starCnt++;
+        }
+        sub[ss.attr]={v:v,s:st};
+      }
     }
   }
-  const hasSub=Object.keys(sub).length>0;
+  const hasSub=starCnt>0;
+  const star=hasSub?Math.max(1,Math.floor(starSum/starCnt)):(e.star3?3:1);
   const jb=GIFT_JOB_MAP[e.job]||GIFT_JOB_MAP[String(e.job)]||'全职';
-  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:hasSub?3:(e.star3?3:1),requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:sub,bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null,desc:e.desc||'',image:e.image||'',attrType:e.attr_type||'star'};
+  return {id:'eq_'+Date.now()+'_'+Math.floor(Math.random()*9999),type:'equip',name:e.name,slot:e.slot||'accessory',quality:qIdx,star:star,requireLvl:Math.max(1,e.lvl||1),job:jb,bonus:bonus,sub:sub,bind:true,source:'后台赠送',owner:owner,price:e.price||0,ts:Date.now(),bossSrc:null,desc:e.desc||'',image:e.image||'',attrType:e.attr_type||'star'};
 }
 function giftUnpackRewards(g,owner,times,d){
   const lines=[];
@@ -631,7 +643,7 @@ async function doGift(){
       if(!d.char)d.char={};
       if(!Array.isArray(d.char.bag))d.char.bag=[];
       if(_giftData.type==='equip'){
-        d.char.bag.push(giftBuildEquip(item,uname));
+        d.char.bag.push(giftBuildEquip(item,(d.char&&d.char.name)||uname));
       }else if(_giftData.type==='item'){
         for(let i=0;i<num;i++){d.char.bag.push({id:'it_'+Date.now()+'_'+Math.floor(Math.random()*9999),kind:item.item_type||'item',name:item.name,type:'item',count:1});}
       }else if(_giftData.type==='title'){
